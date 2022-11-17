@@ -13,6 +13,7 @@ int main(int argc, char const *argv[])
         std::shared_ptr<VulkanRenderer> renderer = std::make_shared<VulkanRenderer>(window);
         std::shared_ptr<VulkanRendererSystem> rendererSystem = std::make_shared<VulkanQuadRenderer>(renderer->getLogicalDevice(), renderer->getPhysicalDevice());
 
+        renderer->setRendererSystem(rendererSystem);
         renderer->PrepareRender();
 
         while (!window->shouldClose())
