@@ -23,6 +23,8 @@ struct MemoryTypeInfo
 class VulkanQuadRenderer : public VulkanRendererSystem
 {
 public:
+	VulkanQuadRenderer(const VkDevice &device, const VkPhysicalDevice &physicalDevice) : VulkanRendererSystem(device, physicalDevice) {}
+	
 	static VkShaderModule LoadShader(VkDevice device, const std::vector<char>& code);
 	static VkPipelineLayout CreatePipelineLayout(VkDevice device);
 	static VkBuffer AllocateBuffer (VkDevice device, const int size, const VkBufferUsageFlagBits bits);
