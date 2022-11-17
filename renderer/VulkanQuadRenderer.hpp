@@ -1,6 +1,7 @@
 #include "VulkanRendererSystem.hpp"
 
 #include <vector>
+#include <glm/glm.hpp>
 
 struct MemoryTypeInfo
 {
@@ -20,11 +21,17 @@ struct MemoryTypeInfo
     int index;
 };
 
+struct Vertex
+{
+	glm::vec2 position;
+	glm::vec3 color;
+};
+
 class VulkanQuadRenderer : public VulkanRendererSystem
 {
 public:
 	VulkanQuadRenderer(const VkDevice &device, const VkPhysicalDevice &physicalDevice) : VulkanRendererSystem(device, physicalDevice) {}
-	
+
 	static VkShaderModule LoadShader(VkDevice device, const std::vector<char>& code);
 	static VkPipelineLayout CreatePipelineLayout(VkDevice device);
 	static VkBuffer AllocateBuffer (VkDevice device, const int size, const VkBufferUsageFlagBits bits);
