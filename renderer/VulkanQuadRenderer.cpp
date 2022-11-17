@@ -5,6 +5,7 @@
 #include "../window/glfw_window.hpp"
 
 #include <vector>
+#include <glm/glm.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 void VulkanQuadRenderer::ShutdownImpl()
@@ -278,15 +279,15 @@ void VulkanQuadRenderer::CreateMeshBuffers(VkCommandBuffer /*uploadCommandBuffer
 {
 	struct Vertex
 	{
-		float position[3];
-		float uv[2];
+		glm::vec2 position;
+		glm::vec3 uv;
 	};
 
-	static const std::vector<Vertex> vertices[4] = {
+	static const std::vector<Vertex> vertices = {
 		{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+		{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+		{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+		{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
 	};
 
 	static const int indices[6] = {
@@ -295,7 +296,7 @@ void VulkanQuadRenderer::CreateMeshBuffers(VkCommandBuffer /*uploadCommandBuffer
 
 	auto memoryHeaps = VulkanQuadRenderer::EnumerateHeaps(this->physicalDevice);
 	this->indexBuffer = VulkanQuadRenderer::AllocateBuffer(this->device, sizeof(indices), VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
-	this->vertexBuffer = VulkanQuadRenderer::AllocateBuffer(this->device, sizeof(vertices), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+	this->vertexBuffer = VulkanQuadRenderer::AllocateBuffer(this->device, sizeof(vertices[0]) * vertices.size(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 	VkMemoryRequirements vertexBufferMemoryRequirements = {};
 	vkGetBufferMemoryRequirements(this->device, this->vertexBuffer, &vertexBufferMemoryRequirements);
 	VkMemoryRequirements indexBufferMemoryRequirements = {};
@@ -313,7 +314,7 @@ void VulkanQuadRenderer::CreateMeshBuffers(VkCommandBuffer /*uploadCommandBuffer
 
 	void* mapping = nullptr;
 	vkMapMemory(this->device, this->deviceMemory, 0, VK_WHOLE_SIZE, 0, &mapping);
-	memcpy(mapping, vertices, sizeof(vertices));
+	memcpy(mapping, vertices.data(), (size_t) sizeof(vertices[0]) * vertices.size());
 
 	memcpy(static_cast<uint8_t*>(mapping) + indexBufferOffset, indices, sizeof(indices));
 
