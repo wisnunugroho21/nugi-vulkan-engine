@@ -1,18 +1,25 @@
+#pragma once
+
 #include <vulkan/vulkan.hpp>
 
 #include "../window/glfw_window.hpp"
+#include <memory>
 
 class VulkanRendererSystem
 {
 protected:
-	std::unique_ptr<GlfwAppWindow> window;
-	bool IsInitialized();
-
-public:
 	VkDevice device = VK_NULL_HANDLE;
 	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 
-	VulkanRendererSystem(VkDevice &device, VkPhysicalDevice &physicalDevice);
+	bool IsInitialized();
+
+public:
+	
+
+	int height;
+	int width;
+
+	VulkanRendererSystem(const VkDevice &device, const VkPhysicalDevice &physicalDevice);
 	~VulkanRendererSystem();
 
 	virtual void InitializeImpl(VkCommandBuffer &commandBuffer, VkRenderPass &renderPass);

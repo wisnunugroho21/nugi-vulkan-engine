@@ -8,4 +8,4 @@ T RoundToNextMultiple(const T a, const T multiple)
     return ((a + multiple - 1) / multiple) * multiple;
 }
 
-std::vector<uint32_t> readFile(const char* filename);
+std::vector<char> readFile(const std::string& filename);

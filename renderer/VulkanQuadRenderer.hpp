@@ -23,10 +23,10 @@ struct MemoryTypeInfo
 class VulkanQuadRenderer : public VulkanRendererSystem
 {
 public:
-	static VkShaderModule LoadShader(VkDevice device, std::vector<uint32_t> shaderContents);
+	static VkShaderModule LoadShader(VkDevice device, const std::vector<char>& code);
 	static VkPipelineLayout CreatePipelineLayout(VkDevice device);
 	static VkBuffer AllocateBuffer (VkDevice device, const int size, const VkBufferUsageFlagBits bits);
-	static VkDeviceMemory AllocateMemory(const std::vector<MemoryTypeInfo>& memoryInfos, VkDevice device, const int size, bool* isHostCoherent = nullptr);
+	static VkDeviceMemory AllocateMemory(const std::vector<MemoryTypeInfo>& memoryInfos, VkDevice device, const int size, bool* isHostCoherent);
 	static std::vector<MemoryTypeInfo> EnumerateHeaps (VkPhysicalDevice device);
 	static VkPipeline CreatePipeline(VkDevice device, VkRenderPass renderPass, VkPipelineLayout layout, VkShaderModule vertexShader, 
 		VkShaderModule fragmentShader, VkExtent2D viewportSize);

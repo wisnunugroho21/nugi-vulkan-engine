@@ -2,26 +2,21 @@
 #include <fstream>
 
 ///////////////////////////////////////////////////////////////////////////////
-std::vector<uint32_t> readFile(const char* filename)
+std::vector<char> readFile(const char* filename)
 {
-    std::vector<uint32_t> result;
-    uint32_t buffer[4096];
+    std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
-    auto handle = std::fopen(filename, "rb");
+	if (!file.is_open()) {
+		throw std::runtime_error("failed to open file!");
+	}
 
-    for (;;)
-    {
-        const auto bytesRead = std::fread(buffer, 1, sizeof(buffer), handle);
+	size_t fileSize = (size_t) file.tellg();
+	std::vector<char> buffer(fileSize);
 
-        result.insert(result.end(), buffer, buffer + bytesRead);
+	file.seekg(0);
+	file.read(buffer.data(), fileSize);
 
-        if (bytesRead < sizeof(buffer))
-        {
-            break;
-        }
-    }
+	file.close();
 
-    std::fclose(handle);
-
-    return result;
+	return buffer;
 }

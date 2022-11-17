@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vulkan/vulkan.h>
 #include <memory>
 
@@ -22,8 +24,8 @@ public:
 	VulkanRenderer& operator= (const VulkanRenderer&) = delete;
 
 	int getQueueSlot() const { return this->currentBackBuffer; }
-	VkDevice getLogicalDevice() const { this->device; }
-	VkPhysicalDevice getPhysicalDevice() const { this->physicalDevice; }
+	VkDevice getLogicalDevice() const { return this->device; }
+	VkPhysicalDevice getPhysicalDevice() const { return this->physicalDevice; }
 
 	void setRendererSystem(std::shared_ptr<VulkanRendererSystem> rendererSystem) { this->rendererSystem = rendererSystem; }
 	void waitIdle() { vkDeviceWaitIdle(this->device); }
@@ -39,13 +41,13 @@ public:
 	static void FindPhysicalDeviceWithGraphicsQueue(const std::vector<VkPhysicalDevice>& physicalDevices, VkPhysicalDevice* outputDevice, int* outputGraphicsQueueIndex);
 	static SwapchainFormatColorSpace GetSwapchainFormatAndColorspace(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, ImportTable* importTable);
 	
-	static VkInstance CreateInstance();
+	static VkInstance CreateInstance(std::shared_ptr<GlfwAppWindow> window);
 	static void CreateDeviceAndQueue(VkInstance instance, VkDevice* outputDevice, VkQueue* outputQueue, int* outputQueueIndex, VkPhysicalDevice* outputPhysicalDevice);
 	static VkRenderPass CreateRenderPass(VkDevice device, VkFormat swapchainFormat);
 	static void CreateFramebuffers(VkDevice device, VkRenderPass renderPass, const int width, const int height, const int count, const VkImageView* imageViews, VkFramebuffer* framebuffers);
 	static void CreateSwapchainImageViews(VkDevice device, VkFormat format, const int count, const VkImage* images, VkImageView* imageViews);
 	static VkSwapchainKHR CreateSwapchain(VkPhysicalDevice physicalDevice, VkDevice device, VkSurfaceKHR surface, const int surfaceWidth, const int surfaceHeight, const int backbufferCount, ImportTable* importTable, VkFormat* swapchainFormat);
-	static VkSurfaceKHR CreateSurface(VkInstance instance, GlfwAppWindow *window);
+	static VkSurfaceKHR CreateSurface(VkInstance instance, std::shared_ptr<GlfwAppWindow> window);
 
 	#ifdef _DEBUG
 	VkDebugReportCallbackEXT SetupDebugCallback(VkInstance instance, VulkanSample::ImportTable* importTable);
@@ -79,8 +81,8 @@ protected:
 	std::shared_ptr<VulkanRendererSystem> rendererSystem;
 
 	// sync object
-	std::vector<VkSemaphore> imageAcquiredSemaphores;
-	std::vector<VkSemaphore> renderingCompleteSemaphores;
+	VkSemaphore imageAcquiredSemaphores[QUEUE_SLOT_COUNT];
+	VkSemaphore renderingCompleteSemaphores[QUEUE_SLOT_COUNT];
 
 private:
     VkCommandPool commandPool;

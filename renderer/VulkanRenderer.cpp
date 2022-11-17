@@ -25,7 +25,7 @@
 #include <iostream>
 #include <algorithm>
 
-#include "Utility.hpp"
+#include "../utility/Utility.hpp"
 
 #include <cassert>
 #include <iostream>
@@ -183,15 +183,15 @@ void VulkanRenderer::FindPhysicalDeviceWithGraphicsQueue(const std::vector<VkPhy
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-VkInstance VulkanRenderer::CreateInstance()
+VkInstance VulkanRenderer::CreateInstance(std::shared_ptr<GlfwAppWindow> window)
 {
     VkInstanceCreateInfo instanceCreateInfo = {};
     instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 
-    std::vector<const char*> instanceExtensions =
-    {
-        "VK_KHR_surface", "VK_KHR_win32_surface"
-    };
+		uint32_t extension_count;
+		auto extensions = window->getRequiredInstanceExtensions(&extension_count);
+
+    std::vector<const char*> instanceExtensions(extensions, extensions + extension_count);
 
 #ifdef _DEBUG
     auto debugInstanceExtensionNames = GetDebugInstanceExtensionNames();
@@ -395,8 +395,7 @@ void VulkanRenderer::CreateFramebuffers(VkDevice device, VkRenderPass renderPass
         framebufferCreateInfo.layers = 1;
         framebufferCreateInfo.renderPass = renderPass;
 
-        vkCreateFramebuffer(device, &framebufferCreateInfo, nullptr,
-            &framebuffers[i]);
+        vkCreateFramebuffer(device, &framebufferCreateInfo, nullptr, &framebuffers[i]);
     }
 }
 
@@ -415,8 +414,7 @@ void VulkanRenderer::CreateSwapchainImageViews(VkDevice device, VkFormat format,
         imageViewCreateInfo.subresourceRange.layerCount = 1;
         imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 
-        vkCreateImageView(device, &imageViewCreateInfo, nullptr,
-            &imageViews[i]);
+        vkCreateImageView(device, &imageViewCreateInfo, nullptr, &imageViews[i]);
     }
 }
 
@@ -497,14 +495,14 @@ VkSwapchainKHR VulkanRenderer::CreateSwapchain(VkPhysicalDevice physicalDevice, 
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-VkSurfaceKHR VulkanRenderer::CreateSurface(VkInstance instance, GlfwAppWindow *window)
+VkSurfaceKHR VulkanRenderer::CreateSurface(VkInstance instance, std::shared_ptr<GlfwAppWindow> window)
 {
   return window->createWindowSurface(instance);
 }
 
 #ifdef _DEBUG
 ///////////////////////////////////////////////////////////////////////////////
-VkDebugReportCallbackEXT SetupDebugCallback(VkInstance instance, VulkanSample::ImportTable* importTable)
+VkDebugReportCallbackEXT VulkanRenderer::SetupDebugCallback(VkInstance instance, VulkanSample::ImportTable* importTable)
 {
     if (importTable->vkCreateDebugReportCallbackEXT)
     {
@@ -527,7 +525,7 @@ VkDebugReportCallbackEXT SetupDebugCallback(VkInstance instance, VulkanSample::I
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void CleanupDebugCallback(VkInstance instance, VkDebugReportCallbackEXT callback,
+void VulkanRenderer::CleanupDebugCallback(VkInstance instance, VkDebugReportCallbackEXT callback,
     VulkanSample::ImportTable* importTable)
 {
     if (importTable->vkDestroyDebugReportCallbackEXT)
@@ -540,27 +538,26 @@ void CleanupDebugCallback(VkInstance instance, VkDebugReportCallbackEXT callback
 ///////////////////////////////////////////////////////////////////////////////
 VulkanRenderer::VulkanRenderer(std::shared_ptr<GlfwAppWindow> window)
 {
-	this->instance = VulkanRenderer::CreateInstance();
+	this->window = window;
+
+	this->instance = VulkanRenderer::CreateInstance(this->window);
 	if (this->instance == VK_NULL_HANDLE) // just bail out if the user does not have a compatible Vulkan driver
 	{
 		return;
 	}
 
-	VkPhysicalDevice physicalDevice;
 	VulkanRenderer::CreateDeviceAndQueue(this->instance, &this->device, &this->queue, &this->queueFamilyIndex, &this->physicalDevice);
-	this->physicalDevice = physicalDevice;
-
 	this->importTable.reset(new ImportTable{this->instance, this->device});
 
 #ifdef _DEBUG
-  this->debugCallback = SetupDebugCallback(instance_, importTable_.get());
+  this->debugCallback = SetupDebugCallback(this->instance, this->importTable_.get());
 #endif
 
-	this->window = window;
-	this->surface = VulkanRenderer::CreateSurface(this->instance, this->window.get());
+	
+	this->surface = VulkanRenderer::CreateSurface(this->instance, this->window);
 
 	VkBool32 presentSupported;
-	vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, 0, this->surface, &presentSupported);
+	vkGetPhysicalDeviceSurfaceSupportKHR(this->physicalDevice, 0, this->surface, &presentSupported);
 	assert(presentSupported);
 
 	VkFormat swapchainFormat = VK_FORMAT_UNDEFINED;
@@ -644,7 +641,7 @@ VulkanRenderer::~VulkanRenderer()
 	vkDestroySurfaceKHR(this->instance, this->surface, nullptr);
 
 #ifdef _DEBUG
-	CleanupDebugCallback(instance_, debugCallback_, importTable_.get());
+	CleanupDebugCallback(this_instance, this->debugCallback, this->importTable.get());
 #endif
 
 	vkDestroyDevice(this->device, nullptr);

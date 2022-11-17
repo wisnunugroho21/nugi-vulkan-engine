@@ -84,7 +84,7 @@ std::vector<MemoryTypeInfo> VulkanQuadRenderer::EnumerateHeaps(VkPhysicalDevice 
 
 ///////////////////////////////////////////////////////////////////////////////
 VkDeviceMemory VulkanQuadRenderer::AllocateMemory(const std::vector<MemoryTypeInfo>& memoryInfos,
-	VkDevice device, const int size, bool* isHostCoherent = nullptr)
+	VkDevice device, const int size, bool* isHostCoherent)
 {
 	// We take the first HOST_VISIBLE memory
 	for(auto& memoryInfo : memoryInfos)
@@ -99,7 +99,7 @@ VkDeviceMemory VulkanQuadRenderer::AllocateMemory(const std::vector<MemoryTypeIn
 			VkDeviceMemory deviceMemory;
 			vkAllocateMemory(device, &memoryAllocateInfo, nullptr, &deviceMemory);
 
-			if(isHostCoherent)
+			if(isHostCoherent != nullptr)
 			{
 				*isHostCoherent = memoryInfo.hostCoherent;
 			}
@@ -138,13 +138,13 @@ VkPipelineLayout VulkanQuadRenderer::CreatePipelineLayout(VkDevice device)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-VkShaderModule VulkanQuadRenderer::LoadShader(VkDevice device, std::vector<uint32_t> shaderContents)
+VkShaderModule VulkanQuadRenderer::LoadShader(VkDevice device, const std::vector<char>& code)
 {
 	VkShaderModuleCreateInfo shaderModuleCreateInfo = {};
 	shaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 
-	shaderModuleCreateInfo.pCode = shaderContents.data();
-	shaderModuleCreateInfo.codeSize = shaderContents.size();
+	shaderModuleCreateInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
+	shaderModuleCreateInfo.codeSize = code.size();
 
 	VkShaderModule result;
 	vkCreateShaderModule(device, &shaderModuleCreateInfo, nullptr, &result);
@@ -302,8 +302,6 @@ void VulkanQuadRenderer::CreateMeshBuffers(VkCommandBuffer /*uploadCommandBuffer
 	vkGetBufferMemoryRequirements(this->device, this->indexBuffer, &indexBufferMemoryRequirements);
 
 	VkDeviceSize bufferSize = vertexBufferMemoryRequirements.size;
-	// We want to place the index buffer behind the vertex buffer. Need to take
-	// the alignment into account to find the next suitable location
 	VkDeviceSize indexBufferOffset = RoundToNextMultiple(bufferSize, indexBufferMemoryRequirements.alignment);
 
 	bufferSize = indexBufferOffset + indexBufferMemoryRequirements.size;
@@ -343,6 +341,6 @@ void VulkanQuadRenderer::CreatePipelineStateObject(const char* vertShaderFilenam
 	this->fragmentShader = LoadShader(this->device, fragCode);
 
 	this->pipelineLayout = VulkanQuadRenderer::CreatePipelineLayout(this->device);
-	VkExtent2D extent = this->window->getExtent();
+	VkExtent2D extent = { static_cast<uint32_t>(this->width), static_cast<uint32_t>(this->height) };
 	this->pipeline = VulkanQuadRenderer::CreatePipeline(this->device, renderPass, this->pipelineLayout, this->vertexShader, this->fragmentShader, extent);
 }
