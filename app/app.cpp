@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <array>
+#include <string>
 
 namespace nugiEngine {
 
@@ -112,7 +113,7 @@ namespace nugiEngine {
 		commandBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
 		if (vkBeginCommandBuffer(this->commandBuffers[imageIndex], &commandBeginInfo) != VK_SUCCESS) {
-			throw std::runtime_error("failed to begin recording command buffer " + imageIndex);
+			throw std::runtime_error("failed to begin recording command buffer " + std::to_string(imageIndex));
 		}
 
 		VkRenderPassBeginInfo renderBeginInfo{};
