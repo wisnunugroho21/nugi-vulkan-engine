@@ -7,9 +7,13 @@
 struct Transform2DObject
 {
 	glm::vec2 translation{};
-	glm::mat2 mat2() { return glm::mat2{1.0f}; }
-};
+	glm::vec2 scale{1.0f, 1.0f};
 
+	glm::mat2 mat2() { 
+		glm::mat2 scaleMat{{scale.x, 0.0f}, {0.0f, scale.y}};
+		return scaleMat;
+	}
+};
 
 namespace nugiEngine {
 	class EngineGameObject

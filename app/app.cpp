@@ -50,6 +50,7 @@ namespace nugiEngine {
 		triangle.model = model;
 		triangle.color = { 0.1f, 0.8f, 0.1f };
 		triangle.transform2d.translation.x = { 0.2f };
+		triangle.transform2d.scale = {2.0f, 0.5f};
 
 		gameObjects.push_back(std::move(triangle));
 	}
