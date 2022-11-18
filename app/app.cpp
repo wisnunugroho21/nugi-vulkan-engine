@@ -183,6 +183,7 @@ namespace nugiEngine {
 			SimplePushConstantData pushConstant{};
 			pushConstant.offset = obj.transform2d.translation;
 			pushConstant.color = obj.color;
+			pushConstant.transform = obj.transform2d.mat2();
 
 			vkCmdPushConstants(
 				commandBuffer, 
