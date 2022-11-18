@@ -182,6 +182,8 @@ namespace nugiEngine {
 		this->pipeline->bind(commandBuffer);
 
 		for (auto& obj : this->gameObjects) {
+			obj.transform2d.rotation = glm::mod(obj.transform2d.rotation + 0.01f, glm::two_pi<float>());
+
 			SimplePushConstantData pushConstant{};
 			pushConstant.offset = obj.transform2d.translation;
 			pushConstant.color = obj.color;
