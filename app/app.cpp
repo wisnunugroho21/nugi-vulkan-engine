@@ -11,13 +11,14 @@
 namespace nugiEngine {
 
 	struct SimplePushConstantData {
+		glm::mat2 transform{1.0f};
 		glm::vec2 offset;
 		alignas(16) glm::vec3 color;
 	};
 	
 
 	EngineApp::EngineApp() {
-		this->loadModels();
+		this->loadObjects();
 		this->createPipelineLayout();
 		this->recreateSwapChain();
 		this->createCommandBuffers();
@@ -36,14 +37,21 @@ namespace nugiEngine {
 		vkDeviceWaitIdle(this->device.device());
 	}
 
-	void EngineApp::loadModels() {
+	void EngineApp::loadObjects() {
 		std::vector<Vertex> vertices {
 			{{ 0.0f, -0.5f }, {1.0f, 0.0f, 0.0f}},
 			{{ 0.5f, 0.5f }, {0.0f, 1.0f, 0.0f}},
 			{{ -0.5f, 0.5f }, {0.0f, 0.0f, 1.0f}}
 		};
 
-		this->model = std::make_unique<EngineModel>(this->device, vertices); 
+		auto model = std::make_shared<EngineModel>(this->device, vertices); 
+
+		auto triangle = EngineGameObject::createGameObject();
+		triangle.model = model;
+		triangle.color = { 0.1f, 0.8f, 0.1f };
+		triangle.transform2d.translation.x = { 0.2f };
+
+		gameObjects.push_back(std::move(triangle));
 	}
 
 	void EngineApp::createPipelineLayout() {
@@ -124,9 +132,6 @@ namespace nugiEngine {
 	}
 
 	void EngineApp::recordCommandBuffer(int imageIndex) {
-		static int frame = 0;
-		frame = (frame + 1) % 100;
-
 		VkCommandBufferBeginInfo commandBeginInfo{};
 		commandBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -162,16 +167,24 @@ namespace nugiEngine {
 		vkCmdSetViewport(this->commandBuffers[imageIndex], 0, 1, &viewport);
 		vkCmdSetScissor(this->commandBuffers[imageIndex], 0, 1, &scissor);
 
-		pipeline->bind(this->commandBuffers[imageIndex]);
-		model->bind(this->commandBuffers[imageIndex]);
+		this->renderGameObjects(commandBuffers[imageIndex]);
 
-		for (int j = 0; j < 4; j++) {
+		vkCmdEndRenderPass(this->commandBuffers[imageIndex]);
+		if (vkEndCommandBuffer(this->commandBuffers[imageIndex]) != VK_SUCCESS) {
+			throw std::runtime_error("failed to record command buffer");
+		}
+	}
+
+	void EngineApp::renderGameObjects(VkCommandBuffer commandBuffer) {
+		this->pipeline->bind(commandBuffer);
+
+		for (auto& obj : this->gameObjects) {
 			SimplePushConstantData pushConstant{};
-			pushConstant.offset = {0.5f + frame * 0.01f, -0.4f + j * 0.25f};
-			pushConstant.color = {0.0f, 0.0f, 0.2f + 0.2f * j};
+			pushConstant.offset = obj.transform2d.translation;
+			pushConstant.color = obj.color;
 
 			vkCmdPushConstants(
-				commandBuffers[imageIndex], 
+				commandBuffer, 
 				pipelineLayout, 
 				VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 				0,
@@ -179,12 +192,8 @@ namespace nugiEngine {
 				&pushConstant
 			);
 
-			model->draw(this->commandBuffers[imageIndex]);
-		}
-
-		vkCmdEndRenderPass(this->commandBuffers[imageIndex]);
-		if (vkEndCommandBuffer(this->commandBuffers[imageIndex]) != VK_SUCCESS) {
-			throw std::runtime_error("failed to record command buffer");
+			obj.model->bind(commandBuffer);
+			obj.model->draw(commandBuffer);
 		}
 	}
     
