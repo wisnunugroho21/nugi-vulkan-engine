@@ -20,9 +20,15 @@ namespace nugiEngine {
 
 			bool isFrameInProgress() const { return this->isFrameStarted; }
 			VkRenderPass getSwapChainRenderPass() { return this->swapChain->getRenderPass(); }
+
 			VkCommandBuffer getCommandBuffer() const { 
 				assert(isFrameStarted && "cannot get command buffer when frame is not in progress");
-				return this->commandBuffers[currentImageIndex];
+				return this->commandBuffers[this->currentFrameIndex];
+			}
+
+			int getFrameIndex() {
+				assert(isFrameStarted && "cannot get frame index when frame is not in progress");
+				return this->currentFrameIndex;
 			}
 
 			VkCommandBuffer beginFrame();
@@ -41,6 +47,7 @@ namespace nugiEngine {
 			std::vector<VkCommandBuffer> commandBuffers;
 
 			uint32_t currentImageIndex = 0;
+			int currentFrameIndex = 0;
 			bool isFrameStarted = false;
 	};
 }

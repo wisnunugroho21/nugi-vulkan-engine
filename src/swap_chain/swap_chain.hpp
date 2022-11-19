@@ -41,6 +41,11 @@ namespace nugiEngine {
     VkResult acquireNextImage(uint32_t *imageIndex);
     VkResult submitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex);
 
+    bool compareSwapFormat(const EngineSwapChain& swapChain) {
+      return swapChain.swapChainDepthFormat == this->swapChainDepthFormat 
+        && swapChain.swapChainImageFormat == this->swapChainImageFormat;
+    }
+
   private:
     void init();
     void createSwapChain();
@@ -56,6 +61,7 @@ namespace nugiEngine {
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
 
     VkFormat swapChainImageFormat;
+    VkFormat swapChainDepthFormat;
     VkExtent2D swapChainExtent;
 
     std::vector<VkFramebuffer> swapChainFramebuffers;

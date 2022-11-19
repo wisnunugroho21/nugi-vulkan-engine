@@ -26,17 +26,18 @@ namespace nugiEngine {
 		if (this->swapChain == nullptr) {
 			this->swapChain = std::make_unique<EngineSwapChain>(this->appDevice, extent);
 		} else {
-			this->swapChain = std::make_unique<EngineSwapChain>(this->appDevice, extent, std::move(this->swapChain));
-			if (this->swapChain->imageCount() != this->commandBuffers.size()) {
-				this->freeCommandBuffers();
-				this->createCommandBuffers();
+			std::shared_ptr<EngineSwapChain> oldSwapChain = std::move(this->swapChain);
+			this->swapChain = std::make_unique<EngineSwapChain>(this->appDevice, extent, oldSwapChain);
+
+			if (oldSwapChain->compareSwapFormat(*this->swapChain.get())) {
+				throw std::runtime_error("Swap chain image or depth has changed");
 			}
 		}
 
 	}
 
 	void EngineRenderer::createCommandBuffers() {
-		this->commandBuffers.resize(this->swapChain->imageCount());
+		this->commandBuffers.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
 
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -97,6 +98,7 @@ namespace nugiEngine {
 		}
 
 		this->isFrameStarted = false;
+		this->currentFrameIndex = (this->currentFrameIndex + 1) % EngineSwapChain::MAX_FRAMES_IN_FLIGHT;
 	}
 
 	void EngineRenderer::beginSwapChainRenderPass(VkCommandBuffer commandBuffer) {
