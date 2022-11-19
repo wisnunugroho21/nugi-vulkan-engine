@@ -21,7 +21,7 @@ namespace nugiEngine {
 			glfwWaitEvents();
 		}
 
-		vkDeviceWaitIdle(this->appDevice.device());
+		vkDeviceWaitIdle(this->appDevice.getLogicalDevice());
 
 		if (this->swapChain == nullptr) {
 			this->swapChain = std::make_unique<EngineSwapChain>(this->appDevice, extent);
@@ -45,13 +45,13 @@ namespace nugiEngine {
 		allocInfo.commandPool = this->appDevice.getCommandPool();
 		allocInfo.commandBufferCount = static_cast<uint32_t>(this->commandBuffers.size());
 
-		if (vkAllocateCommandBuffers(this->appDevice.device(), &allocInfo, this->commandBuffers.data()) != VK_SUCCESS) {
+		if (vkAllocateCommandBuffers(this->appDevice.getLogicalDevice(), &allocInfo, this->commandBuffers.data()) != VK_SUCCESS) {
 			throw std::runtime_error("failed to allocate command buffer");
 		}
 	}
 
 	void EngineRenderer::freeCommandBuffers() {
-		vkFreeCommandBuffers(this->appDevice.device(), this->appDevice.getCommandPool(), static_cast<uint32_t>(this->commandBuffers.size()), this->commandBuffers.data());
+		vkFreeCommandBuffers(this->appDevice.getLogicalDevice(), this->appDevice.getCommandPool(), static_cast<uint32_t>(this->commandBuffers.size()), this->commandBuffers.data());
 		this->commandBuffers.clear();
 	}
 

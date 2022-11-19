@@ -9,8 +9,8 @@ namespace nugiEngine
 	}
 
 	EngineModel::~EngineModel() {
-		vkDestroyBuffer(this->engineDevice.device(), this->vertexBuffer, nullptr);
-		vkFreeMemory(this->engineDevice.device(), this->vertexBufferMemory, nullptr);
+		vkDestroyBuffer(this->engineDevice.getLogicalDevice(), this->vertexBuffer, nullptr);
+		vkFreeMemory(this->engineDevice.getLogicalDevice(), this->vertexBufferMemory, nullptr);
 	}
 
 	void EngineModel::createVertexBuffers(const std::vector<Vertex> vertices) {
@@ -19,17 +19,17 @@ namespace nugiEngine
 		VkDeviceSize bufferSize = sizeof(vertices[0]) * vertextCount;
 
 		this->engineDevice.createBuffer(
-				bufferSize,
-				VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-				this->vertexBuffer,
-				this->vertexBufferMemory
+			bufferSize,
+			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			this->vertexBuffer,
+			this->vertexBufferMemory
 		);
 
 		void* data;
-		vkMapMemory(this->engineDevice.device(), this->vertexBufferMemory, 0, bufferSize, 0, &data);
+		vkMapMemory(this->engineDevice.getLogicalDevice(), this->vertexBufferMemory, 0, bufferSize, 0, &data);
 		memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-		vkUnmapMemory(this->engineDevice.device(), this->vertexBufferMemory);
+		vkUnmapMemory(this->engineDevice.getLogicalDevice(), this->vertexBufferMemory);
 	}
 
 	void EngineModel::bind(VkCommandBuffer commandBuffer) {

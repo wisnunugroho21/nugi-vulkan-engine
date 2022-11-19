@@ -31,7 +31,7 @@ namespace nugiEngine {
 			}
 		}
 
-		vkDeviceWaitIdle(this->device.device());
+		vkDeviceWaitIdle(this->device.getLogicalDevice());
 	}
 
 	void EngineApp::loadObjects() {

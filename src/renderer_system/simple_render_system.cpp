@@ -23,7 +23,7 @@ namespace nugiEngine {
 	}
 
 	EngineSimpleRenderSystem::~EngineSimpleRenderSystem() {
-		vkDestroyPipelineLayout(this->device.device(), this->pipelineLayout, nullptr);
+		vkDestroyPipelineLayout(this->device.getLogicalDevice(), this->pipelineLayout, nullptr);
 	}
 
 	void EngineSimpleRenderSystem::createPipelineLayout() {
@@ -39,7 +39,7 @@ namespace nugiEngine {
 		pipelineLayoutInfo.pushConstantRangeCount = 1;
 		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
-		if (vkCreatePipelineLayout(this->device.device(), &pipelineLayoutInfo, nullptr, &this->pipelineLayout) != VK_SUCCESS) {
+		if (vkCreatePipelineLayout(this->device.getLogicalDevice(), &pipelineLayoutInfo, nullptr, &this->pipelineLayout) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create pipeline layout!");
 		}
 	}

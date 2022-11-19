@@ -17,9 +17,9 @@ namespace nugiEngine {
 	}
 
 	EnginePipeline::~EnginePipeline() {
-		vkDestroyShaderModule(this->engineDevice.device(), this->vertShaderModule, nullptr);
-		vkDestroyShaderModule(this->engineDevice.device(), this->fragShaderModule, nullptr);
-		vkDestroyPipeline(this->engineDevice.device(), this->graphicPipeline, nullptr);
+		vkDestroyShaderModule(this->engineDevice.getLogicalDevice(), this->vertShaderModule, nullptr);
+		vkDestroyShaderModule(this->engineDevice.getLogicalDevice(), this->fragShaderModule, nullptr);
+		vkDestroyPipeline(this->engineDevice.getLogicalDevice(), this->graphicPipeline, nullptr);
 	}
 
 	std::vector<char> EnginePipeline::readFile(const std::string& filepath) {
@@ -105,7 +105,7 @@ namespace nugiEngine {
 		pipelineInfo.basePipelineIndex = -1;
 		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-		if (vkCreateGraphicsPipelines(this->engineDevice.device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &this->graphicPipeline) != VK_SUCCESS) {
+		if (vkCreateGraphicsPipelines(this->engineDevice.getLogicalDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &this->graphicPipeline) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create graphic pipelines");
 		}
 	}
@@ -116,7 +116,7 @@ namespace nugiEngine {
 		createInfo.codeSize = code.size();
 		createInfo.pCode = reinterpret_cast<const u_int32_t*>(code.data());
 
-		if (vkCreateShaderModule(this->engineDevice.device(), &createInfo, nullptr, shaderModule) != VK_SUCCESS) {
+		if (vkCreateShaderModule(this->engineDevice.getLogicalDevice(), &createInfo, nullptr, shaderModule) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create shader module");
 		}
 	}
