@@ -2,7 +2,6 @@
 
 #include "../window/window.hpp"
 #include "../device/device.hpp"
-#include "../pipeline/pipeline.hpp"
 #include "../game_object/game_object.hpp"
 #include "../renderer/renderer.hpp"
 
@@ -26,16 +25,11 @@ namespace nugiEngine {
 
 		private:
 			void loadObjects();
-			void createPipelineLayout();
-			void createPipeline();
-			void renderGameObjects(VkCommandBuffer commandBuffer);
 
 			EngineWindow window{WIDTH, HEIGHT, "Testing vulkan"};
 			EngineDevice device{window};
 			EngineRenderer renderer{window, device};
-			
-			VkPipelineLayout pipelineLayout;
-			std::unique_ptr<EnginePipeline> pipeline;
+
 			std::vector<EngineGameObject> gameObjects;
 	};
 }
