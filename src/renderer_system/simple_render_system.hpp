@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../camera/camera.hpp"
 #include "../device/device.hpp"
 #include "../pipeline/pipeline.hpp"
 #include "../game_object/game_object.hpp"
@@ -17,7 +18,7 @@ namespace nugiEngine {
 			EngineSimpleRenderSystem(const EngineSimpleRenderSystem&) = delete;
 			EngineSimpleRenderSystem& operator = (const EngineSimpleRenderSystem&) = delete;
 
-			void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<EngineGameObject> &gameObjects);
+			void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<EngineGameObject> &gameObjects, const EngineCamera &camera);
 
 		private:
 			void createPipelineLayout();

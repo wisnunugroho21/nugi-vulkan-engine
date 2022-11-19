@@ -19,7 +19,8 @@ namespace nugiEngine {
 			EngineRenderer& operator = (const EngineRenderer&) = delete;
 
 			bool isFrameInProgress() const { return this->isFrameStarted; }
-			VkRenderPass getSwapChainRenderPass() { return this->swapChain->getRenderPass(); }
+			float getAspectRatio() const { return this->swapChain->extentAspectRatio(); }
+			VkRenderPass getSwapChainRenderPass() const { return this->swapChain->getRenderPass(); }
 
 			VkCommandBuffer getCommandBuffer() const { 
 				assert(isFrameStarted && "cannot get command buffer when frame is not in progress");

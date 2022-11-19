@@ -1,5 +1,7 @@
 #include "app.hpp"
+
 #include "../renderer_system/simple_render_system.hpp"
+#include "../camera/camera.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -82,13 +84,18 @@ namespace nugiEngine {
 
 	void EngineApp::run() {
 		EngineSimpleRenderSystem renderSystem{this->device, this->renderer.getSwapChainRenderPass()};
+		EngineCamera camera{};
 
 		while (!this->window.shouldClose()) {
 			this->window.pollEvents();
 
+			auto aspect = this->renderer.getAspectRatio();
+			// camera.setOrthographicProjection(-aspect, aspect, -1, 1, -1, 1);
+			camera.setPerspectiveProjection(50.0f, aspect, 0.1f, 10.0f);
+
 			if (auto commandBuffer = this->renderer.beginFrame()) {
 				this->renderer.beginSwapChainRenderPass(commandBuffer);
-				renderSystem.renderGameObjects(commandBuffer, this->gameObjects);
+				renderSystem.renderGameObjects(commandBuffer, this->gameObjects, camera);
 				this->renderer.endSwapChainRenderPass(commandBuffer);
 				this->renderer.endFrame();
 			}
