@@ -2,7 +2,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "app/app.hpp"
+#include "src/app/app.hpp"
 
 int main(int argc, char const *argv[])
 {
