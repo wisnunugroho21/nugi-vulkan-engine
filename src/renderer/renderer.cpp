@@ -29,7 +29,7 @@ namespace nugiEngine {
 			std::shared_ptr<EngineSwapChain> oldSwapChain = std::move(this->swapChain);
 			this->swapChain = std::make_unique<EngineSwapChain>(this->appDevice, extent, oldSwapChain);
 
-			if (oldSwapChain->compareSwapFormat(*this->swapChain.get())) {
+			if (!oldSwapChain->compareSwapFormat(*this->swapChain.get())) {
 				throw std::runtime_error("Swap chain image or depth has changed");
 			}
 		}
