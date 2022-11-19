@@ -67,6 +67,9 @@
         "bit": "cpp",
         "charconv": "cpp",
         "format": "cpp",
-        "span": "cpp"
+        "span": "cpp",
+        "__tree": "cpp",
+        "set": "cpp",
+        "unordered_set": "cpp"
     }
 }

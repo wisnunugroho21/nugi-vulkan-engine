@@ -3,8 +3,8 @@
 #include "../window/window.hpp"
 #include "../device/device.hpp"
 #include "../pipeline/pipeline.hpp"
-#include "../swap_chain/swap_chain.hpp"
 #include "../game_object/game_object.hpp"
+#include "../renderer/renderer.hpp"
 
 #include <memory>
 #include <vector>
@@ -28,19 +28,14 @@ namespace nugiEngine {
 			void loadObjects();
 			void createPipelineLayout();
 			void createPipeline();
-			void createCommandBuffers();
-			void freeCommandBuffers();
-			void drawFrame();
-			void recreateSwapChain();
-			void recordCommandBuffer(int imageIndex);
 			void renderGameObjects(VkCommandBuffer commandBuffer);
 
 			EngineWindow window{WIDTH, HEIGHT, "Testing vulkan"};
 			EngineDevice device{window};
-			std::unique_ptr<EngineSwapChain> swapChain;
+			EngineRenderer renderer{window, device};
+			
 			VkPipelineLayout pipelineLayout;
 			std::unique_ptr<EnginePipeline> pipeline;
-			std::vector<VkCommandBuffer> commandBuffers;
 			std::vector<EngineGameObject> gameObjects;
 	};
 }
