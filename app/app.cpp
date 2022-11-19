@@ -179,16 +179,11 @@ namespace nugiEngine {
 	}
 
 	void EngineApp::renderGameObjects(VkCommandBuffer commandBuffer) {
-		int i = 0;
-		for (auto& obj : this->gameObjects) {
-			i++;
-			obj.transform2d.rotation = 
-				glm::mod<float>(obj.transform2d.rotation + 0.001f * i, 2.0f * glm::pi<float>());
-		}
-
 		this->pipeline->bind(commandBuffer);
 
 		for (auto& obj : this->gameObjects) {
+			obj.transform2d.rotation = glm::mod(obj.transform2d.rotation + 0.01f, glm::two_pi<float>());
+
 			SimplePushConstantData pushConstant{};
 			pushConstant.offset = obj.transform2d.translation;
 			pushConstant.color = obj.color;
