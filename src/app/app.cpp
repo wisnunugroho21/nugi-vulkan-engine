@@ -86,10 +86,16 @@ namespace nugiEngine {
 		EngineSimpleRenderSystem renderSystem{this->device, this->renderer.getSwapChainRenderPass()};
 
 		EngineCamera camera{};
-		camera.setViewTarget(glm::vec3(-1.0f, -2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 2.5f));
+		int timeF = 0;
 
 		while (!this->window.shouldClose()) {
 			this->window.pollEvents();
+
+			float camx = 2.0f * glm::sin(glm::radians(timeF));
+			float camy = -glm::cos(glm::radians(2.0f * timeF));
+			float camz = -2.0f * glm::cos(glm::radians(timeF));
+
+			camera.setViewTarget(glm::vec3(camx, camy, camz), glm::vec3(0.0f, 0.0f, 2.5f));
 
 			auto aspect = this->renderer.getAspectRatio();
 			// camera.setOrthographicProjection(-aspect, aspect, -1, 1, -1, 1);
