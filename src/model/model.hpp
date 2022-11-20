@@ -18,18 +18,16 @@ namespace nugiEngine
 		static std::vector<VkVertexInputAttributeDescription> getVertexAttributeDescriptions();
 	};
 
+	struct ModelData
+	{
+		std::vector<Vertex> vertices{};
+		std::vector<uint32_t> indices{};
+	};
+
 	class EngineModel
 	{
-	private:
-		EngineDevice &engineDevice;
-		VkBuffer vertexBuffer;
-		VkDeviceMemory vertexBufferMemory;
-		uint32_t vertextCount;
-
-		void createVertexBuffers(const std::vector<Vertex> vertices);
-
 	public:
-		EngineModel(EngineDevice &device, const std::vector<Vertex> vertices);
+		EngineModel(EngineDevice &device, const ModelData &data);
 		~EngineModel();
 
 		EngineModel(const EngineModel&) = delete;
@@ -37,5 +35,20 @@ namespace nugiEngine
 
 		void bind(VkCommandBuffer commandBuffer);
 		void draw(VkCommandBuffer commandBuffer);
+		
+	private:
+		EngineDevice &engineDevice;
+		VkBuffer vertexBuffer;
+		VkDeviceMemory vertexBufferMemory;
+		uint32_t vertextCount;
+
+		VkBuffer indexBuffer;
+		VkDeviceMemory indexBufferMemory;
+		uint32_t indexCount;
+
+		bool hasIndexBuffer = false;
+
+		void createVertexBuffers(const std::vector<Vertex> &vertices);
+		void createIndexBuffer(const std::vector<uint32_t> &indices);
 	};
 } // namespace nugiEngine

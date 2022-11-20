@@ -23,8 +23,9 @@ namespace nugiEngine {
 	
 	// temporary helper function, creates a 1x1x1 cube centered at offset
 	std::unique_ptr<EngineModel> createCubeModel(EngineDevice& device, glm::vec3 offset) {
-		std::vector<Vertex> vertices{
-	
+		ModelData modelData{};
+
+		modelData.vertices = {
 			// left face (white)
 			{{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
 			{{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
@@ -75,13 +76,12 @@ namespace nugiEngine {
 	
 		};
 
-		for (auto& v : vertices) {
+		for (auto& v : modelData.vertices) {
 			v.position += offset;
 		}
 
-		return std::make_unique<EngineModel>(device, vertices);
+		return std::make_unique<EngineModel>(device, modelData);
 	}
-
 
 	EngineApp::EngineApp() {
 		this->loadObjects();

@@ -4,16 +4,22 @@
 
 namespace nugiEngine
 {
-	EngineModel::EngineModel(EngineDevice &device, const std::vector<Vertex> vertices) : engineDevice{device} {
-		this->createVertexBuffers(vertices);
+	EngineModel::EngineModel(EngineDevice &device, const ModelData &datas) : engineDevice{device} {
+		this->createVertexBuffers(datas.vertices);
+		this->createIndexBuffer(datas.indices);
 	}
 
 	EngineModel::~EngineModel() {
 		vkDestroyBuffer(this->engineDevice.getLogicalDevice(), this->vertexBuffer, nullptr);
 		vkFreeMemory(this->engineDevice.getLogicalDevice(), this->vertexBufferMemory, nullptr);
+
+		if (this->hasIndexBuffer) {
+			vkDestroyBuffer(this->engineDevice.getLogicalDevice(), this->indexBuffer, nullptr);
+			vkFreeMemory(this->engineDevice.getLogicalDevice(), this->indexBufferMemory, nullptr);
+		}
 	}
 
-	void EngineModel::createVertexBuffers(const std::vector<Vertex> vertices) {
+	void EngineModel::createVertexBuffers(const std::vector<Vertex> &vertices) {
 		this->vertextCount = static_cast<uint32_t>(vertices.size());
 		assert(vertextCount >= 3 && "Vertex count must be at least 3");
 		VkDeviceSize bufferSize = sizeof(vertices[0]) * vertextCount;
@@ -32,14 +38,45 @@ namespace nugiEngine
 		vkUnmapMemory(this->engineDevice.getLogicalDevice(), this->vertexBufferMemory);
 	}
 
+	void EngineModel::createIndexBuffer(const std::vector<uint32_t> &indices) { 
+		this->indexCount = static_cast<uint32_t>(indices.size());
+		this->hasIndexBuffer = this->indexCount > 0;
+
+		if (!this->hasIndexBuffer) {
+			return;
+		}
+
+		VkDeviceSize bufferSize = sizeof(indices[0]) * this->indexCount;
+		this->engineDevice.createBuffer(
+			bufferSize,
+			VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			this->indexBuffer,
+			this->indexBufferMemory
+		);
+
+		void* data;
+		vkMapMemory(this->engineDevice.getLogicalDevice(), this->indexBufferMemory, 0, bufferSize, 0, &data);
+		memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
+		vkUnmapMemory(this->engineDevice.getLogicalDevice(), this->indexBufferMemory);
+	}
+
 	void EngineModel::bind(VkCommandBuffer commandBuffer) {
 		VkBuffer buffers[] = {this->vertexBuffer};
 		VkDeviceSize offsets[] = {0};
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
+
+		if (this->hasIndexBuffer) {
+			vkCmdBindIndexBuffer(commandBuffer, this->indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+		}
 	}
 
-void EngineModel::draw(VkCommandBuffer commandBuffer) {
-		vkCmdDraw(commandBuffer, this->vertextCount, 1, 0, 0);
+	void EngineModel::draw(VkCommandBuffer commandBuffer) {
+		if (this->hasIndexBuffer) {
+			vkCmdDrawIndexed(commandBuffer, this->indexCount, 1, 0, 0, 0);
+		} else {
+			vkCmdDraw(commandBuffer, this->vertextCount, 1, 0, 0);
+		}
 	}
 
 	std::vector<VkVertexInputBindingDescription> Vertex::getVertexBindingDescriptions() {
