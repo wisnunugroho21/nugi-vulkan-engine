@@ -12,6 +12,10 @@
 #include <array>
 #include <string>
 
+#define OBJ_POST_X 0.0f
+#define OBJ_POST_Y 0.0f
+#define OBJ_POST_Z 2.5f
+
 namespace nugiEngine {
 	
 	// temporary helper function, creates a 1x1x1 cube centered at offset
@@ -92,14 +96,13 @@ namespace nugiEngine {
 		while (!this->window.shouldClose()) {
 			this->window.pollEvents();
 
-			float camx = 2.0f * glm::sin(glm::radians(timeF));
-			float camy = -glm::cos(glm::radians(2.0f * timeF));
-			float camz = -2.0f * glm::cos(glm::radians(timeF));
+			float camx = 2.0f * glm::sin(glm::radians(timeF)) + OBJ_POST_X;
+			float camz = 2.0f * glm::cos(glm::radians(timeF)) + OBJ_POST_Z;
 
-			timeF = glm::mod((timeF + 1.0f), glm::two_pi<float>());
+			timeF = timeF + 0.5f;
 
 			auto aspect = this->renderer.getAspectRatio();
-			// camera.setOrthographicProjection(-aspect, aspect, -1, 1, -1, 1);
+			camera.setViewTarget(glm::vec3(camx, 1.0f, camz), glm::vec3(OBJ_POST_X, OBJ_POST_Y, OBJ_POST_Z));
 			camera.setPerspectiveProjection(glm::radians(50.0f), aspect, 0.1f, 10.0f);
 
 			if (auto commandBuffer = this->renderer.beginFrame()) {
@@ -118,7 +121,7 @@ namespace nugiEngine {
 
 		auto cube = EngineGameObject::createGameObject();
 		cube.model = cubeModel;
-		cube.transform.translation = {0.0f, 0.0f, 2.5f};
+		cube.transform.translation = {OBJ_POST_X, OBJ_POST_Y, OBJ_POST_Z};
 		cube.transform.scale = {0.5f, 0.5f, 0.5f};
 		cube.color = {1.0f, 1.0f, 1.0f};
 
