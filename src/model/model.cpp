@@ -24,18 +24,34 @@ namespace nugiEngine
 		assert(vertextCount >= 3 && "Vertex count must be at least 3");
 		VkDeviceSize bufferSize = sizeof(vertices[0]) * vertextCount;
 
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+
 		this->engineDevice.createBuffer(
 			bufferSize,
-			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			this->vertexBuffer,
-			this->vertexBufferMemory
+			stagingBuffer,
+			stagingBufferMemory
 		);
 
 		void* data;
-		vkMapMemory(this->engineDevice.getLogicalDevice(), this->vertexBufferMemory, 0, bufferSize, 0, &data);
+		vkMapMemory(this->engineDevice.getLogicalDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
 		memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-		vkUnmapMemory(this->engineDevice.getLogicalDevice(), this->vertexBufferMemory);
+		vkUnmapMemory(this->engineDevice.getLogicalDevice(), stagingBufferMemory);
+
+		this->engineDevice.createBuffer(
+			bufferSize,
+			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			this->vertexBuffer,
+			this->vertexBufferMemory
+		);
+		
+		this->engineDevice.copyBuffer(stagingBuffer, this->vertexBuffer, bufferSize);
+
+		vkDestroyBuffer(this->engineDevice.getLogicalDevice(), stagingBuffer, nullptr);
+		vkFreeMemory(this->engineDevice.getLogicalDevice(), stagingBufferMemory, nullptr);
 	}
 
 	void EngineModel::createIndexBuffer(const std::vector<uint32_t> &indices) { 
@@ -47,18 +63,35 @@ namespace nugiEngine
 		}
 
 		VkDeviceSize bufferSize = sizeof(indices[0]) * this->indexCount;
+
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+
 		this->engineDevice.createBuffer(
 			bufferSize,
-			VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			this->indexBuffer,
-			this->indexBufferMemory
+			stagingBuffer,
+			stagingBufferMemory
 		);
 
 		void* data;
-		vkMapMemory(this->engineDevice.getLogicalDevice(), this->indexBufferMemory, 0, bufferSize, 0, &data);
+		vkMapMemory(this->engineDevice.getLogicalDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
 		memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
-		vkUnmapMemory(this->engineDevice.getLogicalDevice(), this->indexBufferMemory);
+		vkUnmapMemory(this->engineDevice.getLogicalDevice(), stagingBufferMemory);
+
+		this->engineDevice.createBuffer(
+			bufferSize,
+			VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			this->indexBuffer,
+			this->indexBufferMemory
+		);
+		
+		this->engineDevice.copyBuffer(stagingBuffer, this->indexBuffer, bufferSize);
+
+		vkDestroyBuffer(this->engineDevice.getLogicalDevice(), stagingBuffer, nullptr);
+		vkFreeMemory(this->engineDevice.getLogicalDevice(), stagingBufferMemory, nullptr);
 	}
 
 	void EngineModel::bind(VkCommandBuffer commandBuffer) {
