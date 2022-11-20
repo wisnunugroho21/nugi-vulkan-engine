@@ -11,6 +11,8 @@
 #include <stdexcept>
 #include <array>
 #include <string>
+#include <chrono>
+#include <iostream>
 
 #define OBJ_POST_X 0.0f
 #define OBJ_POST_Y 0.0f
@@ -88,16 +90,21 @@ namespace nugiEngine {
 
 	void EngineApp::run() {
 		EngineSimpleRenderSystem renderSystem{this->device, this->renderer.getSwapChainRenderPass()};
-
 		EngineCamera camera{};
+
+		auto currentTime = std::chrono::high_resolution_clock::now();
 		float timeF = 0.0f;
-		// camera.setViewTarget(glm::vec3(-1.0f, -2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 2.5f));
 
 		while (!this->window.shouldClose()) {
 			this->window.pollEvents();
 
-			float camx = 2.0f * glm::sin(glm::radians(timeF)) + OBJ_POST_X;
-			float camz = 2.0f * glm::cos(glm::radians(timeF)) + OBJ_POST_Z;
+			auto newTime = std::chrono::high_resolution_clock::now();
+			float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
+
+			std::cerr << "frametime: " << frameTime << '\n';
+
+			float camx = 2.0f * frameTime * glm::sin(glm::radians(timeF)) + OBJ_POST_X;
+			float camz = 2.0f * frameTime * glm::cos(glm::radians(timeF)) + OBJ_POST_Z;
 
 			timeF = timeF + 0.5f;
 
