@@ -63,13 +63,15 @@ namespace nugiEngine {
 	void EngineSimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<EngineGameObject> &gameObjects, const EngineCamera &camera) {
 		this->pipeline->bind(commandBuffer);
 
+		auto projectionView = camera.getProjectionMatrix() * camera.getViewMatrix();
+
 		for (auto& obj : gameObjects) {
 			obj.transform.rotation.y = glm::mod(obj.transform.rotation.y + 0.01f, glm::two_pi<float>());
 			obj.transform.rotation.x = glm::mod(obj.transform.rotation.x + 0.005f, glm::two_pi<float>());
 
 			SimplePushConstantData pushConstant{};
 			pushConstant.color = obj.color;
-			pushConstant.transform = camera.getProjectionMatrix() * obj.transform.mat4();
+			pushConstant.transform = projectionView * obj.transform.mat4();
 
 			vkCmdPushConstants(
 				commandBuffer, 
