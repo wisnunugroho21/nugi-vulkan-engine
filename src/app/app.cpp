@@ -100,13 +100,14 @@ namespace nugiEngine {
 
 			auto newTime = std::chrono::high_resolution_clock::now();
 			float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
+			currentTime = newTime;
 
-			std::cerr << "frametime: " << frameTime << '\n';
+			std::cerr << "FPS: " << (1.0f / frameTime) << '\n';
 
-			float camx = 2.0f * frameTime * glm::sin(glm::radians(timeF)) + OBJ_POST_X;
-			float camz = 2.0f * frameTime * glm::cos(glm::radians(timeF)) + OBJ_POST_Z;
+			float camx = 2.0f * glm::sin(glm::radians(timeF)) + OBJ_POST_X;
+			float camz = 2.0f * glm::cos(glm::radians(timeF)) + OBJ_POST_Z;
 
-			timeF = timeF + 0.5f;
+			timeF = timeF + (10.0f * frameTime);
 
 			auto aspect = this->renderer.getAspectRatio();
 			camera.setViewTarget(glm::vec3(camx, 1.0f, camz), glm::vec3(OBJ_POST_X, OBJ_POST_Y, OBJ_POST_Z));
