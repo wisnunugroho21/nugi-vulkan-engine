@@ -23,6 +23,7 @@ namespace nugiEngine {
 			VkExtent2D getExtent();
 			void resetResizedFlag();
 			bool wasResized();
+			GLFWwindow* getWindow() const { return this->window; } 
 
 		private:
 			int width;

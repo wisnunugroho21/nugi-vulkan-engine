@@ -2,6 +2,7 @@
 
 #include "../renderer_system/simple_render_system.hpp"
 #include "../camera/camera.hpp"
+#include "../keyboard_controller/keyboard_controller.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -92,9 +93,10 @@ namespace nugiEngine {
 		EngineSimpleRenderSystem renderSystem{this->device, this->renderer.getSwapChainRenderPass()};
 		EngineCamera camera{};
 
-		auto currentTime = std::chrono::high_resolution_clock::now();
-		float timeF = 0.0f;
+		auto viewObject = EngineGameObject::createGameObject();
+		EngineKeyboardController keyboardController{};
 
+		auto currentTime = std::chrono::high_resolution_clock::now();
 		while (!this->window.shouldClose()) {
 			this->window.pollEvents();
 
@@ -104,13 +106,10 @@ namespace nugiEngine {
 
 			std::cerr << "FPS: " << (1.0f / frameTime) << '\n';
 
-			float camx = 2.0f * glm::sin(glm::radians(timeF)) + OBJ_POST_X;
-			float camz = 2.0f * glm::cos(glm::radians(timeF)) + OBJ_POST_Z;
-
-			timeF = timeF + (10.0f * frameTime);
+			keyboardController.moveInPlaceXZ(this->window.getWindow(), frameTime, viewObject);
+			camera.setViewYXZ(viewObject.transform.translation, viewObject.transform.rotation);
 
 			auto aspect = this->renderer.getAspectRatio();
-			camera.setViewTarget(glm::vec3(camx, 1.0f, camz), glm::vec3(OBJ_POST_X, OBJ_POST_Y, OBJ_POST_Z));
 			camera.setPerspectiveProjection(glm::radians(50.0f), aspect, 0.1f, 10.0f);
 
 			if (auto commandBuffer = this->renderer.beginFrame()) {
