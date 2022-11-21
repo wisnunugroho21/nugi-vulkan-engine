@@ -22,7 +22,7 @@ namespace nugiEngine {
 			void createWindowSurface(VkInstance instance, VkSurfaceKHR* surface);
 			VkExtent2D getExtent();
 			void resetResizedFlag();
-			bool wasResized();
+			bool wasResized() { return this->frameBufferResized; }
 			GLFWwindow* getWindow() const { return this->window; } 
 
 		private:

@@ -90,7 +90,7 @@ namespace nugiEngine {
 		}
 
 		auto result = this->swapChain->submitCommandBuffers(&commandBuffer, &this->currentImageIndex);
-		if (result != VK_ERROR_OUT_OF_DATE_KHR || result != VK_SUBOPTIMAL_KHR || this->appWindow.wasResized()) {
+		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || this->appWindow.wasResized()) {
 			this->appWindow.resetResizedFlag();
 			this->recreateSwapChain();
 		} else if (result != VK_SUCCESS) {
