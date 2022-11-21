@@ -29,7 +29,7 @@ namespace nugiEngine
 
 		std::cout << "Vertex Count: " << modelData.vertices.size() << '\n';
 
-		return std::make_unique<EngineModel>(device, filePath);
+		return std::make_unique<EngineModel>(device, modelData);
 	}
 
 	void EngineModel::createVertexBuffers(const std::vector<Vertex> &vertices) {
@@ -193,8 +193,8 @@ namespace nugiEngine
 
 				if (index.texcoord_index >= 0) {
 					vertex.uv = {
-						attrib.texcoords[3 * index.texcoord_index + 0],
-						attrib.texcoords[3 * index.texcoord_index + 1]
+						attrib.texcoords[2 * index.texcoord_index + 0],
+						attrib.texcoords[2 * index.texcoord_index + 1]
 					};
 				}
 
