@@ -42,8 +42,6 @@ namespace nugiEngine {
 		ModelData modelData;
 		modelData.loadModel(filePath);
 
-		std::cout << "Vertex Count: " << modelData.vertices.size() << '\n';
-
 		return std::make_unique<EngineModel>(device, modelData);
 	}
 

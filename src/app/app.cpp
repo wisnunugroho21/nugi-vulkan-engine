@@ -20,9 +20,6 @@
 #define OBJ_POST_Z 2.5f
 
 namespace nugiEngine {
-	
-	
-
 	EngineApp::EngineApp() {
 		this->loadObjects();
 	}
