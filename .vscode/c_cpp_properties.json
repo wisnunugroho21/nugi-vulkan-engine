@@ -1,0 +1,20 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "macFrameworkPath": [
+                "/System/Library/Frameworks",
+                "/Library/Frameworks"
+            ],
+            "includePath": [
+              "${workspaceFolder}/**",
+              "/Users/nugrohodewantoro/Documents/Libraries"
+            ],
+            "intelliSenseMode": "macos-clang-arm64",
+            "compilerPath": "/usr/bin/clang++",
+            "cStandard": "c17",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}

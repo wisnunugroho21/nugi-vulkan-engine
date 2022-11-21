@@ -1,6 +1,10 @@
 #include "model.hpp"
 
 #include <cstring>
+#include <iostream>
+
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tiny_obj/tiny_obj_loader.h>
 
 namespace nugiEngine
 {
@@ -17,6 +21,15 @@ namespace nugiEngine
 			vkDestroyBuffer(this->engineDevice.getLogicalDevice(), this->indexBuffer, nullptr);
 			vkFreeMemory(this->engineDevice.getLogicalDevice(), this->indexBufferMemory, nullptr);
 		}
+	}
+
+	std::unique_ptr<EngineModel> EngineModel::createModelFromFile(EngineDevice &device, const std::string &filePath) {
+		ModelData modelData;
+		modelData.loadModel(filePath);
+
+		std::cout << "Vertex Count: " << modelData.vertices.size() << '\n';
+
+		return std::make_unique<EngineModel>(device, filePath);
 	}
 
 	void EngineModel::createVertexBuffers(const std::vector<Vertex> &vertices) {
@@ -132,6 +145,62 @@ namespace nugiEngine
 		attributeDescription[1].format = VK_FORMAT_R32G32B32_SFLOAT;
 		attributeDescription[1].offset = offsetof(Vertex, color);
 		return attributeDescription;
+	}
+
+	void ModelData::loadModel(const std::string &filePath) {
+		tinyobj::attrib_t attrib;
+		std::vector<tinyobj::shape_t> shapes;
+		std::vector<tinyobj::material_t> materials;
+		std::string warn, err;
+
+		if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filePath.c_str())) {
+			throw std::runtime_error(warn + err);
+		}
+
+		this->vertices.clear();
+		this->indices.clear();
+
+		for (const auto &shape: shapes) {
+			for (const auto &index: shape.mesh.indices) {
+				Vertex vertex{};
+
+				if (index.vertex_index >= 0) {
+					vertex.position = {
+						attrib.vertices[3 * index.vertex_index + 0],
+						attrib.vertices[3 * index.vertex_index + 1],
+						attrib.vertices[3 * index.vertex_index + 2]
+					};
+
+					auto colorIndex = 3 * index.vertex_index + 2;
+					if (colorIndex < attrib.colors.size()) {
+						vertex.color = {
+							attrib.colors[colorIndex - 2],
+							attrib.colors[colorIndex - 1],
+							attrib.colors[colorIndex - 0]
+						};
+					} else {
+						vertex.color = {1.0f, 1.0f, 1.0f};
+					}
+				}
+
+				if (index.normal_index >= 0) {
+					vertex.normal = {
+						attrib.normals[3 * index.normal_index + 0],
+						attrib.normals[3 * index.normal_index + 1],
+						attrib.normals[3 * index.normal_index + 2]
+					};
+				}
+
+				if (index.texcoord_index >= 0) {
+					vertex.uv = {
+						attrib.texcoords[3 * index.texcoord_index + 0],
+						attrib.texcoords[3 * index.texcoord_index + 1]
+					};
+				}
+
+				this->vertices.push_back(vertex);
+			}
+		}
 	}
     
 } // namespace nugiEngine
