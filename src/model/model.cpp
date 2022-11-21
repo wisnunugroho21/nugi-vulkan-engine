@@ -1,13 +1,28 @@
 #include "model.hpp"
+#include "../utils/utils.hpp"
 
 #include <cstring>
 #include <iostream>
+#include <unordered_map>
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj/tiny_obj_loader.h>
 
-namespace nugiEngine
-{
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
+
+namespace std {
+	template<>
+	struct hash<nugiEngine::Vertex> {
+		size_t operator () (nugiEngine::Vertex const &vertex) const {
+			size_t seed = 0;
+			nugiEngine::hashCombine(seed, vertex.position, vertex.color, vertex.normal, vertex.uv);
+			return seed;
+		}
+	};
+} // namespace std
+
+namespace nugiEngine {
 	EngineModel::EngineModel(EngineDevice &device, const ModelData &datas) : engineDevice{device} {
 		this->createVertexBuffers(datas.vertices);
 		this->createIndexBuffer(datas.indices);
@@ -160,6 +175,7 @@ namespace nugiEngine
 		this->vertices.clear();
 		this->indices.clear();
 
+		std::unordered_map<Vertex, uint32_t> uniqueVertices{};
 		for (const auto &shape: shapes) {
 			for (const auto &index: shape.mesh.indices) {
 				Vertex vertex{};
@@ -198,7 +214,12 @@ namespace nugiEngine
 					};
 				}
 
-				this->vertices.push_back(vertex);
+				if (uniqueVertices.count(vertex) == 0) {
+					uniqueVertices[vertex] = static_cast<uint32_t>(this->vertices.size());
+					this->vertices.push_back(vertex);
+				}
+
+				this->indices.push_back(uniqueVertices[vertex]);
 			}
 		}
 	}

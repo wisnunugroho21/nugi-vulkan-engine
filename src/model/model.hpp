@@ -19,6 +19,11 @@ namespace nugiEngine
 
 		static std::vector<VkVertexInputBindingDescription> getVertexBindingDescriptions();
 		static std::vector<VkVertexInputAttributeDescription> getVertexAttributeDescriptions();
+
+		bool operator == (const Vertex &other) const {
+			return this->position == other.position && this->color == other.color && this->normal == other.normal 
+				&& this->uv == other.uv;
+		}
 	};
 
 	struct ModelData
