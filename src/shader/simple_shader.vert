@@ -12,12 +12,14 @@ layout(push_constant) uniform Push {
     mat4 modelMatrix;
 } push;
 
-const vec3 DIRECTION_TO_LIGHT = normalize(vec3(1.0, -3.0, -1.0))
+const vec3 DIRECTION_TO_LIGHT = normalize(vec3(1.0, -3.0, -1.0));
+const float AMBIENT = 0.02;
 
 void main() {
     gl_Position = push.transform * vec4(position, 1.0);
 
     vec3 normalWorldSpace = normalize(mat3(push.modelMatrix) * normal);
-    float lightIntensity = max(dot(normalWorldSpace, DIRECTION_TO_LIGHT), 0) ;
+    float lightIntensity = AMBIENT + max(dot(normalWorldSpace, DIRECTION_TO_LIGHT), 0) ;
+
     fragColor = lightIntensity * inColor;
 }

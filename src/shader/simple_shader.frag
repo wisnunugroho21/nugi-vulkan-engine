@@ -10,5 +10,5 @@ layout(push_constant) uniform Push {
 } push;
 
 void main() {
-    outColor = vec4(push.color * fragColor, 1.0);
+    outColor = vec4(fragColor, 1.0);
 }
