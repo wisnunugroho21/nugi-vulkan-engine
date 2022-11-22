@@ -6,7 +6,7 @@
 #include <unordered_map>
 
 #define TINYOBJLOADER_IMPLEMENTATION
-#include <tiny_obj/tiny_obj_loader.h>
+#include <tiny_obj_loader.h>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
@@ -185,16 +185,11 @@ namespace nugiEngine {
 						attrib.vertices[3 * index.vertex_index + 2]
 					};
 
-					auto colorIndex = 3 * index.vertex_index + 2;
-					if (colorIndex < attrib.colors.size()) {
-						vertex.color = {
-							attrib.colors[colorIndex - 2],
-							attrib.colors[colorIndex - 1],
-							attrib.colors[colorIndex - 0]
-						};
-					} else {
-						vertex.color = {1.0f, 1.0f, 1.0f};
-					}
+					vertex.color = {
+						attrib.colors[3 * index.vertex_index + 0],
+						attrib.colors[3 * index.vertex_index + 1],
+						attrib.colors[3 * index.vertex_index + 2]
+					};
 				}
 
 				if (index.normal_index >= 0) {
