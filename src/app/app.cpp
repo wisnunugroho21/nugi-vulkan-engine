@@ -69,6 +69,6 @@ namespace nugiEngine {
 		gameObj.transform.scale = glm::vec3{3.0f};
 		gameObj.color = {1.0f, 1.0f, 1.0f};
 
-		gameObjects.push_back(std::move(gameObj)); 
+		this->gameObjects.push_back(std::move(gameObj)); 
 	}
 }

@@ -13,7 +13,7 @@ namespace nugiEngine {
 
 	struct SimplePushConstantData {
 		glm::mat4 transform{1.0f};
-		glm::mat4 modelMatrix{1.0f};
+		glm::mat4 normalMatrix{1.0f};
 	};
 
 	EngineSimpleRenderSystem::EngineSimpleRenderSystem(EngineDevice& device, VkRenderPass renderPass) : device{device} {
@@ -70,7 +70,7 @@ namespace nugiEngine {
 			auto modelMatrix = obj.transform.mat4();
 
 			pushConstant.transform = projectionView * modelMatrix;
-			pushConstant.modelMatrix = modelMatrix;
+			pushConstant.normalMatrix = obj.transform.normalMatrix();
 
 			vkCmdPushConstants(
 				commandBuffer, 
