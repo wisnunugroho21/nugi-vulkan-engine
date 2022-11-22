@@ -1,5 +1,5 @@
 CFLAGS = -std=c++17 -O2
-LDFLAGS = -lglfw -lvulkan -ldl -lpthread
+LDFLAGS = -lglfw -lvulkan -ldl -lpthread -l/Users/nugrohodewantoro/Documents/Libraries/tiny_obj
 
 Engine: *.cpp */*/*.cpp */*/*.hpp
 	g++ $(CFLAGS) -o bin/engine.out *.cpp */*/*.cpp $(LDFLAGS)

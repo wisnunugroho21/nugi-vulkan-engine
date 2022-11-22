@@ -13,7 +13,7 @@ namespace nugiEngine {
 
 	struct SimplePushConstantData {
 		glm::mat4 transform{1.0f};
-		alignas(16) glm::vec3 color;
+		glm::mat4 modelMatrix{1.0f};
 	};
 
 	EngineSimpleRenderSystem::EngineSimpleRenderSystem(EngineDevice& device, VkRenderPass renderPass) : device{device} {
@@ -67,8 +67,10 @@ namespace nugiEngine {
 
 		for (auto& obj : gameObjects) {
 			SimplePushConstantData pushConstant{};
-			pushConstant.color = obj.color;
-			pushConstant.transform = projectionView * obj.transform.mat4();
+			auto modelMatrix = obj.transform.mat4();
+
+			pushConstant.transform = projectionView * modelMatrix;
+			pushConstant.modelMatrix = modelMatrix;
 
 			vkCmdPushConstants(
 				commandBuffer, 

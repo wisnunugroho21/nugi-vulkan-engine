@@ -7,8 +7,8 @@
                 "/Library/Frameworks"
             ],
             "includePath": [
-              "${workspaceFolder}/**",
-              "/Users/nugrohodewantoro/Documents/Libraries"
+                "${workspaceFolder}/**",
+                "/Users/nugrohodewantoro/Documents/Libraries/tiny_obj"
             ],
             "intelliSenseMode": "macos-clang-arm64",
             "compilerPath": "/usr/bin/clang++",
