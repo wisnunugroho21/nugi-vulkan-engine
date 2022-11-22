@@ -28,15 +28,7 @@ namespace nugiEngine {
 		this->createIndexBuffer(datas.indices);
 	}
 
-	EngineModel::~EngineModel() {
-		vkDestroyBuffer(this->engineDevice.getLogicalDevice(), this->vertexBuffer, nullptr);
-		vkFreeMemory(this->engineDevice.getLogicalDevice(), this->vertexBufferMemory, nullptr);
-
-		if (this->hasIndexBuffer) {
-			vkDestroyBuffer(this->engineDevice.getLogicalDevice(), this->indexBuffer, nullptr);
-			vkFreeMemory(this->engineDevice.getLogicalDevice(), this->indexBufferMemory, nullptr);
-		}
-	}
+	EngineModel::~EngineModel() {}
 
 	std::unique_ptr<EngineModel> EngineModel::createModelFromFile(EngineDevice &device, const std::string &filePath) {
 		ModelData modelData;
@@ -48,36 +40,30 @@ namespace nugiEngine {
 	void EngineModel::createVertexBuffers(const std::vector<Vertex> &vertices) {
 		this->vertextCount = static_cast<uint32_t>(vertices.size());
 		assert(vertextCount >= 3 && "Vertex count must be at least 3");
+
 		VkDeviceSize bufferSize = sizeof(vertices[0]) * vertextCount;
+		uint32_t vertexSize = sizeof(vertices[0]);
 
-		VkBuffer stagingBuffer;
-		VkDeviceMemory stagingBufferMemory;
-
-		this->engineDevice.createBuffer(
-			bufferSize,
+		EngineBuffer stagingBuffer {
+			this->engineDevice,
+			vertexSize,
+			this->vertextCount,
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			stagingBuffer,
-			stagingBufferMemory
-		);
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+		};
 
-		void* data;
-		vkMapMemory(this->engineDevice.getLogicalDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
-		memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-		vkUnmapMemory(this->engineDevice.getLogicalDevice(), stagingBufferMemory);
+		stagingBuffer.map();
+		stagingBuffer.writeToBuffer((void *) vertices.data());
 
-		this->engineDevice.createBuffer(
-			bufferSize,
+		this->vertexBuffer = std::make_unique<EngineBuffer>(
+			this->engineDevice,
+			vertexSize,
+			this->vertextCount,
 			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-			this->vertexBuffer,
-			this->vertexBufferMemory
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 		);
 		
-		this->engineDevice.copyBuffer(stagingBuffer, this->vertexBuffer, bufferSize);
-
-		vkDestroyBuffer(this->engineDevice.getLogicalDevice(), stagingBuffer, nullptr);
-		vkFreeMemory(this->engineDevice.getLogicalDevice(), stagingBufferMemory, nullptr);
+		this->engineDevice.copyBuffer(stagingBuffer.getBuffer(), this->vertexBuffer->getBuffer(), bufferSize);
 	}
 
 	void EngineModel::createIndexBuffer(const std::vector<uint32_t> &indices) { 
@@ -89,44 +75,37 @@ namespace nugiEngine {
 		}
 
 		VkDeviceSize bufferSize = sizeof(indices[0]) * this->indexCount;
+		uint32_t indexSize = sizeof(indices[0]);
 
-		VkBuffer stagingBuffer;
-		VkDeviceMemory stagingBufferMemory;
-
-		this->engineDevice.createBuffer(
-			bufferSize,
+		EngineBuffer stagingBuffer {
+			this->engineDevice,
+			indexSize,
+			this->indexCount,
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			stagingBuffer,
-			stagingBufferMemory
-		);
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+		};
 
-		void* data;
-		vkMapMemory(this->engineDevice.getLogicalDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
-		memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
-		vkUnmapMemory(this->engineDevice.getLogicalDevice(), stagingBufferMemory);
+		stagingBuffer.map();
+		stagingBuffer.writeToBuffer((void *) indices.data());
 
-		this->engineDevice.createBuffer(
-			bufferSize,
+		this->indexBuffer = std::make_unique<EngineBuffer>(
+			this->engineDevice,
+			indexSize,
+			this->indexCount,
 			VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-			this->indexBuffer,
-			this->indexBufferMemory
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 		);
-		
-		this->engineDevice.copyBuffer(stagingBuffer, this->indexBuffer, bufferSize);
 
-		vkDestroyBuffer(this->engineDevice.getLogicalDevice(), stagingBuffer, nullptr);
-		vkFreeMemory(this->engineDevice.getLogicalDevice(), stagingBufferMemory, nullptr);
+		this->engineDevice.copyBuffer(stagingBuffer.getBuffer(), this->indexBuffer->getBuffer(), bufferSize);
 	}
 
 	void EngineModel::bind(VkCommandBuffer commandBuffer) {
-		VkBuffer buffers[] = {this->vertexBuffer};
+		VkBuffer buffers[] = {this->vertexBuffer->getBuffer()};
 		VkDeviceSize offsets[] = {0};
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
 
 		if (this->hasIndexBuffer) {
-			vkCmdBindIndexBuffer(commandBuffer, this->indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+			vkCmdBindIndexBuffer(commandBuffer, this->indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
 		}
 	}
 

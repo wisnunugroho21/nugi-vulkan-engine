@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../device/device.hpp"
+#include "../buffer/buffer.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -50,12 +51,10 @@ namespace nugiEngine
 		
 	private:
 		EngineDevice &engineDevice;
-		VkBuffer vertexBuffer;
-		VkDeviceMemory vertexBufferMemory;
+		std::unique_ptr<EngineBuffer> vertexBuffer;
 		uint32_t vertextCount;
 
-		VkBuffer indexBuffer;
-		VkDeviceMemory indexBufferMemory;
+		std::unique_ptr<EngineBuffer> indexBuffer;
 		uint32_t indexCount;
 
 		bool hasIndexBuffer = false;
