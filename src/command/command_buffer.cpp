@@ -72,4 +72,17 @@ namespace nugiEngine {
 			std::cerr << "Failed to start recording buffer" << '\n';
 		}
 	}
+
+	void EngineCommandBuffer::submitCommands(VkQueue queue, int index = -1) {
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &this->commandBuffers[index];
+
+		if (vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS) {
+			std::cerr << "Failed to submit buffer" << '\n';
+		}
+
+		vkQueueWaitIdle(queue);
+	}
 } // namespace nugiEngine

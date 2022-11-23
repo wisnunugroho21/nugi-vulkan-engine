@@ -20,6 +20,7 @@ namespace nugiEngine
       void beginSingleTimeCommands(int index = -1);
       void beginReccuringCommands(int index = -1);
       void endCommands(int index = -1);
+      void submitCommands(VkQueue queue, int index = -1);
 
       VkCommandBuffer getBuffer(int index) { return this->commandBuffers[index]; }
 
