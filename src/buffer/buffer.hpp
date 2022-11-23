@@ -15,6 +15,9 @@ class EngineBuffer {
  
   EngineBuffer(const EngineBuffer&) = delete;
   EngineBuffer& operator=(const EngineBuffer&) = delete;
+
+  void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
+  void copyBuffer(VkBuffer srcBuffer, VkDeviceSize size);
  
   VkResult map(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
   void unmap();
@@ -42,6 +45,7 @@ class EngineBuffer {
   static VkDeviceSize getAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment);
  
   EngineDevice& engineDevice;
+
   void* mapped = nullptr;
   VkBuffer buffer = VK_NULL_HANDLE;
   VkDeviceMemory memory = VK_NULL_HANDLE;
