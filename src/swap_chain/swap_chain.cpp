@@ -1,4 +1,5 @@
 #include "swap_chain.hpp"
+#include "../command/command_buffer.hpp"
 
 // std
 #include <array>
@@ -72,12 +73,13 @@ VkResult EngineSwapChain::acquireNextImage(uint32_t *imageIndex) {
   return result;
 }
 
-VkResult EngineSwapChain::submitCommandBuffers(
-    const VkCommandBuffer *buffers, uint32_t *imageIndex) {
+VkResult EngineSwapChain::submitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex) {
   if (imagesInFlight[*imageIndex] != VK_NULL_HANDLE) {
     vkWaitForFences(device.getLogicalDevice(), 1, &imagesInFlight[*imageIndex], VK_TRUE, UINT64_MAX);
   }
+
   imagesInFlight[*imageIndex] = inFlightFences[currentFrame];
+  vkResetFences(device.getLogicalDevice(), 1, &inFlightFences[currentFrame]);
 
   VkSubmitInfo submitInfo = {};
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -94,8 +96,7 @@ VkResult EngineSwapChain::submitCommandBuffers(
   VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
   submitInfo.signalSemaphoreCount = 1;
   submitInfo.pSignalSemaphores = signalSemaphores;
-
-  vkResetFences(device.getLogicalDevice(), 1, &inFlightFences[currentFrame]);
+  
   if (vkQueueSubmit(device.getGraphicsQueue(), 1, &submitInfo, inFlightFences[currentFrame]) !=
       VK_SUCCESS) {
     throw std::runtime_error("failed to submit draw command buffer!");

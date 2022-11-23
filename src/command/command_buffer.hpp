@@ -14,19 +14,21 @@ namespace nugiEngine
       EngineCommandBuffer(const EngineCommandBuffer&) = delete;
       EngineCommandBuffer& operator=(const EngineCommandBuffer&) = delete;
 
-      void createCommandBuffers(uint32_t size);
-      void freeCommandBuffers();
+      void beginSingleTimeCommands(int32_t index = -1);
+      void beginReccuringCommands(int32_t index = -1);
+      void endCommands(int32_t index = -1);
+      void submitCommands(VkQueue queue, int32_t index = -1, std::vector<VkSemaphore> *waitSemaphores = nullptr, 
+        std::vector<VkPipelineStageFlags> *waitStages = nullptr, std::vector<VkSemaphore> *signalSemaphores = nullptr, 
+        VkFence fence = VK_NULL_HANDLE);
 
-      void beginSingleTimeCommands(int index = -1);
-      void beginReccuringCommands(int index = -1);
-      void endCommands(int index = -1);
-      void submitCommands(VkQueue queue, int index = -1);
-
-      VkCommandBuffer getBuffer(int index) { return this->commandBuffers[index]; }
+      VkCommandBuffer getBuffer(int32_t index = -1);
 
     private:
       EngineDevice& device;
       std::vector<VkCommandBuffer> commandBuffers;
+
+      void createCommandBuffers(uint32_t size);
+      void freeCommandBuffers();
   };
   
 } // namespace nugiEngine

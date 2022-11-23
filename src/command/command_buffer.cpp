@@ -36,13 +36,13 @@ namespace nugiEngine {
 		this->commandBuffers.clear();
 	}
 
-	void EngineCommandBuffer::beginSingleTimeCommands(int index = -1) {
+	void EngineCommandBuffer::beginSingleTimeCommands(int32_t index) {
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
 		if (index == -1) {
-			index = this->commandBuffers.size() - 1;
+			index = static_cast<int32_t>(this->commandBuffers.size()) - 1;
 		}
 
 		if (vkBeginCommandBuffer(this->commandBuffers[index], &beginInfo) != VK_SUCCESS) {
@@ -50,12 +50,12 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineCommandBuffer::beginReccuringCommands(int index = -1) {
+	void EngineCommandBuffer::beginReccuringCommands(int32_t index) {
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
 		if (index == -1) {
-			index = this->commandBuffers.size() - 1;
+			index = static_cast<int32_t>(this->commandBuffers.size()) - 1;
 		}
 
 		if (vkBeginCommandBuffer(this->commandBuffers[index], &beginInfo) != VK_SUCCESS) {
@@ -63,9 +63,9 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineCommandBuffer::endCommands(int index = -1) {
+	void EngineCommandBuffer::endCommands(int32_t index) {
 		if (index == -1) {
-			index = this->commandBuffers.size() - 1;
+			index = static_cast<int32_t>(this->commandBuffers.size()) - 1;
 		}
 
 		if (vkEndCommandBuffer(this->commandBuffers[index]) != VK_SUCCESS) {
@@ -73,16 +73,40 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineCommandBuffer::submitCommands(VkQueue queue, int index = -1) {
+	void EngineCommandBuffer::submitCommands(VkQueue queue, int32_t index, std::vector<VkSemaphore> *waitSemaphores, 
+      std::vector<VkPipelineStageFlags> *waitStages, std::vector<VkSemaphore> *signalSemaphores, VkFence fence) 
+	{
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &this->commandBuffers[index];
 
-		if (vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS) {
+		if (waitSemaphores != nullptr) {
+			submitInfo.waitSemaphoreCount = waitSemaphores->size();
+  		submitInfo.pWaitSemaphores = waitSemaphores->data();
+		}
+
+		if (waitStages != nullptr) {
+			submitInfo.pWaitDstStageMask = waitStages->data();
+		}
+
+		if (signalSemaphores != nullptr) {
+			submitInfo.signalSemaphoreCount = signalSemaphores->size();
+  		submitInfo.pSignalSemaphores = signalSemaphores->data();
+		}
+
+		if (vkQueueSubmit(queue, 1, &submitInfo, fence) != VK_SUCCESS) {
 			std::cerr << "Failed to submit buffer" << '\n';
 		}
 
 		vkQueueWaitIdle(queue);
+	}
+
+	VkCommandBuffer EngineCommandBuffer::getBuffer(int32_t index) { 
+		if (index == -1) {
+			index = static_cast<int32_t>(this->commandBuffers.size()) - 1;
+		}
+
+		return this->commandBuffers[index]; 
 	}
 } // namespace nugiEngine
