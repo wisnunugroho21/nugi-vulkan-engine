@@ -4,6 +4,7 @@
 #include "../device/device.hpp"
 #include "../game_object/game_object.hpp"
 #include "../renderer/renderer.hpp"
+#include "../descriptor/descriptor.hpp"
 
 #include <memory>
 #include <vector>
@@ -30,6 +31,7 @@ namespace nugiEngine {
 			EngineDevice device{window};
 			EngineRenderer renderer{window, device};
 
+			std::unique_ptr<EngineDescriptorPool> globalPool{};
 			std::vector<EngineGameObject> gameObjects;
 	};
 }

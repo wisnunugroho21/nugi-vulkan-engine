@@ -3,6 +3,8 @@
 #include "../renderer_system/simple_render_system.hpp"
 #include "../camera/camera.hpp"
 #include "../keyboard_controller/keyboard_controller.hpp"
+#include "../buffer/buffer.hpp"
+#include "../frame_info.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -20,14 +22,51 @@
 #define OBJ_POST_Z 2.5f
 
 namespace nugiEngine {
+	struct GlobalUBO {
+		glm::mat4 projectionView{1.0f};
+		glm::vec3 lightDirection = glm::normalize(glm::vec3(1.0f, -3.0f, -1.0f));
+	};
+
 	EngineApp::EngineApp() {
+		this->globalPool = 
+			EngineDescriptorPool::Builder(this->device)
+				.setMaxSets(EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
+				.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
+				.build();
+
 		this->loadObjects();
 	}
 
 	EngineApp::~EngineApp() {}
 
 	void EngineApp::run() {
-		EngineSimpleRenderSystem renderSystem{this->device, this->renderer.getSwapChainRenderPass()};
+		std::vector<std::unique_ptr<EngineBuffer>> globalUboBuffers(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
+		for (int i = 0; i < globalUboBuffers.size(); i++) {
+			globalUboBuffers[i] = std::make_unique<EngineBuffer>(
+				this->device,
+				sizeof(GlobalUBO),
+				1,
+				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+			);
+
+			globalUboBuffers[i]->map();
+		}
+
+		auto globalSetLayout = 
+			EngineDescriptorSetLayout::Builder(this->device)
+				.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+				.build();
+
+		std::vector<VkDescriptorSet> globalDescriptorSets(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
+		for (int i = 0; i < globalDescriptorSets.size(); i++) {
+			auto bufferInfo = globalUboBuffers[i]->descriptorInfo();
+			EngineDescriptorWriter(*globalSetLayout, *globalPool)
+				.writeBuffer(0, &bufferInfo)
+				.build(globalDescriptorSets[i]);
+		}
+
+		EngineSimpleRenderSystem renderSystem{this->device, this->renderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
 		EngineCamera camera{};
 
 		auto viewObject = EngineGameObject::createGameObject();
@@ -50,8 +89,24 @@ namespace nugiEngine {
 			camera.setPerspectiveProjection(glm::radians(50.0f), aspect, 0.1f, 10.0f);
 
 			if (auto commandBuffer = this->renderer.beginFrame()) {
+				int frameIndex = this->renderer.getFrameIndex();
+				FrameInfo frameInfo {
+					frameIndex,
+					frameTime,
+					commandBuffer,
+					camera,
+					globalDescriptorSets[frameIndex]
+				};
+
+				// update
+				GlobalUBO ubo{};
+				ubo.projectionView = camera.getProjectionMatrix() * camera.getViewMatrix();
+				globalUboBuffers[frameIndex]->writeToBuffer(&ubo);
+				globalUboBuffers[frameIndex]->flush();
+
+				// render
 				this->renderer.beginSwapChainRenderPass(commandBuffer);
-				renderSystem.renderGameObjects(commandBuffer, this->gameObjects, camera);
+				renderSystem.renderGameObjects(frameInfo, this->gameObjects);
 				this->renderer.endSwapChainRenderPass(commandBuffer);
 				this->renderer.endFrame();
 			}
