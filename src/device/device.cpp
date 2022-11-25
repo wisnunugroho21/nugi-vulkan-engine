@@ -123,7 +123,7 @@ void EngineDevice::pickPhysicalDevice() {
   vkEnumeratePhysicalDevices(this->instance, &deviceCount, devices.data());
 
   for (const auto &device : devices) {
-    if (isDeviceSuitable(device)) {
+    if (this->isDeviceSuitable(device)) {
       this->physicalDevice = device;
       break;
     }
@@ -133,7 +133,7 @@ void EngineDevice::pickPhysicalDevice() {
     throw std::runtime_error("failed to find a suitable GPU!");
   }
 
-  vkGetPhysicalDeviceProperties(this->physicalDevice, &properties);
+  vkGetPhysicalDeviceProperties(this->physicalDevice, &this->properties);
   std::cout << "physical device: " << properties.deviceName << std::endl;
 }
 
