@@ -233,7 +233,7 @@ void EngineDevice::populateDebugMessengerCreateInfo(
 }
 
 void EngineDevice::setupDebugMessenger() {
-  if (!enableValidationLayers) return;
+  if (!this->enableValidationLayers) return;
   VkDebugUtilsMessengerCreateInfoEXT createInfo;
   this->populateDebugMessengerCreateInfo(createInfo);
   if (CreateDebugUtilsMessengerEXT(this->instance, &createInfo, nullptr, &this->debugMessenger) != VK_SUCCESS) {
@@ -248,7 +248,7 @@ bool EngineDevice::checkValidationLayerSupport() {
   std::vector<VkLayerProperties> availableLayers(layerCount);
   vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-  for (const char *layerName : validationLayers) {
+  for (const char *layerName : this->validationLayers) {
     bool layerFound = false;
 
     for (const auto &layerProperties : availableLayers) {

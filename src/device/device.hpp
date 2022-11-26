@@ -39,15 +39,15 @@ class EngineDevice {
   EngineDevice(EngineDevice &&) = delete;
   EngineDevice &operator=(EngineDevice &&) = delete;
 
-  VkCommandPool getCommandPool() { return commandPool; }
+  VkCommandPool getCommandPool() { return this->commandPool; }
   VkDevice getLogicalDevice() { return this->device; }
   VkSurfaceKHR getSurface() { return this->surface; }
   VkQueue getGraphicsQueue() { return this->graphicsQueue; }
   VkQueue getPresentQueue() { return this->presentQueue; }
 
-  SwapChainSupportDetails getSwapChainSupport() { return querySwapChainSupport(physicalDevice); }
+  SwapChainSupportDetails getSwapChainSupport() { return this->querySwapChainSupport(physicalDevice); }
   uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-  QueueFamilyIndices findPhysicalQueueFamilies() { return findQueueFamilies(physicalDevice); }
+  QueueFamilyIndices findPhysicalQueueFamilies() { return this->findQueueFamilies(physicalDevice); }
   VkFormat findSupportedFormat(const std::vector<VkFormat> &candidates, 
     VkImageTiling tiling, VkFormatFeatureFlags features);
 
