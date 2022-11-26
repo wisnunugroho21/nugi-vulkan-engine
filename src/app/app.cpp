@@ -17,14 +17,12 @@
 #include <chrono>
 #include <iostream>
 
-#define OBJ_POST_X 0.0f
-#define OBJ_POST_Y 0.0f
-#define OBJ_POST_Z 2.5f
-
 namespace nugiEngine {
 	struct GlobalUBO {
 		glm::mat4 projectionView{1.0f};
-		glm::vec3 lightDirection = glm::normalize(glm::vec3(1.0f, -3.0f, -1.0f));
+		glm::vec4 ambientLightColor{1.0f, 1.0f, 1.0f, 0.02f};
+		glm::vec3 lightPosition{-1.0f};
+		alignas(16) glm::vec4 lightColor{-1.0f};
 	};
 
 	EngineApp::EngineApp() {
@@ -70,6 +68,7 @@ namespace nugiEngine {
 		EngineCamera camera{};
 
 		auto viewObject = EngineGameObject::createGameObject();
+		viewObject.transform.translation.z = -2.5f;
 		EngineKeyboardController keyboardController{};
 
 		auto currentTime = std::chrono::high_resolution_clock::now();
@@ -116,14 +115,24 @@ namespace nugiEngine {
 	}
 
 	void EngineApp::loadObjects() {
-		std::shared_ptr<EngineModel> cubeModel = EngineModel::createModelFromFile(this->device, "models/smooth_vase.obj");
+		std::shared_ptr<EngineModel> flatVaseModel = EngineModel::createModelFromFile(this->device, "models/flat_vase.obj");
 
-		auto gameObj = EngineGameObject::createGameObject();
-		gameObj.model = cubeModel;
-		gameObj.transform.translation = {OBJ_POST_X, OBJ_POST_Y, OBJ_POST_Z};
-		gameObj.transform.scale = glm::vec3{3.0f};
-		gameObj.color = {1.0f, 1.0f, 1.0f};
+		auto flatVase = EngineGameObject::createGameObject();
+		flatVase.model = flatVaseModel;
+		flatVase.transform.translation = {-0.5f, 0.5f, 0.0f};
+		flatVase.transform.scale = {3.0f, 1.5f, 3.0f};
+		flatVase.color = {1.0f, 1.0f, 1.0f};
 
-		this->gameObjects.push_back(std::move(gameObj)); 
+		this->gameObjects.push_back(std::move(flatVase)); 
+
+		std::shared_ptr<EngineModel> smoothVaseModel = EngineModel::createModelFromFile(this->device, "models/smooth_vase.obj");
+
+		auto smoothVase = EngineGameObject::createGameObject();
+		smoothVase.model = smoothVaseModel;
+		smoothVase.transform.translation = {0.5f, 0.5f, 0.0f};
+		smoothVase.transform.scale = {3.0f, 1.5f, 3.0f};
+		smoothVase.color = {1.0f, 1.0f, 1.0f};
+
+		this->gameObjects.push_back(std::move(smoothVase)); 
 	}
 }
