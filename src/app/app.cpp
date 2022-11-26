@@ -105,9 +105,9 @@ namespace nugiEngine {
 				globalUboBuffers[frameIndex]->flush();
 
 				// render
-				this->renderer.beginSwapChainRenderPass(commandBuffer);
+				this->renderer.beginSwapChainRenderPass(frameInfo.commandBuffer);
 				renderSystem.renderGameObjects(frameInfo, this->gameObjects);
-				this->renderer.endSwapChainRenderPass(commandBuffer);
+				this->renderer.endSwapChainRenderPass(frameInfo.commandBuffer);
 				this->renderer.endFrame();
 			}
 		}
