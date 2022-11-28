@@ -238,7 +238,7 @@ namespace nugiEngine {
     vkCmdCopyBuffer(commandBuffer.getBuffer(0), srcBuffer, this->buffer, 1, &copyRegion);
 
     commandBuffer.endCommands(0);
-    commandBuffer.submitCommands(this->engineDevice.getGraphicsQueue(), 0);
+    commandBuffer.submitCommands(this->engineDevice.getGraphicsQueue(), 0, nullptr, nullptr, nullptr, nullptr);
   }
  
 }  // namespace lve

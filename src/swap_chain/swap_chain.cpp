@@ -73,7 +73,7 @@ VkResult EngineSwapChain::acquireNextImage(uint32_t *imageIndex) {
   return result;
 }
 
-VkResult EngineSwapChain::submitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex) {
+VkResult EngineSwapChain::executeAndPresentRenders(const VkCommandBuffer *buffers, uint32_t *imageIndex) {
   if (imagesInFlight[*imageIndex] != VK_NULL_HANDLE) {
     vkWaitForFences(device.getLogicalDevice(), 1, &imagesInFlight[*imageIndex], VK_TRUE, UINT64_MAX);
   }

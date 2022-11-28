@@ -89,7 +89,7 @@ namespace nugiEngine {
 			throw std::runtime_error("failed to record command buffer");
 		}
 
-		auto result = this->swapChain->submitCommandBuffers(&commandBuffer, &this->currentImageIndex);
+		auto result = this->swapChain->executeAndPresentRenders(&commandBuffer, &this->currentImageIndex);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || this->appWindow.wasResized()) {
 			this->appWindow.resetResizedFlag();
 			this->recreateSwapChain();
