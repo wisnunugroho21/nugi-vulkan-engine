@@ -62,11 +62,11 @@ namespace nugiEngine {
 		);
 	}
 
-	void EngineSimpleRenderSystem::renderGameObjects(FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects) {
-		this->pipeline->bind(frameInfo.commandBuffer);
+	void EngineSimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects) {
+		this->pipeline->bind(commandBuffer);
 
 		vkCmdBindDescriptorSets(
-			frameInfo.commandBuffer,
+			commandBuffer,
 			VK_PIPELINE_BIND_POINT_GRAPHICS,
 			this->pipelineLayout,
 			0,
@@ -83,7 +83,7 @@ namespace nugiEngine {
 			pushConstant.normalMatrix = obj.transform.normalMatrix();
 
 			vkCmdPushConstants(
-				frameInfo.commandBuffer, 
+				commandBuffer, 
 				pipelineLayout, 
 				VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 				0,
@@ -91,8 +91,8 @@ namespace nugiEngine {
 				&pushConstant
 			);
 
-			obj.model->bind(frameInfo.commandBuffer);
-			obj.model->draw(frameInfo.commandBuffer);
+			obj.model->bind(commandBuffer);
+			obj.model->draw(commandBuffer);
 		}
 	}
 }

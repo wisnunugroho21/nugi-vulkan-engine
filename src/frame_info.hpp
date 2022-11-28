@@ -8,7 +8,6 @@ namespace nugiEngine {
   struct FrameInfo {
   int frameIndex;
   float frameTime;
-  VkCommandBuffer commandBuffer;
   EngineCamera &camera;
   VkDescriptorSet globalDescriptorSet;
 };

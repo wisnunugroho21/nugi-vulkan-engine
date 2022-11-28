@@ -19,7 +19,7 @@ namespace nugiEngine {
 			EngineSimpleRenderSystem(const EngineSimpleRenderSystem&) = delete;
 			EngineSimpleRenderSystem& operator = (const EngineSimpleRenderSystem&) = delete;
 
-			void renderGameObjects(FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects);
+			void renderGameObjects(VkCommandBuffer commandBuffer, FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects);
 
 		private:
 			void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
