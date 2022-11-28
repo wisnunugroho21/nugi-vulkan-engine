@@ -24,17 +24,17 @@ namespace nugiEngine {
     EngineSwapChain(const EngineSwapChain &) = delete;
     EngineSwapChain& operator=(const EngineSwapChain &) = delete;
 
-    VkFramebuffer getFrameBuffer(int index) { return swapChainFramebuffers[index]; }
-    VkRenderPass getRenderPass() { return renderPass; }
-    VkImageView getImageView(int index) { return swapChainImageViews[index]; }
-    size_t imageCount() { return swapChainImages.size(); }
-    VkFormat getSwapChainImageFormat() { return swapChainImageFormat; }
-    VkExtent2D getSwapChainExtent() { return swapChainExtent; }
-    uint32_t width() { return swapChainExtent.width; }
-    uint32_t height() { return swapChainExtent.height; }
+    VkFramebuffer getFrameBuffer(int index) { return this->swapChainFramebuffers[index]; }
+    VkRenderPass getRenderPass() { return this->renderPass; }
+    VkImageView getImageView(int index) { return this->swapChainImageViews[index]; }
+    size_t imageCount() { return this->swapChainImages.size(); }
+    VkFormat getSwapChainImageFormat() { return this->swapChainImageFormat; }
+    VkExtent2D getSwapChainExtent() { return this->swapChainExtent; }
+    uint32_t width() { return this->swapChainExtent.width; }
+    uint32_t height() { return this->swapChainExtent.height; }
 
     float extentAspectRatio() {
-      return static_cast<float>(swapChainExtent.width) / static_cast<float>(swapChainExtent.height);
+      return static_cast<float>(this->swapChainExtent.width) / static_cast<float>(this->swapChainExtent.height);
     }
     VkFormat findDepthFormat();
 

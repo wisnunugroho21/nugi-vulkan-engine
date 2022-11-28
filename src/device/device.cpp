@@ -86,8 +86,10 @@ void EngineDevice::createInstance() {
   VkInstanceCreateInfo createInfo = {};
   createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
   createInfo.pApplicationInfo = &appInfo;
+  createInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 
   auto extensions = this->getRequiredExtensions();
+  extensions.push_back("VK_KHR_portability_enumeration");
   createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
   createInfo.ppEnabledExtensionNames = extensions.data();
 
@@ -121,7 +123,7 @@ void EngineDevice::pickPhysicalDevice() {
   vkEnumeratePhysicalDevices(this->instance, &deviceCount, devices.data());
 
   for (const auto &device : devices) {
-    if (isDeviceSuitable(device)) {
+    if (this->isDeviceSuitable(device)) {
       this->physicalDevice = device;
       break;
     }
@@ -131,7 +133,7 @@ void EngineDevice::pickPhysicalDevice() {
     throw std::runtime_error("failed to find a suitable GPU!");
   }
 
-  vkGetPhysicalDeviceProperties(this->physicalDevice, &properties);
+  vkGetPhysicalDeviceProperties(this->physicalDevice, &this->properties);
   std::cout << "physical device: " << properties.deviceName << std::endl;
 }
 
@@ -231,7 +233,7 @@ void EngineDevice::populateDebugMessengerCreateInfo(
 }
 
 void EngineDevice::setupDebugMessenger() {
-  if (!enableValidationLayers) return;
+  if (!this->enableValidationLayers) return;
   VkDebugUtilsMessengerCreateInfoEXT createInfo;
   this->populateDebugMessengerCreateInfo(createInfo);
   if (CreateDebugUtilsMessengerEXT(this->instance, &createInfo, nullptr, &this->debugMessenger) != VK_SUCCESS) {
@@ -246,7 +248,7 @@ bool EngineDevice::checkValidationLayerSupport() {
   std::vector<VkLayerProperties> availableLayers(layerCount);
   vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-  for (const char *layerName : validationLayers) {
+  for (const char *layerName : this->validationLayers) {
     bool layerFound = false;
 
     for (const auto &layerProperties : availableLayers) {

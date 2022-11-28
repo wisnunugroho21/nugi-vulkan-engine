@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../device/device.hpp"
  
 namespace nugiEngine {
