@@ -1,5 +1,7 @@
 #include "simple_render_system.hpp"
 
+#include "../swap_chain/swap_chain.hpp"
+
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -16,22 +18,57 @@ namespace nugiEngine {
 		glm::mat4 normalMatrix{1.0f};
 	};
 
-	EngineSimpleRenderSystem::EngineSimpleRenderSystem(EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout) : device{device} {
-		this->createPipelineLayout(globalSetLayout);
+	EngineSimpleRenderSystem::EngineSimpleRenderSystem(EngineDevice& device, VkRenderPass renderPass) : appDevice{device} {
+		this->createBuffers(sizeof(GlobalUBO));
+		this->createPipelineLayout();
 		this->createPipeline(renderPass);
 	}
 
 	EngineSimpleRenderSystem::~EngineSimpleRenderSystem() {
-		vkDestroyPipelineLayout(this->device.getLogicalDevice(), this->pipelineLayout, nullptr);
+		vkDestroyPipelineLayout(this->appDevice.getLogicalDevice(), this->pipelineLayout, nullptr);
 	}
 
-	void EngineSimpleRenderSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout) {
+	void EngineSimpleRenderSystem::createBuffers(unsigned long sizeUBO) {
+		this->globalPool = 
+			EngineDescriptorPool::Builder(this->appDevice)
+				.setMaxSets(EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
+				.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
+				.build();
+
+		this->globalUboBuffers.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
+		for (int i = 0; i < this->globalUboBuffers.size(); i++) {
+			this->globalUboBuffers[i] = std::make_unique<EngineBuffer>(
+				this->appDevice,
+				sizeUBO,
+				1,
+				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+			);
+
+			this->globalUboBuffers[i]->map();
+		}
+
+		this->globalSetLayout = 
+			EngineDescriptorSetLayout::Builder(this->appDevice)
+				.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
+				.build();
+
+		this->globalDescriptorSets.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
+		for (int i = 0; i < this->globalDescriptorSets.size(); i++) {
+			auto bufferInfo = this->globalUboBuffers[i]->descriptorInfo();
+			EngineDescriptorWriter(*this->globalSetLayout, *this->globalPool)
+				.writeBuffer(0, &bufferInfo)
+				.build(this->globalDescriptorSets[i]);
+		}
+	}
+
+	void EngineSimpleRenderSystem::createPipelineLayout() {
 		VkPushConstantRange pushConstantRange{};
 		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 		pushConstantRange.offset = 0;
 		pushConstantRange.size = sizeof(SimplePushConstantData);
 
-		std::vector<VkDescriptorSetLayout> descriptorSetLayouts{globalSetLayout}; 
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts{this->globalSetLayout->getDescriptorSetLayout()}; 
 
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -40,7 +77,7 @@ namespace nugiEngine {
 		pipelineLayoutInfo.pushConstantRangeCount = 1;
 		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
-		if (vkCreatePipelineLayout(this->device.getLogicalDevice(), &pipelineLayoutInfo, nullptr, &this->pipelineLayout) != VK_SUCCESS) {
+		if (vkCreatePipelineLayout(this->appDevice.getLogicalDevice(), &pipelineLayoutInfo, nullptr, &this->pipelineLayout) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create pipeline layout!");
 		}
 	}
@@ -55,11 +92,16 @@ namespace nugiEngine {
 		pipelineConfig.pipelineLayout = this->pipelineLayout;
 
 		this->pipeline = std::make_unique<EnginePipeline>(
-			device, 
+			this->appDevice, 
 			"bin/shader/simple_shader.vert.spv",
 			"bin/shader/simple_shader.frag.spv",
 			pipelineConfig
 		);
+	}
+
+	void EngineSimpleRenderSystem::writeUniformBuffer(int frameIndex, void* data, VkDeviceSize size, VkDeviceSize offset) {
+		this->globalUboBuffers[frameIndex]->writeToBuffer(data, size, offset);
+		this->globalUboBuffers[frameIndex]->flush(size, offset);
 	}
 
 	void EngineSimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects) {

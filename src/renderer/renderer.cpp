@@ -5,10 +5,9 @@
 #include <string>
 
 namespace nugiEngine {
-	EngineRenderer::EngineRenderer(EngineWindow& window, EngineDevice& device, unsigned long sizeUBO) : appDevice{device}, appWindow{window} {
+	EngineRenderer::EngineRenderer(EngineWindow& window, EngineDevice& device) : appDevice{device}, appWindow{window} {
 		this->recreateSwapChain();
 		this->createCommandBuffers();
-		this->createBuffers(sizeUBO);
 	}
 
 	EngineRenderer::~EngineRenderer() {
@@ -51,40 +50,6 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineRenderer::createBuffers(unsigned long sizeUBO) {
-		this->globalPool = 
-			EngineDescriptorPool::Builder(this->appDevice)
-				.setMaxSets(EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
-				.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
-				.build();
-
-		this->globalUboBuffers.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
-		for (int i = 0; i < this->globalUboBuffers.size(); i++) {
-			this->globalUboBuffers[i] = std::make_unique<EngineBuffer>(
-				this->appDevice,
-				sizeUBO,
-				1,
-				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-			);
-
-			this->globalUboBuffers[i]->map();
-		}
-
-		this->globalSetLayout = 
-			EngineDescriptorSetLayout::Builder(this->appDevice)
-				.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
-				.build();
-
-		this->globalDescriptorSets.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
-		for (int i = 0; i < this->globalDescriptorSets.size(); i++) {
-			auto bufferInfo = this->globalUboBuffers[i]->descriptorInfo();
-			EngineDescriptorWriter(*this->globalSetLayout, *this->globalPool)
-				.writeBuffer(0, &bufferInfo)
-				.build(this->globalDescriptorSets[i]);
-		}
-	}
-
 	void EngineRenderer::freeCommandBuffers() {
 		vkFreeCommandBuffers(this->appDevice.getLogicalDevice(), this->appDevice.getCommandPool(), static_cast<uint32_t>(this->commandBuffers.size()), this->commandBuffers.data());
 		this->commandBuffers.clear();
@@ -114,11 +79,6 @@ namespace nugiEngine {
 		}
 
 		return commandBuffer;
-	}
-
-	void EngineRenderer::writeUniformBuffer(int frameIndex, void* data, VkDeviceSize size, VkDeviceSize offset) {
-		this->globalUboBuffers[frameIndex]->writeToBuffer(data, size, offset);
-		this->globalUboBuffers[frameIndex]->flush(size, offset);
 	}
 
 	void EngineRenderer::endFrame(VkCommandBuffer commandBuffer) {

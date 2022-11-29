@@ -25,7 +25,7 @@ namespace nugiEngine {
 	EngineApp::~EngineApp() {}
 
 	void EngineApp::run() {
-		EngineSimpleRenderSystem renderSystem{this->device, this->renderer.getSwapChainRenderPass(), this->renderer.getDescriptorSetLayout()};
+		EngineSimpleRenderSystem renderSystem{this->device, this->renderer.getSwapChainRenderPass()};
 		EngineCamera camera{};
 
 		auto viewObject = EngineGameObject::createGameObject();
@@ -54,13 +54,13 @@ namespace nugiEngine {
 					frameIndex,
 					frameTime,
 					camera,
-					this->renderer.getGlobalDescriptorSets(frameIndex)
+					renderSystem.getGlobalDescriptorSets(frameIndex)
 				};
 
 				// update
 				GlobalUBO ubo{};
 				ubo.projectionView = camera.getProjectionMatrix() * camera.getViewMatrix();
-				this->renderer.writeUniformBuffer(frameIndex, &ubo);
+				renderSystem.writeUniformBuffer(frameIndex, &ubo);
 
 				// render
 				this->renderer.beginSwapChainRenderPass(commandBuffer);

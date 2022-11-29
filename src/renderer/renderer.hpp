@@ -14,7 +14,7 @@ namespace nugiEngine {
 	class EngineRenderer
 	{
 		public:
-			EngineRenderer(EngineWindow& window, EngineDevice& device, unsigned long sizeUBO);
+			EngineRenderer(EngineWindow& window, EngineDevice& device);
 			~EngineRenderer();
 
 			EngineRenderer(const EngineRenderer&) = delete;
@@ -23,8 +23,6 @@ namespace nugiEngine {
 			bool isFrameInProgress() const { return this->isFrameStarted; }
 			float getAspectRatio() const { return this->swapChain->extentAspectRatio(); }
 			VkRenderPass getSwapChainRenderPass() const { return this->swapChain->getRenderPass(); }
-			VkDescriptorSetLayout getDescriptorSetLayout () { return this->globalSetLayout->getDescriptorSetLayout(); }
-			VkDescriptorSet getGlobalDescriptorSets(int index) { return this->globalDescriptorSets[index]; }
 
 			VkCommandBuffer getCommandBuffer() const { 
 				assert(isFrameStarted && "cannot get command buffer when frame is not in progress");
@@ -37,25 +35,18 @@ namespace nugiEngine {
 			}
 
 			VkCommandBuffer beginFrame();
-			void writeUniformBuffer(int frameIndex, void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
 			void endFrame(VkCommandBuffer commandBuffer);
 			void beginSwapChainRenderPass(VkCommandBuffer commandBuffer);
 			void endSwapChainRenderPass(VkCommandBuffer commandBuffer);
 
 		private:
 			void createCommandBuffers();
-			void createBuffers(unsigned long sizeUBO);
 			void freeCommandBuffers();
 			void recreateSwapChain();
 
 			EngineWindow& appWindow;
 			EngineDevice& appDevice;
 			std::unique_ptr<EngineSwapChain> swapChain;
-
-			std::unique_ptr<EngineDescriptorPool> globalPool{};
-			std::unique_ptr<EngineDescriptorSetLayout> globalSetLayout{};
-			std::vector<std::shared_ptr<EngineBuffer>> globalUboBuffers;
-			std::vector<VkDescriptorSet> globalDescriptorSets;
 
 			std::vector<VkCommandBuffer> commandBuffers;
 
