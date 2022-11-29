@@ -7,12 +7,10 @@
 namespace nugiEngine {
 	EngineRenderer::EngineRenderer(EngineWindow& window, EngineDevice& device) : appDevice{device}, appWindow{window} {
 		this->recreateSwapChain();
-		this->createCommandBuffers();
+		this->commandBuffers = std::make_unique<EngineCommandBuffer>(device, EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
 	}
 
-	EngineRenderer::~EngineRenderer() {
-		this->freeCommandBuffers();
-	}
+	EngineRenderer::~EngineRenderer() {}
 
 	void EngineRenderer::recreateSwapChain() {
 		auto extent = this->appWindow.getExtent();
@@ -33,26 +31,6 @@ namespace nugiEngine {
 				throw std::runtime_error("Swap chain image or depth has changed");
 			}
 		}
-
-	}
-
-	void EngineRenderer::createCommandBuffers() {
-		this->commandBuffers.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
-
-		VkCommandBufferAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandPool = this->appDevice.getCommandPool();
-		allocInfo.commandBufferCount = static_cast<uint32_t>(this->commandBuffers.size());
-
-		if (vkAllocateCommandBuffers(this->appDevice.getLogicalDevice(), &allocInfo, this->commandBuffers.data()) != VK_SUCCESS) {
-			throw std::runtime_error("failed to allocate command buffer");
-		}
-	}
-
-	void EngineRenderer::freeCommandBuffers() {
-		vkFreeCommandBuffers(this->appDevice.getLogicalDevice(), this->appDevice.getCommandPool(), static_cast<uint32_t>(this->commandBuffers.size()), this->commandBuffers.data());
-		this->commandBuffers.clear();
 	}
 
 	VkCommandBuffer EngineRenderer::beginFrame() {
@@ -69,24 +47,15 @@ namespace nugiEngine {
 		}
 
 		this->isFrameStarted = true;
-		auto commandBuffer = this->getCommandBuffer();
 
-		VkCommandBufferBeginInfo commandBeginInfo{};
-		commandBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-		if (vkBeginCommandBuffer(commandBuffer, &commandBeginInfo) != VK_SUCCESS) {
-			throw std::runtime_error("failed to begin recording command buffer " + std::to_string(this->currentImageIndex));
-		}
-
-		return commandBuffer;
+		this->commandBuffers->beginReccuringCommands(this->currentFrameIndex);
+		return this->commandBuffers->getBuffer(this->currentFrameIndex);
 	}
 
 	void EngineRenderer::endFrame(VkCommandBuffer commandBuffer) {
 		assert(this->isFrameStarted && "can't call endframe if frame is not in progress");
 
-		if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
-			throw std::runtime_error("failed to record command buffer");
-		}
+		EngineCommandBuffer::endCommands(commandBuffer);
 
 		auto result = this->swapChain->executeAndPresentRenders(&commandBuffer, &this->currentImageIndex);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || this->appWindow.wasResized()) {

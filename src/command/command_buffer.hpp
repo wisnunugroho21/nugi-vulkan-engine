@@ -23,6 +23,10 @@ namespace nugiEngine
 
       VkCommandBuffer getBuffer(int32_t index = -1);
 
+      void beginSingleTimeCommands(VkCommandBuffer commandBuffers);
+      void beginReccuringCommands(VkCommandBuffer commandBuffers);
+      static void endCommands(VkCommandBuffer commandBuffers);
+
     private:
       EngineDevice& device;
       std::vector<VkCommandBuffer> commandBuffers;

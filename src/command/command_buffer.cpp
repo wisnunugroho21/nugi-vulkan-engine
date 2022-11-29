@@ -59,7 +59,26 @@ namespace nugiEngine {
 		}
 
 		if (vkBeginCommandBuffer(this->commandBuffers[index], &beginInfo) != VK_SUCCESS) {
+			std::cerr << "Failed to start recording command buffer" << '\n';
+		}
+	}
+
+	void EngineCommandBuffer::beginSingleTimeCommands(VkCommandBuffer commandBuffer) {
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+		if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
 			std::cerr << "Failed to start recording buffer" << '\n';
+		}
+	}
+
+	void EngineCommandBuffer::beginReccuringCommands(VkCommandBuffer commandBuffer) {
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+		if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+			std::cerr << "Failed to start recording command buffer" << '\n';
 		}
 	}
 
@@ -69,7 +88,13 @@ namespace nugiEngine {
 		}
 
 		if (vkEndCommandBuffer(this->commandBuffers[index]) != VK_SUCCESS) {
-			std::cerr << "Failed to start recording buffer" << '\n';
+			std::cerr << "Failed to end recording command buffer" << '\n';
+		}
+	}
+
+	void EngineCommandBuffer::endCommands(VkCommandBuffer commandBuffer) {
+		if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
+			std::cerr << "Failed to end recording command buffer" << '\n';
 		}
 	}
 
@@ -96,7 +121,7 @@ namespace nugiEngine {
 		}
 
 		if (vkQueueSubmit(queue, 1, &submitInfo, fence) != VK_SUCCESS) {
-			std::cerr << "Failed to submit buffer" << '\n';
+			std::cerr << "Failed to submitting command buffer" << '\n';
 		}
 
 		vkQueueWaitIdle(queue);
