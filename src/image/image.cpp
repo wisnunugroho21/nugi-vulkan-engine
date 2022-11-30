@@ -80,7 +80,7 @@ namespace nugiEngine {
     }
   }
 
-  void EngineImage::transitionImageLayout(VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) {
+  void EngineImage::transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout) {
     EngineCommandBuffer commandBuffer{this->appDevice, 1};
     commandBuffer.beginSingleTimeCommands(0);
 
