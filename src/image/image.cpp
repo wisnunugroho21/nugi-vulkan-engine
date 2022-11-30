@@ -7,7 +7,7 @@ namespace nugiEngine {
     this->createImage(width, height, format, tiling, usage, properties);
     this->createImageView(format, aspectFlags);
 
-    this->isImageCreatedByUs = false;
+    this->isImageCreatedByUs = true;
   }
 
   EngineImage::EngineImage(EngineDevice &appDevice, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) : appDevice{appDevice} {

@@ -27,7 +27,7 @@ namespace nugiEngine {
 
     VkFramebuffer getFrameBuffer(int index) { return this->swapChainFramebuffers[index]; }
     VkRenderPass getRenderPass() { return this->renderPass; }
-    VkImageView getImageView(int index) { return this->swapChainImages[index].getImageView(); }
+    VkImageView getImageView(int index) { return this->swapChainImages[index]->getImageView(); }
     size_t imageCount() { return this->swapChainImages.size(); }
     VkFormat getSwapChainImageFormat() { return this->swapChainImageFormat; }
     VkExtent2D getSwapChainExtent() { return this->swapChainExtent; }
@@ -67,8 +67,8 @@ namespace nugiEngine {
     std::vector<VkFramebuffer> swapChainFramebuffers;
     VkRenderPass renderPass;
 
-    std::vector<EngineImage> depthImages;
-    std::vector<EngineImage> swapChainImages;
+    std::vector<std::shared_ptr<EngineImage>> depthImages;
+    std::vector<std::shared_ptr<EngineImage>> swapChainImages;
 
     EngineDevice &device;
     VkExtent2D windowExtent;

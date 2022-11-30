@@ -180,8 +180,8 @@ namespace nugiEngine {
 
     this->swapChainImages.clear();
     for (uint32_t i = 0; i < imageCount; i++) {
-      EngineImage image{this->device, tempSwapChainImages[i], this->swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT};
-      this->swapChainImages.push_back(image);
+      auto swapChainImage = std::make_shared<EngineImage>(this->device, tempSwapChainImages[i], this->swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+      this->swapChainImages.push_back(swapChainImage);
     }
   }
 
@@ -249,7 +249,7 @@ namespace nugiEngine {
   void EngineSwapChain::createFramebuffers() {
     this->swapChainFramebuffers.resize(this->imageCount());
     for (size_t i = 0; i < this->imageCount(); i++) {
-      std::array<VkImageView, 2> attachments = {this->swapChainImages[i].getImageView(), this->depthImages[i].getImageView()};
+      std::array<VkImageView, 2> attachments = {this->swapChainImages[i]->getImageView(), this->depthImages[i]->getImageView()};
 
       VkExtent2D swapChainExtent = this->getSwapChainExtent();
       VkFramebufferCreateInfo framebufferInfo = {};
@@ -280,11 +280,11 @@ namespace nugiEngine {
     this->depthImages.clear();
 
     for (int i = 0; i < this->imageCount(); i++) {
-      EngineImage depthImage{
+      auto depthImage = std::make_shared<EngineImage>(
         this->device, this->swapChainExtent.width, this->swapChainExtent.height, depthFormat, 
         VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_DEPTH_BIT
-      };
+      );
 
       this->depthImages.push_back(depthImage);
     }
