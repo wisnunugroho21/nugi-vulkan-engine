@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../device/device.hpp"
+#include "../image/image.hpp"
 
 // vulkan headers
 #include <vulkan/vulkan.h>
@@ -26,7 +27,7 @@ namespace nugiEngine {
 
     VkFramebuffer getFrameBuffer(int index) { return this->swapChainFramebuffers[index]; }
     VkRenderPass getRenderPass() { return this->renderPass; }
-    VkImageView getImageView(int index) { return this->swapChainImageViews[index]; }
+    VkImageView getImageView(int index) { return this->swapChainImages[index]->getImageView(); }
     size_t imageCount() { return this->swapChainImages.size(); }
     VkFormat getSwapChainImageFormat() { return this->swapChainImageFormat; }
     VkExtent2D getSwapChainExtent() { return this->swapChainExtent; }
@@ -49,7 +50,6 @@ namespace nugiEngine {
   private:
     void init();
     void createSwapChain();
-    void createImageViews();
     void createDepthResources();
     void createRenderPass();
     void createFramebuffers();
@@ -67,11 +67,8 @@ namespace nugiEngine {
     std::vector<VkFramebuffer> swapChainFramebuffers;
     VkRenderPass renderPass;
 
-    std::vector<VkImage> depthImages;
-    std::vector<VkDeviceMemory> depthImageMemorys;
-    std::vector<VkImageView> depthImageViews;
-    std::vector<VkImage> swapChainImages;
-    std::vector<VkImageView> swapChainImageViews;
+    std::vector<std::shared_ptr<EngineImage>> depthImages;
+    std::vector<std::shared_ptr<EngineImage>> swapChainImages;
 
     EngineDevice &device;
     VkExtent2D windowExtent;

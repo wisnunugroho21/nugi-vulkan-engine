@@ -48,15 +48,7 @@ class EngineDevice {
   SwapChainSupportDetails getSwapChainSupport() { return this->querySwapChainSupport(physicalDevice); }
   uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
   QueueFamilyIndices findPhysicalQueueFamilies() { return this->findQueueFamilies(physicalDevice); }
-  VkFormat findSupportedFormat(const std::vector<VkFormat> &candidates, 
-    VkImageTiling tiling, VkFormatFeatureFlags features);
-
-  void createImageWithInfo(
-    const VkImageCreateInfo &imageInfo,
-    VkMemoryPropertyFlags properties,
-    VkImage &image,
-    VkDeviceMemory &imageMemory
-  );
+  VkFormat findSupportedFormat(const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 
   VkPhysicalDeviceProperties properties;
 
