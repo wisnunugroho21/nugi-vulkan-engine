@@ -410,32 +410,4 @@ namespace nugiEngine {
 
     throw std::runtime_error("failed to find suitable memory type!");
   }
-
-  void EngineDevice::createImageWithInfo(
-    const VkImageCreateInfo &imageInfo,
-    VkMemoryPropertyFlags properties,
-    VkImage &image,
-    VkDeviceMemory &imageMemory)
-  {
-    if (vkCreateImage(this->device, &imageInfo, nullptr, &image) != VK_SUCCESS) {
-      throw std::runtime_error("failed to create image!");
-    }
-
-    VkMemoryRequirements memRequirements;
-    vkGetImageMemoryRequirements(this->device, image, &memRequirements);
-
-    VkMemoryAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = this->findMemoryType(memRequirements.memoryTypeBits, properties);
-
-    if (vkAllocateMemory(this->device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
-      throw std::runtime_error("failed to allocate image memory!");
-    }
-
-    if (vkBindImageMemory(this->device, image, imageMemory, 0) != VK_SUCCESS) {
-      throw std::runtime_error("failed to bind image memory!");
-    }
-  }
-
 }  // namespace lve

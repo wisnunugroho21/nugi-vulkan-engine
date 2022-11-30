@@ -24,20 +24,9 @@ namespace nugiEngine {
   }
 
   EngineSwapChain::~EngineSwapChain() {
-    for (auto imageView : swapChainImageViews) {
-      vkDestroyImageView(device.getLogicalDevice(), imageView, nullptr);
-    }
-    swapChainImageViews.clear();
-
     if (swapChain != nullptr) {
       vkDestroySwapchainKHR(device.getLogicalDevice(), swapChain, nullptr);
       swapChain = nullptr;
-    }
-
-    for (int i = 0; i < depthImages.size(); i++) {
-      vkDestroyImageView(device.getLogicalDevice(), depthImageViews[i], nullptr);
-      vkDestroyImage(device.getLogicalDevice(), depthImages[i], nullptr);
-      vkFreeMemory(device.getLogicalDevice(), depthImageMemorys[i], nullptr);
     }
 
     for (auto framebuffer : swapChainFramebuffers) {
@@ -56,17 +45,17 @@ namespace nugiEngine {
 
   VkResult EngineSwapChain::acquireNextImage(uint32_t *imageIndex) {
     vkWaitForFences(
-      device.getLogicalDevice(),
+      this->device.getLogicalDevice(),
       1,
-      &inFlightFences[currentFrame],
+      &this->inFlightFences[this->currentFrame],
       VK_TRUE,
       std::numeric_limits<uint64_t>::max());
 
     VkResult result = vkAcquireNextImageKHR(
-      device.getLogicalDevice(),
-      swapChain,
+      this->device.getLogicalDevice(),
+      this->swapChain,
       std::numeric_limits<uint64_t>::max(),
-      imageAvailableSemaphores[currentFrame],  // must be a not signaled semaphore
+      this->imageAvailableSemaphores[this->currentFrame],  // must be a not signaled semaphore
       VK_NULL_HANDLE,
       imageIndex);
 
@@ -122,7 +111,6 @@ namespace nugiEngine {
 
   void EngineSwapChain::init() {
     createSwapChain();
-    createImageViews();
     createRenderPass();
     createDepthResources();
     createFramebuffers();
@@ -182,33 +170,19 @@ namespace nugiEngine {
     // allowed to create a swap chain with more. That's why we'll first query the final number of
     // images with vkGetSwapchainImagesKHR, then resize the container and finally call it again to
     // retrieve the handles.
+    std::vector<VkImage> tempSwapChainImages;
     vkGetSwapchainImagesKHR(this->device.getLogicalDevice(), swapChain, &imageCount, nullptr);
-    swapChainImages.resize(imageCount);
-    vkGetSwapchainImagesKHR(this->device.getLogicalDevice(), swapChain, &imageCount, this->swapChainImages.data());
+    tempSwapChainImages.resize(imageCount);
+    vkGetSwapchainImagesKHR(this->device.getLogicalDevice(), swapChain, &imageCount, tempSwapChainImages.data());
+
+    this->swapChainImages.clear();
+    for (uint32_t i = 0; i < imageCount; i++) {
+      EngineImage image{this->device, tempSwapChainImages[i], this->swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT};
+      this->swapChainImages.push_back(image);
+    }    
 
     swapChainImageFormat = surfaceFormat.format;
     swapChainExtent = extent;
-  }
-
-  void EngineSwapChain::createImageViews() {
-    swapChainImageViews.resize(swapChainImages.size());
-    for (size_t i = 0; i < swapChainImages.size(); i++) {
-      VkImageViewCreateInfo viewInfo{};
-      viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-      viewInfo.image = swapChainImages[i];
-      viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-      viewInfo.format = swapChainImageFormat;
-      viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-      viewInfo.subresourceRange.baseMipLevel = 0;
-      viewInfo.subresourceRange.levelCount = 1;
-      viewInfo.subresourceRange.baseArrayLayer = 0;
-      viewInfo.subresourceRange.layerCount = 1;
-
-      if (vkCreateImageView(this->device.getLogicalDevice(), &viewInfo, nullptr, &swapChainImageViews[i]) !=
-          VK_SUCCESS) {
-        throw std::runtime_error("failed to create texture image view!");
-      }
-    }
   }
 
   void EngineSwapChain::createRenderPass() {
@@ -273,11 +247,11 @@ namespace nugiEngine {
   }
 
   void EngineSwapChain::createFramebuffers() {
-    swapChainFramebuffers.resize(imageCount());
+    this->swapChainFramebuffers.resize(imageCount());
     for (size_t i = 0; i < imageCount(); i++) {
-      std::array<VkImageView, 2> attachments = {this->swapChainImageViews[i], this->depthImageViews[i]};
+      std::array<VkImageView, 2> attachments = {this->swapChainImages[i].getImageView(), this->depthImages[i].getImageView()};
 
-      VkExtent2D swapChainExtent = getSwapChainExtent();
+      VkExtent2D swapChainExtent = this->getSwapChainExtent();
       VkFramebufferCreateInfo framebufferInfo = {};
       framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
       framebufferInfo.renderPass = renderPass;
@@ -303,48 +277,16 @@ namespace nugiEngine {
     this->swapChainDepthFormat = depthFormat;
     
     VkExtent2D swapChainExtent = this->getSwapChainExtent();
+    this->depthImages.clear();
 
-    depthImages.resize(this->imageCount());
-    depthImageMemorys.resize(this->imageCount());
-    depthImageViews.resize(this->imageCount());
+    for (int i = 0; i < this->imageCount(); i++) {
+      EngineImage depthImage{
+        this->device, this->swapChainExtent.width, this->swapChainExtent.height, depthFormat, 
+        VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_DEPTH_BIT
+      };
 
-    for (int i = 0; i < depthImages.size(); i++) {
-      VkImageCreateInfo imageInfo{};
-      imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-      imageInfo.imageType = VK_IMAGE_TYPE_2D;
-      imageInfo.extent.width = swapChainExtent.width;
-      imageInfo.extent.height = swapChainExtent.height;
-      imageInfo.extent.depth = 1;
-      imageInfo.mipLevels = 1;
-      imageInfo.arrayLayers = 1;
-      imageInfo.format = depthFormat;
-      imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-      imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-      imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-      imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-      imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-      imageInfo.flags = 0;
-
-      device.createImageWithInfo(
-        imageInfo,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-        depthImages[i],
-        depthImageMemorys[i]);
-
-      VkImageViewCreateInfo viewInfo{};
-      viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-      viewInfo.image = depthImages[i];
-      viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-      viewInfo.format = depthFormat;
-      viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-      viewInfo.subresourceRange.baseMipLevel = 0;
-      viewInfo.subresourceRange.levelCount = 1;
-      viewInfo.subresourceRange.baseArrayLayer = 0;
-      viewInfo.subresourceRange.layerCount = 1;
-
-      if (vkCreateImageView(device.getLogicalDevice(), &viewInfo, nullptr, &depthImageViews[i]) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create texture image view!");
-      }
+      this->depthImages.push_back(depthImage);
     }
   }
 
