@@ -31,7 +31,7 @@ namespace nugiEngine
 
       void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties);
       void createImageView(VkFormat format, VkImageAspectFlags aspectFlags);
-      void transitionImageLayout(VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+      void transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout);
   };
   
   
