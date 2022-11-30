@@ -20,6 +20,7 @@ namespace nugiEngine
       VkImageView getImageView() const { return this->imageView; }
       VkDeviceMemory getImageMemory() const { return this->imageMemory; }
 
+      void transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout);
     private:
       EngineDevice &appDevice;
 
@@ -31,7 +32,6 @@ namespace nugiEngine
 
       void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties);
       void createImageView(VkFormat format, VkImageAspectFlags aspectFlags);
-      void transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout);
   };
   
   
