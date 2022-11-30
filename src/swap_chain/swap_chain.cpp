@@ -25,21 +25,21 @@ namespace nugiEngine {
 
   EngineSwapChain::~EngineSwapChain() {
     if (swapChain != nullptr) {
-      vkDestroySwapchainKHR(device.getLogicalDevice(), swapChain, nullptr);
+      vkDestroySwapchainKHR(this->device.getLogicalDevice(), this->swapChain, nullptr);
       swapChain = nullptr;
     }
 
-    for (auto framebuffer : swapChainFramebuffers) {
-      vkDestroyFramebuffer(device.getLogicalDevice(), framebuffer, nullptr);
+    for (auto framebuffer : this->swapChainFramebuffers) {
+      vkDestroyFramebuffer(this->device.getLogicalDevice(), framebuffer, nullptr);
     }
 
-    vkDestroyRenderPass(device.getLogicalDevice(), renderPass, nullptr);
+    vkDestroyRenderPass(this->device.getLogicalDevice(), this->renderPass, nullptr);
 
     // cleanup synchronization objects
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-      vkDestroySemaphore(device.getLogicalDevice(), renderFinishedSemaphores[i], nullptr);
-      vkDestroySemaphore(device.getLogicalDevice(), imageAvailableSemaphores[i], nullptr);
-      vkDestroyFence(device.getLogicalDevice(), inFlightFences[i], nullptr);
+      vkDestroySemaphore(this->device.getLogicalDevice(), this->renderFinishedSemaphores[i], nullptr);
+      vkDestroySemaphore(this->device.getLogicalDevice(), this->imageAvailableSemaphores[i], nullptr);
+      vkDestroyFence(this->device.getLogicalDevice(), this->inFlightFences[i], nullptr);
     }
   }
 
@@ -132,7 +132,7 @@ namespace nugiEngine {
 
     VkSwapchainCreateInfoKHR createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    createInfo.surface = device.getSurface();
+    createInfo.surface = this->device.getSurface();
 
     createInfo.minImageCount = imageCount;
     createInfo.imageFormat = surfaceFormat.format;
@@ -141,7 +141,7 @@ namespace nugiEngine {
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    QueueFamilyIndices indices = device.findPhysicalQueueFamilies();
+    QueueFamilyIndices indices = this->device.findPhysicalQueueFamilies();
     uint32_t queueFamilyIndices[] = {indices.graphicsFamily, indices.presentFamily};
 
     if (indices.graphicsFamily != indices.presentFamily) {
@@ -265,7 +265,7 @@ namespace nugiEngine {
         this->device.getLogicalDevice(),
         &framebufferInfo,
         nullptr,
-        &swapChainFramebuffers[i]) != VK_SUCCESS) 
+        &this->swapChainFramebuffers[i]) != VK_SUCCESS) 
       {
         throw std::runtime_error("failed to create framebuffer!");
       }
@@ -304,17 +304,16 @@ namespace nugiEngine {
     fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-      if (vkCreateSemaphore(device.getLogicalDevice(), &semaphoreInfo, nullptr, &this->imageAvailableSemaphores[i]) != VK_SUCCESS ||
-          vkCreateSemaphore(device.getLogicalDevice(), &semaphoreInfo, nullptr, &this->renderFinishedSemaphores[i]) != VK_SUCCESS ||
-          vkCreateFence(device.getLogicalDevice(), &fenceInfo, nullptr, &this->inFlightFences[i]) != VK_SUCCESS) 
+      if (vkCreateSemaphore(this->device.getLogicalDevice(), &semaphoreInfo, nullptr, &this->imageAvailableSemaphores[i]) != VK_SUCCESS ||
+          vkCreateSemaphore(this->device.getLogicalDevice(), &semaphoreInfo, nullptr, &this->renderFinishedSemaphores[i]) != VK_SUCCESS ||
+          vkCreateFence(this->device.getLogicalDevice(), &fenceInfo, nullptr, &this->inFlightFences[i]) != VK_SUCCESS) 
       {
         throw std::runtime_error("failed to create synchronization objects for a frame!");
       }
     }
   }
 
-  VkSurfaceFormatKHR EngineSwapChain::chooseSwapSurfaceFormat(
-      const std::vector<VkSurfaceFormatKHR> &availableFormats) {
+  VkSurfaceFormatKHR EngineSwapChain::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats) {
     for (const auto &availableFormat : availableFormats) {
       if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB &&
           availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) 
@@ -326,8 +325,7 @@ namespace nugiEngine {
     return availableFormats[0];
   }
 
-  VkPresentModeKHR EngineSwapChain::chooseSwapPresentMode(
-      const std::vector<VkPresentModeKHR> &availablePresentModes) {
+  VkPresentModeKHR EngineSwapChain::chooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes) {
     for (const auto &availablePresentMode : availablePresentModes) {
       if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
         std::cout << "Present mode: Mailbox" << std::endl;
@@ -365,10 +363,9 @@ namespace nugiEngine {
   }
 
   VkFormat EngineSwapChain::findDepthFormat() {
-    return device.findSupportedFormat(
+    return this->device.findSupportedFormat(
       {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
       VK_IMAGE_TILING_OPTIMAL,
       VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
   }
-
 }
