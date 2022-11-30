@@ -175,14 +175,14 @@ namespace nugiEngine {
     tempSwapChainImages.resize(imageCount);
     vkGetSwapchainImagesKHR(this->device.getLogicalDevice(), swapChain, &imageCount, tempSwapChainImages.data());
 
+    this->swapChainImageFormat = surfaceFormat.format;
+    this->swapChainExtent = extent;
+
     this->swapChainImages.clear();
     for (uint32_t i = 0; i < imageCount; i++) {
       EngineImage image{this->device, tempSwapChainImages[i], this->swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT};
       this->swapChainImages.push_back(image);
-    }    
-
-    swapChainImageFormat = surfaceFormat.format;
-    swapChainExtent = extent;
+    }
   }
 
   void EngineSwapChain::createRenderPass() {

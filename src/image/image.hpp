@@ -27,6 +27,8 @@ namespace nugiEngine
       VkImageView imageView;
       VkDeviceMemory imageMemory;
 
+      bool isImageCreatedByUs = false;
+
       void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties);
       void createImageView(VkFormat format, VkImageAspectFlags aspectFlags);
   };

@@ -6,17 +6,24 @@ namespace nugiEngine {
   {
     this->createImage(width, height, format, tiling, usage, properties);
     this->createImageView(format, aspectFlags);
+
+    this->isImageCreatedByUs = false;
   }
 
   EngineImage::EngineImage(EngineDevice &appDevice, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) : appDevice{appDevice} {
     this->image = image;
     this->createImageView(format, aspectFlags);
+
+    this->isImageCreatedByUs = false;
   }
 
   EngineImage::~EngineImage() {
     vkDestroyImageView(this->appDevice.getLogicalDevice(), this->imageView, nullptr);
-    vkDestroyImage(this->appDevice.getLogicalDevice(), this->image, nullptr);
-    vkFreeMemory(this->appDevice.getLogicalDevice(), this->imageMemory, nullptr);
+
+    if (this->isImageCreatedByUs) {
+      vkDestroyImage(this->appDevice.getLogicalDevice(), this->image, nullptr);
+      vkFreeMemory(this->appDevice.getLogicalDevice(), this->imageMemory, nullptr);
+    }
   }
 
   void EngineImage::createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties) {
