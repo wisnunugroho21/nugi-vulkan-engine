@@ -247,8 +247,8 @@ namespace nugiEngine {
   }
 
   void EngineSwapChain::createFramebuffers() {
-    this->swapChainFramebuffers.resize(imageCount());
-    for (size_t i = 0; i < imageCount(); i++) {
+    this->swapChainFramebuffers.resize(this->imageCount());
+    for (size_t i = 0; i < this->imageCount(); i++) {
       std::array<VkImageView, 2> attachments = {this->swapChainImages[i].getImageView(), this->depthImages[i].getImageView()};
 
       VkExtent2D swapChainExtent = this->getSwapChainExtent();
