@@ -18,9 +18,9 @@ namespace nugiEngine {
 		glm::mat4 normalMatrix{1.0f};
 	};
 
-	EngineSimpleTextureRenderSystem::EngineSimpleTextureRenderSystem(EngineDevice& device, VkRenderPass renderPass, const char* textureFileName) : appDevice{device} {
+	EngineSimpleTextureRenderSystem::EngineSimpleTextureRenderSystem(EngineDevice& device, VkRenderPass renderPass, std::vector<const char*> texturesFileName) : appDevice{device} {
 		this->createBuffers(sizeof(GlobalUBO));
-		this->createTexture(textureFileName);
+		this->createTexture(texturesFileName);
 		this->createDescriptor();
 		this->createPipelineLayout();
 		this->createPipeline(renderPass);
@@ -45,19 +45,21 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineSimpleTextureRenderSystem::createTexture(const char* textureFileName) {
-		this->globalTextures.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
+	void EngineSimpleTextureRenderSystem::createTexture(std::vector<const char*> texturesFileName) {
+		this->globalTextures.resize(texturesFileName.size());
 		for (int i = 0; i < this->globalTextures.size(); i++) {
-			this->globalTextures[i] = std::make_unique<EngineTexture>(this->appDevice, textureFileName);
+			this->globalTextures[i] = std::make_unique<EngineTexture>(this->appDevice, texturesFileName[i]);
 		}
 	}
 
 	void EngineSimpleTextureRenderSystem::createDescriptor() {
+		const int totalDescriptorCount = this->globalUboBuffers.size() * this->globalTextures.size();
+
 		this->globalPool = 
 			EngineDescriptorPool::Builder(this->appDevice)
-				.setMaxSets(EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
-				.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
-        .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
+				.setMaxSets(totalDescriptorCount)
+				.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, totalDescriptorCount)
+        .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, totalDescriptorCount)
 				.build();
 
 		this->globalSetLayout = 
@@ -66,15 +68,20 @@ namespace nugiEngine {
         .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
 				.build();
 
-		this->globalDescriptorSets.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
-		for (int i = 0; i < this->globalDescriptorSets.size(); i++) {
-			auto bufferInfo = this->globalUboBuffers[i]->descriptorInfo();
-      auto textureInfo = this->globalTextures[i]->getDescriptorInfo();
+		this->globalDescriptorSets.resize(totalDescriptorCount);
+		
+		for (int iTextures = 0; iTextures < this->globalTextures.size(); iTextures++) {
+			for (int iBuffers = 0; iBuffers < this->globalUboBuffers.size(); iBuffers++) {
+				const int index = (iTextures * this->globalUboBuffers.size()) + iBuffers;
 
-			EngineDescriptorWriter(*this->globalSetLayout, *this->globalPool)
-				.writeBuffer(0, &bufferInfo)
-        .writeImage(1, &textureInfo)
-				.build(this->globalDescriptorSets[i]);
+				auto bufferInfo = this->globalUboBuffers[index]->descriptorInfo();
+      	auto textureInfo = this->globalTextures[index]->getDescriptorInfo();
+
+				EngineDescriptorWriter(*this->globalSetLayout, *this->globalPool)
+					.writeBuffer(0, &bufferInfo)
+					.writeImage(1, &textureInfo)
+					.build(this->globalDescriptorSets[index]);
+			}
 		}
 	}
 
@@ -123,18 +130,21 @@ namespace nugiEngine {
 	void EngineSimpleTextureRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects) {
 		this->pipeline->bind(commandBuffer);
 
-		vkCmdBindDescriptorSets(
-			commandBuffer,
-			VK_PIPELINE_BIND_POINT_GRAPHICS,
-			this->pipelineLayout,
-			0,
-			1,
-			&frameInfo.globalDescriptorSet,
-			0,
-			nullptr
-		);
+		for (int iObj = 0; iObj < gameObjects.size(); iObj++) {
+			auto& obj = gameObjects[iObj];
+			auto descpSet = this->getGlobalDescriptorSets(iObj * frameInfo.frameIndex);
 
-		for (auto& obj : gameObjects) {
+			vkCmdBindDescriptorSets(
+				commandBuffer,
+				VK_PIPELINE_BIND_POINT_GRAPHICS,
+				this->pipelineLayout,
+				0,
+				1,
+				&descpSet,
+				0,
+				nullptr
+			);
+
 			SimplePushConstantData pushConstant{};
 
 			pushConstant.modelMatrix = obj.transform.mat4();
@@ -142,7 +152,7 @@ namespace nugiEngine {
 
 			vkCmdPushConstants(
 				commandBuffer, 
-				pipelineLayout, 
+				this->pipelineLayout, 
 				VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 				0,
 				sizeof(SimplePushConstantData),

@@ -190,9 +190,9 @@ namespace nugiEngine {
 				}
 
 				if (index.texcoord_index >= 0) {
-					vertex.uv = {
+					vertex.uv = { // temoirary. for OBJ object only
 						attrib.texcoords[2 * index.texcoord_index + 0],
-						attrib.texcoords[2 * index.texcoord_index + 1]
+    				1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
 					};
 				}
 

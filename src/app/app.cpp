@@ -25,7 +25,9 @@ namespace nugiEngine {
 	EngineApp::~EngineApp() {}
 
 	void EngineApp::run() {
-		EngineSimpleTextureRenderSystem renderSystem{this->device, this->renderer.getSwapChainRenderPass(), "textures/texture.jpg"};
+		std::vector<const char*> texturesFilename = {"textures/texture.jpg"};
+		
+		EngineSimpleTextureRenderSystem renderSystem{this->device, this->renderer.getSwapChainRenderPass(), texturesFilename};
 		EngineCamera camera{};
 
 		auto viewObject = EngineGameObject::createGameObject();

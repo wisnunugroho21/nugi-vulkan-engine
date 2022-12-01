@@ -23,7 +23,7 @@ namespace nugiEngine {
 	class EngineSimpleTextureRenderSystem
 	{
 		public:
-			EngineSimpleTextureRenderSystem(EngineDevice& device, VkRenderPass renderPass, const char* textureFileName);
+			EngineSimpleTextureRenderSystem(EngineDevice& device, VkRenderPass renderPass, std::vector<const char*> texturesFileName);
 			~EngineSimpleTextureRenderSystem();
 
 			EngineSimpleTextureRenderSystem(const EngineSimpleTextureRenderSystem&) = delete;
@@ -38,7 +38,7 @@ namespace nugiEngine {
 			void createPipelineLayout();
 			void createPipeline(VkRenderPass renderPass);
 			void createBuffers(unsigned long sizeUBO);
-			void createTexture(const char* textureFileName);
+			void createTexture(std::vector<const char*> textureFileName);
 			void createDescriptor();
 
 			EngineDevice& appDevice;
