@@ -31,5 +31,5 @@ void main() {
     
     vec4 finalLightColor = vec4((diffuseLight + ambientLight) * fragColor, 1.0);
 
-    outColor = finalLightColor * texture(texSampler, fragTexCoord)
+    outColor = finalLightColor * texture(texSampler, fragTexCoord);
 }

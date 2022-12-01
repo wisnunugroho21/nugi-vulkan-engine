@@ -21,6 +21,7 @@ namespace nugiEngine {
 	EngineSimpleTextureRenderSystem::EngineSimpleTextureRenderSystem(EngineDevice& device, VkRenderPass renderPass, const char* textureFileName) : appDevice{device} {
 		this->createBuffers(sizeof(GlobalUBO));
 		this->createTexture(textureFileName);
+		this->createDescriptor();
 		this->createPipelineLayout();
 		this->createPipeline(renderPass);
 	}

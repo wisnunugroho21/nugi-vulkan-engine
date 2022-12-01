@@ -1,5 +1,6 @@
 #include "texture.hpp"
 
+#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #include <vulkan/vulkan.h>
 #include <stdexcept>
@@ -26,8 +27,8 @@ namespace nugiEngine {
       throw std::runtime_error("failed to load texture image!");
     }
 
-    int pixelSize = texChannels;
-    int pixelCount = texWidth * texHeight;
+    unsigned long pixelSize = 4;
+    uint32_t pixelCount = texWidth * texHeight;
 
     EngineBuffer stagingBuffer {
 			this->appDevice,

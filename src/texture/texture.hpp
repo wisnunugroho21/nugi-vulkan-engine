@@ -8,6 +8,8 @@
 #include "../command/command_buffer.hpp"
 #include "../image/image.hpp"
 
+#include <memory>
+
 namespace nugiEngine
 {
   class EngineTexture
