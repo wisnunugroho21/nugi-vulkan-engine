@@ -1,6 +1,6 @@
 #include "app.hpp"
 
-#include "../renderer_system/simple_render_system.hpp"
+#include "../renderer_system/simple_texture_render_system.hpp"
 #include "../camera/camera.hpp"
 #include "../keyboard_controller/keyboard_controller.hpp"
 #include "../buffer/buffer.hpp"
@@ -25,7 +25,7 @@ namespace nugiEngine {
 	EngineApp::~EngineApp() {}
 
 	void EngineApp::run() {
-		EngineSimpleRenderSystem renderSystem{this->device, this->renderer.getSwapChainRenderPass()};
+		EngineSimpleTextureRenderSystem renderSystem{this->device, this->renderer.getSwapChainRenderPass(), "textures/texture.jpg"};
 		EngineCamera camera{};
 
 		auto viewObject = EngineGameObject::createGameObject();
