@@ -74,8 +74,8 @@ namespace nugiEngine {
 			for (int iBuffers = 0; iBuffers < this->globalUboBuffers.size(); iBuffers++) {
 				const int index = (iTextures * this->globalUboBuffers.size()) + iBuffers;
 
-				auto bufferInfo = this->globalUboBuffers[index]->descriptorInfo();
-      	auto textureInfo = this->globalTextures[index]->getDescriptorInfo();
+				auto bufferInfo = this->globalUboBuffers[iBuffers]->descriptorInfo();
+      	auto textureInfo = this->globalTextures[iTextures]->getDescriptorInfo();
 
 				EngineDescriptorWriter(*this->globalSetLayout, *this->globalPool)
 					.writeBuffer(0, &bufferInfo)

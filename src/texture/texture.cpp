@@ -21,7 +21,7 @@ namespace nugiEngine {
   void EngineTexture::createTextureImage(const char* textureFileName) {
     int texWidth, texHeight, texChannels;
     stbi_uc* pixels = stbi_load(textureFileName, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-    VkDeviceSize imageSize = texWidth * texHeight * texChannels;
+    VkDeviceSize imageSize = texWidth * texHeight * 4;
 
     if (!pixels) {
       throw std::runtime_error("failed to load texture image!");
