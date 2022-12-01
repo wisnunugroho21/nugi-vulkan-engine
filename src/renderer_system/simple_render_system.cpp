@@ -20,6 +20,7 @@ namespace nugiEngine {
 
 	EngineSimpleRenderSystem::EngineSimpleRenderSystem(EngineDevice& device, VkRenderPass renderPass) : appDevice{device} {
 		this->createBuffers(sizeof(GlobalUBO));
+		this->createDescriptor();
 		this->createPipelineLayout();
 		this->createPipeline(renderPass);
 	}
@@ -29,12 +30,6 @@ namespace nugiEngine {
 	}
 
 	void EngineSimpleRenderSystem::createBuffers(unsigned long sizeUBO) {
-		this->globalPool = 
-			EngineDescriptorPool::Builder(this->appDevice)
-				.setMaxSets(EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
-				.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
-				.build();
-
 		this->globalUboBuffers.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
 		for (int i = 0; i < this->globalUboBuffers.size(); i++) {
 			this->globalUboBuffers[i] = std::make_unique<EngineBuffer>(
@@ -47,6 +42,14 @@ namespace nugiEngine {
 
 			this->globalUboBuffers[i]->map();
 		}
+	}
+
+	void EngineSimpleRenderSystem::createDescriptor() {
+		this->globalPool = 
+			EngineDescriptorPool::Builder(this->appDevice)
+				.setMaxSets(EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
+				.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
+				.build();
 
 		this->globalSetLayout = 
 			EngineDescriptorSetLayout::Builder(this->appDevice)

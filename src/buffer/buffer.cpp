@@ -152,7 +152,7 @@ namespace nugiEngine {
    */
   VkDescriptorBufferInfo EngineBuffer::descriptorInfo(VkDeviceSize size, VkDeviceSize offset) {
     return VkDescriptorBufferInfo{
-        buffer,
+        this->buffer,
         offset,
         size,
     };

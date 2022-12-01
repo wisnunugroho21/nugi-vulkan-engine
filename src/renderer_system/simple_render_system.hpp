@@ -37,6 +37,7 @@ namespace nugiEngine {
 			void createPipelineLayout();
 			void createPipeline(VkRenderPass renderPass);
 			void createBuffers(unsigned long sizeUBO);
+			void createDescriptor();
 
 			EngineDevice& appDevice;
 			
