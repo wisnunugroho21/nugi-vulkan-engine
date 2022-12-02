@@ -1,6 +1,5 @@
 #include "app.hpp"
 
-#include "../renderer_system/simple_texture_render_system.hpp"
 #include "../camera/camera.hpp"
 #include "../keyboard_controller/keyboard_controller.hpp"
 #include "../buffer/buffer.hpp"
@@ -20,14 +19,16 @@
 namespace nugiEngine {
 	EngineApp::EngineApp() {
 		this->loadObjects();
+
+		for (auto& obj : this->gameObjects) {
+			obj.textureDescSet = this->renderSystem.setupTextureDescriptorSet(obj.texture->getDescriptorInfo());
+		}
 	}
 
 	EngineApp::~EngineApp() {}
 
 	void EngineApp::run() {
 		std::vector<const char*> texturesFilename = {"textures/texture.jpg"};
-		
-		EngineSimpleTextureRenderSystem renderSystem{this->device, this->renderer.getSwapChainRenderPass(), texturesFilename};
 		EngineCamera camera{};
 
 		auto viewObject = EngineGameObject::createGameObject();
@@ -55,8 +56,7 @@ namespace nugiEngine {
 				FrameInfo frameInfo {
 					frameIndex,
 					frameTime,
-					camera,
-					renderSystem.getGlobalDescriptorSets(frameIndex)
+					camera
 				};
 
 				// update
@@ -77,9 +77,11 @@ namespace nugiEngine {
 
 	void EngineApp::loadObjects() {
 		std::shared_ptr<EngineModel> flatVaseModel = EngineModel::createModelFromFile(this->device, "models/flat_vase.obj");
+		std::shared_ptr<EngineTexture> flatVaseTexture = std::make_shared<EngineTexture>(this->device, "texture/flat_vase.obj");
 
 		auto flatVase = EngineGameObject::createGameObject();
 		flatVase.model = flatVaseModel;
+		flatVase.texture = flatVaseTexture;
 		flatVase.transform.translation = {-0.5f, 0.5f, 0.0f};
 		flatVase.transform.scale = {3.0f, 1.5f, 3.0f};
 		flatVase.color = {1.0f, 1.0f, 1.0f};
@@ -87,9 +89,11 @@ namespace nugiEngine {
 		this->gameObjects.push_back(std::move(flatVase)); 
 
 		std::shared_ptr<EngineModel> smoothVaseModel = EngineModel::createModelFromFile(this->device, "models/smooth_vase.obj");
+		std::shared_ptr<EngineTexture> smoothSaveTexture = std::make_shared<EngineTexture>(this->device, "texture/smooth_vase.obj");
 
 		auto smoothVase = EngineGameObject::createGameObject();
 		smoothVase.model = smoothVaseModel;
+		flatVase.texture = smoothSaveTexture;
 		smoothVase.transform.translation = {0.5f, 0.5f, 0.0f};
 		smoothVase.transform.scale = {3.0f, 1.5f, 3.0f};
 		smoothVase.color = {1.0f, 1.0f, 1.0f};

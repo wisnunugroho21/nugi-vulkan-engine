@@ -23,34 +23,36 @@ namespace nugiEngine {
 	class EngineSimpleTextureRenderSystem
 	{
 		public:
-			EngineSimpleTextureRenderSystem(EngineDevice& device, VkRenderPass renderPass, std::vector<const char*> texturesFileName);
+			EngineSimpleTextureRenderSystem(EngineDevice& device, VkRenderPass renderPass, int objCount);
 			~EngineSimpleTextureRenderSystem();
 
 			EngineSimpleTextureRenderSystem(const EngineSimpleTextureRenderSystem&) = delete;
 			EngineSimpleTextureRenderSystem& operator = (const EngineSimpleTextureRenderSystem&) = delete;
 
-			VkDescriptorSet getGlobalDescriptorSets(int index) { return this->globalDescriptorSets[index]; }
+			VkDescriptorSet getBufferDescriptorSets(int index) { return this->bufferDescriptorSets[index]; }
 
 			void writeUniformBuffer(int frameIndex, void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+			VkDescriptorSet setupTextureDescriptorSet(VkDescriptorImageInfo descImageInfo);
 			void renderGameObjects(VkCommandBuffer commandBuffer, FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects);
 
 		private:
 			void createPipelineLayout();
 			void createPipeline(VkRenderPass renderPass);
 			void createBuffers(unsigned long sizeUBO);
-			void createTexture(std::vector<const char*> textureFileName);
-			void createDescriptor();
+			void createDescriptor(int objCount);
 
 			EngineDevice& appDevice;
 			
 			VkPipelineLayout pipelineLayout;
 			std::unique_ptr<EnginePipeline> pipeline;
 
-			std::unique_ptr<EngineDescriptorPool> globalPool{};
-			std::unique_ptr<EngineDescriptorSetLayout> globalSetLayout{};
-			std::vector<VkDescriptorSet> globalDescriptorSets;
+			std::unique_ptr<EngineDescriptorPool> bufferDescPool{};
+			std::unique_ptr<EngineDescriptorSetLayout> bufferDescSetLayout{};
+			std::vector<VkDescriptorSet> bufferDescriptorSets;
+
+			std::unique_ptr<EngineDescriptorPool> textureDescPool{};
+			std::unique_ptr<EngineDescriptorSetLayout> textureDescSetLayout{};
 
       std::vector<std::shared_ptr<EngineBuffer>> globalUboBuffers;
-      std::vector<std::shared_ptr<EngineTexture>> globalTextures;
 	};
 }
