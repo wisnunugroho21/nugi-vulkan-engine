@@ -19,15 +19,15 @@
 namespace nugiEngine {
 	EngineApp::EngineApp() {
 		this->loadObjects();
-
-		for (auto& obj : this->gameObjects) {
-			obj.textureDescSet = this->renderSystem.setupTextureDescriptorSet(obj.texture->getDescriptorInfo());
-		}
 	}
 
 	EngineApp::~EngineApp() {}
 
 	void EngineApp::run() {
+		for (auto& obj : this->gameObjects) {
+			obj.textureDescSet = this->renderSystem.setupTextureDescriptorSet(obj.texture->getDescriptorInfo());
+		}
+
 		std::vector<const char*> texturesFilename = {"textures/texture.jpg"};
 		EngineCamera camera{};
 

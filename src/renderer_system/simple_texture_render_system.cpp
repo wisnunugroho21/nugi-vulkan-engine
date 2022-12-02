@@ -46,7 +46,7 @@ namespace nugiEngine {
 
 	VkDescriptorSet EngineSimpleTextureRenderSystem::setupTextureDescriptorSet(VkDescriptorImageInfo descImageInfo) {
 		VkDescriptorSet descSet;
-		EngineDescriptorWriter(*this->bufferDescSetLayout, *this->bufferDescPool)
+		EngineDescriptorWriter(*this->textureDescSetLayout, *this->textureDescPool)
 			.writeImage(0, &descImageInfo)
 			.build(descSet);
 

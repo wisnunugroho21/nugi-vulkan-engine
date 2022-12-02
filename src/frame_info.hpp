@@ -9,7 +9,6 @@ namespace nugiEngine {
   int frameIndex;
   float frameTime;
   EngineCamera &camera;
-  VkDescriptorSet globalDescriptorSet;
 };
   
 } // namespace nugiEngine

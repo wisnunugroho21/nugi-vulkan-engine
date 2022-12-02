@@ -109,6 +109,7 @@ namespace nugiEngine {
 
 	void EngineSimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects) {
 		this->pipeline->bind(commandBuffer);
+		auto globalDescSet = this->getGlobalDescriptorSets(frameInfo.frameIndex);
 
 		vkCmdBindDescriptorSets(
 			commandBuffer,
@@ -116,7 +117,7 @@ namespace nugiEngine {
 			this->pipelineLayout,
 			0,
 			1,
-			&frameInfo.globalDescriptorSet,
+			&globalDescSet,
 			0,
 			nullptr
 		);
