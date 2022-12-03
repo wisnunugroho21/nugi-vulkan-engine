@@ -47,6 +47,9 @@ namespace nugiEngine {
 		PipelineConfigInfo pipelineConfig{};
 		EnginePipeline::defaultPipelineConfigInfo(this->appDevice, pipelineConfig);
 
+		pipelineConfig.bindingDescriptions.clear();
+		pipelineConfig.attributeDescriptions.clear();
+		
 		pipelineConfig.renderPass = renderPass;
 		pipelineConfig.pipelineLayout = this->pipelineLayout;
 
