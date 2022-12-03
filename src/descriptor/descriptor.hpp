@@ -73,7 +73,7 @@ class EngineDescriptorPool {
   EngineDescriptorPool(const EngineDescriptorPool &) = delete;
   EngineDescriptorPool &operator=(const EngineDescriptorPool &) = delete;
  
-  bool allocateDescriptor(const VkDescriptorSetLayout descriptorSetLayout, VkDescriptorSet &descriptor) const;
+  bool allocateDescriptor(const VkDescriptorSetLayout descriptorSetLayout, VkDescriptorSet *descriptor) const;
   void freeDescriptors(std::vector<VkDescriptorSet> &descriptors) const;
   void resetPool();
  
@@ -91,8 +91,8 @@ class EngineDescriptorWriter {
   EngineDescriptorWriter &writeBuffer(uint32_t binding, VkDescriptorBufferInfo *bufferInfo);
   EngineDescriptorWriter &writeImage(uint32_t binding, VkDescriptorImageInfo *imageInfo);
  
-  bool build(VkDescriptorSet &set);
-  void overwrite(VkDescriptorSet &set);
+  bool build(VkDescriptorSet *set);
+  void overwrite(VkDescriptorSet *set);
  
  private:
   EngineDescriptorSetLayout &setLayout;

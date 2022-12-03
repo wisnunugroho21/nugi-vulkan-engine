@@ -103,7 +103,7 @@ namespace nugiEngine {
     vkDestroyDescriptorPool(this->engineDevice.getLogicalDevice(), descriptorPool, nullptr);
   }
   
-  bool EngineDescriptorPool::allocateDescriptor(const VkDescriptorSetLayout descriptorSetLayout, VkDescriptorSet &descriptor) const {
+  bool EngineDescriptorPool::allocateDescriptor(const VkDescriptorSetLayout descriptorSetLayout, VkDescriptorSet *descriptor) const {
     VkDescriptorSetAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     allocInfo.descriptorPool = this->descriptorPool;
@@ -112,7 +112,7 @@ namespace nugiEngine {
   
     // Might want to create a "DescriptorPoolManager" class that handles this case, and builds
     // a new pool whenever an old pool fills up. But this is beyond our current scope
-    if (vkAllocateDescriptorSets(this->engineDevice.getLogicalDevice(), &allocInfo, &descriptor) != VK_SUCCESS) {
+    if (vkAllocateDescriptorSets(this->engineDevice.getLogicalDevice(), &allocInfo, descriptor) != VK_SUCCESS) {
       return false;
     }
     return true;
@@ -174,7 +174,7 @@ namespace nugiEngine {
     return *this;
   }
   
-  bool EngineDescriptorWriter::build(VkDescriptorSet &set) {
+  bool EngineDescriptorWriter::build(VkDescriptorSet *set) {
     bool success = this->pool.allocateDescriptor(this->setLayout.getDescriptorSetLayout(), set);
     if (!success) {
       return false;
@@ -184,9 +184,9 @@ namespace nugiEngine {
     return true;
   }
   
-  void EngineDescriptorWriter::overwrite(VkDescriptorSet &set) {
+  void EngineDescriptorWriter::overwrite(VkDescriptorSet *set) {
     for (auto &write : this->writes) {
-      write.dstSet = set;
+      write.dstSet = *set;
     }
     
     vkUpdateDescriptorSets(this->pool.engineDevice.getLogicalDevice(), this->writes.size(), this->writes.data(), 0, nullptr);

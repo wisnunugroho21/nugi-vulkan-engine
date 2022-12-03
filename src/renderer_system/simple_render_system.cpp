@@ -58,8 +58,8 @@ namespace nugiEngine {
 
 		this->pipeline = std::make_unique<EnginePipeline>(
 			this->appDevice, 
-			"bin/shader/simple_shader.vert.spv",
-			"bin/shader/simple_shader.frag.spv",
+			"shader/simple_shader.vert.spv",
+			"shader/simple_shader.frag.spv",
 			pipelineConfig
 		);
 	}

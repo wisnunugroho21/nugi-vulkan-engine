@@ -72,17 +72,18 @@ namespace nugiEngine {
 
 		this->pipeline = std::make_unique<EnginePipeline>(
 			this->appDevice, 
-			"bin/shader/simple_texture_shader.vert.spv",
-			"bin/shader/simple_texture_shader.frag.spv",
+			"shader/simple_texture_shader.vert.spv",
+			"shader/simple_texture_shader.frag.spv",
 			pipelineConfig
 		);
 	}
 
-	VkDescriptorSet EngineSimpleTextureRenderSystem::setupTextureDescriptorSet(VkDescriptorImageInfo descImageInfo) {
-		VkDescriptorSet descSet;
+	std::shared_ptr<VkDescriptorSet> EngineSimpleTextureRenderSystem::setupTextureDescriptorSet(VkDescriptorImageInfo descImageInfo) {
+		std::shared_ptr<VkDescriptorSet> descSet = std::make_shared<VkDescriptorSet>();
+
 		EngineDescriptorWriter(*this->textureDescSetLayout, *this->textureDescPool)
 			.writeImage(0, &descImageInfo)
-			.build(descSet);
+			.build(descSet.get());
 
 		return descSet;
 	}
@@ -91,7 +92,7 @@ namespace nugiEngine {
 		this->pipeline->bind(commandBuffer);
 
 		for (auto& obj : gameObjects) {
-			VkDescriptorSet descpSet[2] = { UBODescSet, obj.textureDescSet };
+			VkDescriptorSet descpSet[2] = { UBODescSet, *obj.textureDescSet };
 
 			vkCmdBindDescriptorSets(
 				commandBuffer,

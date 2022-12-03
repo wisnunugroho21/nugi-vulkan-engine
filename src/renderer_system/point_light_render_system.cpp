@@ -49,14 +49,14 @@ namespace nugiEngine {
 
 		pipelineConfig.bindingDescriptions.clear();
 		pipelineConfig.attributeDescriptions.clear();
-		
+
 		pipelineConfig.renderPass = renderPass;
 		pipelineConfig.pipelineLayout = this->pipelineLayout;
 
 		this->pipeline = std::make_unique<EnginePipeline>(
 			this->appDevice, 
-			"bin/shader/point_light.vert.spv",
-			"bin/shader/point_light.frag.spv",
+			"shader/point_light.vert.spv",
+			"shader/point_light.frag.spv",
 			pipelineConfig
 		);
 	}

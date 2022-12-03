@@ -40,7 +40,7 @@ namespace nugiEngine {
 
 		std::shared_ptr<EngineModel> model{};
 		std::shared_ptr<EngineTexture> texture{};
-		VkDescriptorSet textureDescSet{};
+		std::shared_ptr<VkDescriptorSet> textureDescSet{};
 	private:
 		id_t objectId;
 	};

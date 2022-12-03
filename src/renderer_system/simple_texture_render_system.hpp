@@ -22,7 +22,7 @@ namespace nugiEngine {
 			EngineSimpleTextureRenderSystem(const EngineSimpleTextureRenderSystem&) = delete;
 			EngineSimpleTextureRenderSystem& operator = (const EngineSimpleTextureRenderSystem&) = delete;
 			
-			VkDescriptorSet setupTextureDescriptorSet(VkDescriptorImageInfo descImageInfo);
+			std::shared_ptr<VkDescriptorSet> setupTextureDescriptorSet(VkDescriptorImageInfo descImageInfo);
 			void render(VkCommandBuffer commandBuffer, VkDescriptorSet UBODescSet, FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects);
 
 		private:

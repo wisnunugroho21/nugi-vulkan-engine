@@ -1,5 +1,5 @@
 #include "renderer.hpp"
-#include "globalUbo.hpp"
+#include "../globalUbo.hpp"
 
 #include <stdexcept>
 #include <array>
@@ -71,7 +71,7 @@ namespace nugiEngine {
 
 			EngineDescriptorWriter(*this->globalUboDescSetLayout, *this->globalUboDescPool)
 				.writeBuffer(0, &bufferInfo)
-				.build(this->globalUboDescriptorSets[iBuffers]);
+				.build(this->globalUboDescriptorSets[iBuffers].get());
 		}
 	}
 

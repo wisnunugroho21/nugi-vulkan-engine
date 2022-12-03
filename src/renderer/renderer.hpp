@@ -24,7 +24,7 @@ namespace nugiEngine {
 			bool isFrameInProgress() const { return this->isFrameStarted; }
 			float getAspectRatio() const { return this->swapChain->extentAspectRatio(); }
 			VkRenderPass getSwapChainRenderPass() const { return this->swapChain->getRenderPass(); }
-			VkDescriptorSet getBufferDescriptorSets(int index) { return this->globalUboDescriptorSets[index]; }
+			std::shared_ptr<VkDescriptorSet> getBufferDescriptorSets(int index) { return this->globalUboDescriptorSets[index]; }
 			VkDescriptorSetLayout getGlobalUboDescSetLayout() { return this->globalUboDescSetLayout->getDescriptorSetLayout(); }
 
 			VkCommandBuffer getCommandBuffer() { 
@@ -57,7 +57,7 @@ namespace nugiEngine {
 
 			std::unique_ptr<EngineDescriptorPool> globalUboDescPool{};
 			std::unique_ptr<EngineDescriptorSetLayout> globalUboDescSetLayout{};
-			std::vector<VkDescriptorSet> globalUboDescriptorSets;
+			std::vector<std::shared_ptr<VkDescriptorSet>> globalUboDescriptorSets;
 			std::vector<std::shared_ptr<EngineBuffer>> globalUboBuffers;
 
 			uint32_t currentImageIndex = 0;
