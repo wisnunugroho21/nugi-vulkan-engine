@@ -67,6 +67,7 @@ namespace nugiEngine {
 		this->globalUboDescriptorSets.resize(this->globalUboBuffers.size());
 		
 		for (int iBuffers = 0; iBuffers < this->globalUboBuffers.size(); iBuffers++) {
+			this->globalUboDescriptorSets[iBuffers] = std::make_shared<VkDescriptorSet>();
 			auto bufferInfo = this->globalUboBuffers[iBuffers]->descriptorInfo();
 
 			EngineDescriptorWriter(*this->globalUboDescSetLayout, *this->globalUboDescPool)

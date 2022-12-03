@@ -33,7 +33,7 @@ namespace nugiEngine {
       EngineDevice &engineDevice, std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings)
       : engineDevice{engineDevice}, bindings{bindings} {
     std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings{};
-    for (auto kv : bindings) {
+    for (auto& kv : bindings) {
       setLayoutBindings.push_back(kv.second);
     }
   
