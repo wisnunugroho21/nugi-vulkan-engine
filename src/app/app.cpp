@@ -32,15 +32,22 @@ namespace nugiEngine {
 		EngineKeyboardController keyboardController{};
 
 		auto currentTime = std::chrono::high_resolution_clock::now();
+		int t = 0;
+
 		while (!this->window.shouldClose()) {
 			this->window.pollEvents();
 
 			auto newTime = std::chrono::high_resolution_clock::now();
 			float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
-			currentTime = newTime;
 
-			std::string appTitle = std::string(APP_TITLE) + std::string(" | FPS: ") + std::to_string((1.0f / frameTime));
-			glfwSetWindowTitle(this->window.getWindow(), appTitle.c_str());
+			if (t == 100) {
+				std::string appTitle = std::string(APP_TITLE) + std::string(" | FPS: ") + std::to_string((1.0f / frameTime));
+				glfwSetWindowTitle(this->window.getWindow(), appTitle.c_str());
+			} else {
+				t++;
+			}
+
+			currentTime = newTime;
 
 			keyboardController.moveInPlaceXZ(this->window.getWindow(), frameTime, viewObject);
 			camera.setViewYXZ(viewObject.transform.translation, viewObject.transform.rotation);
