@@ -10,6 +10,8 @@
 #include <memory>
 #include <vector>
 
+#define APP_TITLE "Testing Vulkan"
+
 namespace nugiEngine {
 	class EngineApp
 	{
@@ -29,7 +31,7 @@ namespace nugiEngine {
 			void loadObjects();
 			void init();
 
-			EngineWindow window{WIDTH, HEIGHT, "Testing vulkan"};
+			EngineWindow window{WIDTH, HEIGHT, APP_TITLE};
 			EngineDevice device{window};
 			
 			std::shared_ptr<EngineRenderer> renderer{};

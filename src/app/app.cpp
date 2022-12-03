@@ -25,7 +25,6 @@ namespace nugiEngine {
 	EngineApp::~EngineApp() {}
 
 	void EngineApp::run() {
-		std::vector<const char*> texturesFilename = {"textures/texture.jpg"};
 		EngineCamera camera{};
 
 		auto viewObject = EngineGameObject::createGameObject();
@@ -40,7 +39,8 @@ namespace nugiEngine {
 			float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
 			currentTime = newTime;
 
-			std::cerr << "FPS: " << (1.0f / frameTime) << '\n';
+			std::string appTitle = std::string(APP_TITLE) + std::string(" | FPS: ") + std::to_string((1.0f / frameTime));
+			glfwSetWindowTitle(this->window.getWindow(), appTitle.c_str());
 
 			keyboardController.moveInPlaceXZ(this->window.getWindow(), frameTime, viewObject);
 			camera.setViewYXZ(viewObject.transform.translation, viewObject.transform.rotation);
