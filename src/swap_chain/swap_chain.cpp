@@ -180,7 +180,7 @@ namespace nugiEngine {
 
     this->swapChainImages.clear();
     for (uint32_t i = 0; i < imageCount; i++) {
-      auto swapChainImage = std::make_shared<EngineImage>(this->device, tempSwapChainImages[i], this->swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+      auto swapChainImage = std::make_shared<EngineImage>(this->device, tempSwapChainImages[i], 1, this->swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
       this->swapChainImages.push_back(swapChainImage);
     }
   }
@@ -281,7 +281,7 @@ namespace nugiEngine {
 
     for (int i = 0; i < this->imageCount(); i++) {
       auto depthImage = std::make_shared<EngineImage>(
-        this->device, this->swapChainExtent.width, this->swapChainExtent.height, depthFormat, 
+        this->device, this->swapChainExtent.width, this->swapChainExtent.height, 1, depthFormat, 
         VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_DEPTH_BIT
       );

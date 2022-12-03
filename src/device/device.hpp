@@ -37,9 +37,10 @@ namespace nugiEngine {
       void operator=(const EngineDevice &) = delete;
       EngineDevice(EngineDevice &&) = delete;
       EngineDevice &operator=(EngineDevice &&) = delete;
-
-      VkCommandPool getCommandPool() { return this->commandPool; }
+      
       VkDevice getLogicalDevice() { return this->device; }
+      VkPhysicalDevice getPhysicalDevice() { return this->physicalDevice; }
+      VkCommandPool getCommandPool() { return this->commandPool; }
       VkSurfaceKHR getSurface() { return this->surface; }
       VkQueue getGraphicsQueue() { return this->graphicsQueue; }
       VkQueue getPresentQueue() { return this->presentQueue; }

@@ -23,7 +23,9 @@ namespace nugiEngine
     private:
       EngineDevice &appDevice;
       std::unique_ptr<EngineImage> image;
+
       VkSampler sampler;
+      uint32_t mipLevels;
 
       void createTextureImage(const char* textureFileName);
       void createTextureSampler();

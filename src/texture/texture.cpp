@@ -4,6 +4,7 @@
 #include <stb_image.h>
 #include <vulkan/vulkan.h>
 #include <stdexcept>
+#include <cmath>
 
 #include "../buffer/buffer.hpp"
 #include "../command/command_buffer.hpp"
@@ -27,6 +28,8 @@ namespace nugiEngine {
       throw std::runtime_error("failed to load texture image!");
     }
 
+    this->mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
+
     unsigned long pixelSize = 4;
     uint32_t pixelCount = texWidth * texHeight;
 
@@ -44,13 +47,14 @@ namespace nugiEngine {
 
     stbi_image_free(pixels);
 
-    this->image = std::make_unique<EngineImage>(this->appDevice, texWidth, texHeight, VK_FORMAT_R8G8B8A8_SRGB, 
-      VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, 
+    this->image = std::make_unique<EngineImage>(this->appDevice, texWidth, texHeight, this->mipLevels, VK_FORMAT_R8G8B8A8_SRGB, 
+      VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, 
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_COLOR_BIT);
 
     this->image->transitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     stagingBuffer.copyBufferToImage(this->image->getImage(), static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), 1);
-    this->image->transitionImageLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    this->image->generateMipMap();
+    // this->image->transitionImageLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
   }
 
   void EngineTexture::createTextureSampler() {
@@ -73,9 +77,9 @@ namespace nugiEngine {
     samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
 
     samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-    samplerInfo.mipLodBias = 0.0f;
-    samplerInfo.minLod = 0.0f;
-    samplerInfo.maxLod = 0.0f;
+    samplerInfo.minLod = 0.0f; // Optional
+    samplerInfo.maxLod = static_cast<float>(this->mipLevels);
+    samplerInfo.mipLodBias = 0.0f; // Optional
 
     if (vkCreateSampler(this->appDevice.getLogicalDevice(), &samplerInfo, nullptr, &this->sampler) != VK_SUCCESS) {
       throw std::runtime_error("failed to create texture sampler!");
