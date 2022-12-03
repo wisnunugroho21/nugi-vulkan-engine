@@ -1,4 +1,4 @@
-#include "simple_render_system.hpp"
+#include "point_light_system.hpp"
 
 #include "../swap_chain/swap_chain.hpp"
 
@@ -12,24 +12,18 @@
 #include <string>
 
 namespace nugiEngine {
-
-	struct SimplePushConstantData {
-		glm::mat4 modelMatrix{1.0f};
-		glm::mat4 normalMatrix{1.0f};
-	};
-
-	EngineSimpleRenderSystem::EngineSimpleRenderSystem(EngineDevice& device, VkRenderPass renderPass) : appDevice{device} {
+	EnginePointLightRenderSystem::EnginePointLightRenderSystem(EngineDevice& device, VkRenderPass renderPass) : appDevice{device} {
 		this->createBuffers(sizeof(GlobalUBO));
 		this->createDescriptor();
 		this->createPipelineLayout();
 		this->createPipeline(renderPass);
 	}
 
-	EngineSimpleRenderSystem::~EngineSimpleRenderSystem() {
+	EnginePointLightRenderSystem::~EnginePointLightRenderSystem() {
 		vkDestroyPipelineLayout(this->appDevice.getLogicalDevice(), this->pipelineLayout, nullptr);
 	}
 
-	void EngineSimpleRenderSystem::createBuffers(unsigned long sizeUBO) {
+	void EnginePointLightRenderSystem::createBuffers(unsigned long sizeUBO) {
 		this->globalUboBuffers.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
 		for (int i = 0; i < this->globalUboBuffers.size(); i++) {
 			this->globalUboBuffers[i] = std::make_unique<EngineBuffer>(
@@ -44,7 +38,7 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineSimpleRenderSystem::createDescriptor() {
+	void EnginePointLightRenderSystem::createDescriptor() {
 		this->globalPool = 
 			EngineDescriptorPool::Builder(this->appDevice)
 				.setMaxSets(EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
@@ -65,11 +59,11 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineSimpleRenderSystem::createPipelineLayout() {
-		VkPushConstantRange pushConstantRange{};
+	void EnginePointLightRenderSystem::createPipelineLayout() {
+		/* VkPushConstantRange pushConstantRange{};
 		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 		pushConstantRange.offset = 0;
-		pushConstantRange.size = sizeof(SimplePushConstantData);
+		pushConstantRange.size = sizeof(SimplePushConstantData); */
 
 		std::vector<VkDescriptorSetLayout> descriptorSetLayouts{this->globalSetLayout->getDescriptorSetLayout()}; 
 
@@ -77,15 +71,15 @@ namespace nugiEngine {
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
 		pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
-		pipelineLayoutInfo.pushConstantRangeCount = 1;
-		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+		pipelineLayoutInfo.pushConstantRangeCount = 0;
+		pipelineLayoutInfo.pPushConstantRanges = nullptr;
 
 		if (vkCreatePipelineLayout(this->appDevice.getLogicalDevice(), &pipelineLayoutInfo, nullptr, &this->pipelineLayout) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create pipeline layout!");
 		}
 	}
 
-	void EngineSimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
+	void EnginePointLightRenderSystem::createPipeline(VkRenderPass renderPass) {
 		assert(this->pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
 		PipelineConfigInfo pipelineConfig{};
@@ -96,18 +90,18 @@ namespace nugiEngine {
 
 		this->pipeline = std::make_unique<EnginePipeline>(
 			this->appDevice, 
-			"bin/shader/simple_shader.vert.spv",
-			"bin/shader/simple_shader.frag.spv",
+			"bin/shader/point_light.vert.spv",
+			"bin/shader/point_light.frag.spv",
 			pipelineConfig
 		);
 	}
 
-	void EngineSimpleRenderSystem::writeUniformBuffer(int frameIndex, void* data, VkDeviceSize size, VkDeviceSize offset) {
+	void EnginePointLightRenderSystem::writeUniformBuffer(int frameIndex, void* data, VkDeviceSize size, VkDeviceSize offset) {
 		this->globalUboBuffers[frameIndex]->writeToBuffer(data, size, offset);
 		this->globalUboBuffers[frameIndex]->flush(size, offset);
 	}
 
-	void EngineSimpleRenderSystem::render(VkCommandBuffer commandBuffer, FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects) {
+	void EnginePointLightRenderSystem::render(VkCommandBuffer commandBuffer, FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects) {
 		this->pipeline->bind(commandBuffer);
 		auto globalDescSet = this->getGlobalDescriptorSets(frameInfo.frameIndex);
 
@@ -122,23 +116,6 @@ namespace nugiEngine {
 			nullptr
 		);
 
-		for (auto& obj : gameObjects) {
-			SimplePushConstantData pushConstant{};
-
-			pushConstant.modelMatrix = obj.transform.mat4();
-			pushConstant.normalMatrix = obj.transform.normalMatrix();
-
-			vkCmdPushConstants(
-				commandBuffer, 
-				pipelineLayout, 
-				VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-				0,
-				sizeof(SimplePushConstantData),
-				&pushConstant
-			);
-
-			obj.model->bind(commandBuffer);
-			obj.model->draw(commandBuffer);
-		}
+		vkCmdDraw(commandBuffer, 6, 1, 0, 0);
 	}
 }

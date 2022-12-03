@@ -43,6 +43,8 @@ namespace nugiEngine {
 			if (t == 100) {
 				std::string appTitle = std::string(APP_TITLE) + std::string(" | FPS: ") + std::to_string((1.0f / frameTime));
 				glfwSetWindowTitle(this->window.getWindow(), appTitle.c_str());
+
+				t = 0;
 			} else {
 				t++;
 			}
@@ -71,7 +73,10 @@ namespace nugiEngine {
 
 				// render
 				this->renderer->beginSwapChainRenderPass(commandBuffer);
-				this->renderSystem->renderGameObjects(commandBuffer, frameInfo, this->gameObjects);
+
+				this->renderSystem->render(commandBuffer, frameInfo, this->gameObjects);
+				this->pointLightRenderSystem->render(commandBuffer, frameInfo, this->gameObjects);
+				
 				this->renderer->endSwapChainRenderPass(commandBuffer);
 				this->renderer->endFrame(commandBuffer);
 			}
@@ -108,10 +113,13 @@ namespace nugiEngine {
 
 	void EngineApp::init() {
 		this->renderer = std::make_shared<EngineRenderer>(window, device);
-		this->renderSystem = std::make_shared<EngineSimpleTextureRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->gameObjects.size());
+		this->renderSystem = std::make_shared<EngineSimpleRenderSystem>(this->device, this->renderer->getSwapChainRenderPass());
+		this->pointLightRenderSystem = std::make_shared<EnginePointLightRenderSystem>(this->device, this->renderer->getSwapChainRenderPass());
 
-		for (auto& obj : this->gameObjects) {
+		// this->renderSystem = std::make_shared<EngineSimpleTextureRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->gameObjects.size());
+
+		/* for (auto& obj : this->gameObjects) {
 			obj.textureDescSet = this->renderSystem->setupTextureDescriptorSet(obj.texture->getDescriptorInfo());
-		}
+		} */
 	}
 }

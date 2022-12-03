@@ -1,11 +1,12 @@
 #pragma once
 
-#include "../renderer_system/simple_texture_render_system.hpp"
 #include "../window/window.hpp"
 #include "../device/device.hpp"
 #include "../game_object/game_object.hpp"
 #include "../renderer/renderer.hpp"
 #include "../descriptor/descriptor.hpp"
+#include "../renderer_system/simple_render_system.hpp"
+#include "../renderer_system/point_light_system.hpp"
 
 #include <memory>
 #include <vector>
@@ -35,7 +36,9 @@ namespace nugiEngine {
 			EngineDevice device{window};
 			
 			std::shared_ptr<EngineRenderer> renderer{};
-			std::shared_ptr<EngineSimpleTextureRenderSystem> renderSystem{};
+			std::shared_ptr<EngineSimpleRenderSystem> renderSystem{};
+			std::shared_ptr<EnginePointLightRenderSystem> pointLightRenderSystem{};
+			// std::shared_ptr<EngineSimpleTextureRenderSystem> renderSystem{};
 
 			std::vector<EngineGameObject> gameObjects;
 	};

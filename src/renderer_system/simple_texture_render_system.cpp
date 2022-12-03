@@ -129,7 +129,7 @@ namespace nugiEngine {
 		this->globalUboBuffers[frameIndex]->flush(size, offset);
 	}
 
-	void EngineSimpleTextureRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects) {
+	void EngineSimpleTextureRenderSystem::render(VkCommandBuffer commandBuffer, FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects) {
 		this->pipeline->bind(commandBuffer);
 
 		for (auto& obj : gameObjects) {

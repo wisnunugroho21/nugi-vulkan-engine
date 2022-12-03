@@ -26,7 +26,7 @@ namespace nugiEngine {
 
 			void writeUniformBuffer(int frameIndex, void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
 			VkDescriptorSet setupTextureDescriptorSet(VkDescriptorImageInfo descImageInfo);
-			void renderGameObjects(VkCommandBuffer commandBuffer, FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects);
+			void render(VkCommandBuffer commandBuffer, FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects);
 
 		private:
 			void createPipelineLayout();

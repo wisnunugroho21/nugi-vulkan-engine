@@ -13,13 +13,13 @@
 #include <vector>
 
 namespace nugiEngine {
-	class EngineSimpleRenderSystem {
+	class EnginePointLightRenderSystem {
 		public:
-			EngineSimpleRenderSystem(EngineDevice& device, VkRenderPass renderPass);
-			~EngineSimpleRenderSystem();
+			EnginePointLightRenderSystem(EngineDevice& device, VkRenderPass renderPass);
+			~EnginePointLightRenderSystem();
 
-			EngineSimpleRenderSystem(const EngineSimpleRenderSystem&) = delete;
-			EngineSimpleRenderSystem& operator = (const EngineSimpleRenderSystem&) = delete;
+			EnginePointLightRenderSystem(const EnginePointLightRenderSystem&) = delete;
+			EnginePointLightRenderSystem& operator = (const EnginePointLightRenderSystem&) = delete;
 
 			VkDescriptorSet getGlobalDescriptorSets(int index) { return this->globalDescriptorSets[index]; }
 
