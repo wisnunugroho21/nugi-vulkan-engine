@@ -11,7 +11,7 @@ namespace nugiEngine {
     this->isImageCreatedByUs = true;
   }
 
-  EngineImage::EngineImage(EngineDevice &appDevice, VkImage image, uint32_t mipLevels, VkFormat format, VkImageAspectFlags aspectFlags) : appDevice{appDevice} {
+  EngineImage::EngineImage(EngineDevice &appDevice, VkImage image, uint32_t mipLevels, VkFormat format, VkImageAspectFlags aspectFlags) : appDevice{appDevice}, mipLevels{mipLevels}, format{format}, aspectFlags{aspectFlags} {
     this->image = image;
     this->createImageView();
 
@@ -135,6 +135,10 @@ namespace nugiEngine {
   }
 
   void EngineImage::generateMipMap() {
+    if (!this->isImageCreatedByUs) {
+      throw std::runtime_error("cannot generate mipmap if the image is not created by this class => image directly assigned to this class via second constructor");
+    }
+
     // Check if image format supports linear blitting
     VkFormatProperties formatProperties;
     vkGetPhysicalDeviceFormatProperties(this->appDevice.getPhysicalDevice(), this->format, &formatProperties);
