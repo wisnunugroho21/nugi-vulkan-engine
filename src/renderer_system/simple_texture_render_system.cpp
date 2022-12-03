@@ -132,8 +132,7 @@ namespace nugiEngine {
 	void EngineSimpleTextureRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects) {
 		this->pipeline->bind(commandBuffer);
 
-		for (int iObj = 0; iObj < gameObjects.size(); iObj++) {
-			auto& obj = gameObjects[iObj];
+		for (auto& obj : gameObjects) {
 			VkDescriptorSet descpSet[2] = { this->getBufferDescriptorSets(frameInfo.frameIndex), obj.textureDescSet };
 
 			vkCmdBindDescriptorSets(

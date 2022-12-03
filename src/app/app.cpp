@@ -19,15 +19,12 @@
 namespace nugiEngine {
 	EngineApp::EngineApp() {
 		this->loadObjects();
+		this->init();
 	}
 
 	EngineApp::~EngineApp() {}
 
 	void EngineApp::run() {
-		for (auto& obj : this->gameObjects) {
-			obj.textureDescSet = this->renderSystem.setupTextureDescriptorSet(obj.texture->getDescriptorInfo());
-		}
-
 		std::vector<const char*> texturesFilename = {"textures/texture.jpg"};
 		EngineCamera camera{};
 
@@ -48,11 +45,11 @@ namespace nugiEngine {
 			keyboardController.moveInPlaceXZ(this->window.getWindow(), frameTime, viewObject);
 			camera.setViewYXZ(viewObject.transform.translation, viewObject.transform.rotation);
 
-			auto aspect = this->renderer.getAspectRatio();
+			auto aspect = this->renderer->getAspectRatio();
 			camera.setPerspectiveProjection(glm::radians(50.0f), aspect, 0.1f, 10.0f);
 
-			if (auto commandBuffer = this->renderer.beginFrame()) {
-				int frameIndex = this->renderer.getFrameIndex();
+			if (auto commandBuffer = this->renderer->beginFrame()) {
+				int frameIndex = this->renderer->getFrameIndex();
 				FrameInfo frameInfo {
 					frameIndex,
 					frameTime,
@@ -62,13 +59,13 @@ namespace nugiEngine {
 				// update
 				GlobalUBO ubo{};
 				ubo.projectionView = camera.getProjectionMatrix() * camera.getViewMatrix();
-				renderSystem.writeUniformBuffer(frameIndex, &ubo);
+				this->renderSystem->writeUniformBuffer(frameIndex, &ubo);
 
 				// render
-				this->renderer.beginSwapChainRenderPass(commandBuffer);
-				renderSystem.renderGameObjects(commandBuffer, frameInfo, this->gameObjects);
-				this->renderer.endSwapChainRenderPass(commandBuffer);
-				this->renderer.endFrame(commandBuffer);
+				this->renderer->beginSwapChainRenderPass(commandBuffer);
+				this->renderSystem->renderGameObjects(commandBuffer, frameInfo, this->gameObjects);
+				this->renderer->endSwapChainRenderPass(commandBuffer);
+				this->renderer->endFrame(commandBuffer);
 			}
 		}
 
@@ -99,5 +96,14 @@ namespace nugiEngine {
 		smoothVase.color = {1.0f, 1.0f, 1.0f};
 
 		this->gameObjects.push_back(std::move(smoothVase)); 
+	}
+
+	void EngineApp::init() {
+		this->renderer = std::make_shared<EngineRenderer>(window, device);
+		this->renderSystem = std::make_shared<EngineSimpleTextureRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->gameObjects.size());
+
+		for (auto& obj : this->gameObjects) {
+			obj.textureDescSet = this->renderSystem->setupTextureDescriptorSet(obj.texture->getDescriptorInfo());
+		}
 	}
 }

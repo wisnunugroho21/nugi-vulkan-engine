@@ -27,12 +27,14 @@ namespace nugiEngine {
 
 		private:
 			void loadObjects();
-			void loadTextures();
+			void init();
 
 			EngineWindow window{WIDTH, HEIGHT, "Testing vulkan"};
 			EngineDevice device{window};
 			EngineRenderer renderer{window, device};
-			EngineSimpleTextureRenderSystem renderSystem{this->device, this->renderer.getSwapChainRenderPass(), 2};
+			
+			std::shared_ptr<EngineRenderer> renderer{};
+			std::shared_ptr<EngineSimpleTextureRenderSystem> renderSystem{};
 
 			std::vector<EngineGameObject> gameObjects;
 	};
