@@ -315,11 +315,12 @@ namespace nugiEngine {
     VkFormat depthFormat = this->findDepthFormat();
     this->swapChainDepthFormat = depthFormat;
     
+    auto msaaSamples = this->device.getMSAASamples();
     this->depthImages.clear();
 
     for (int i = 0; i < this->imageCount(); i++) {
       auto depthImage = std::make_shared<EngineImage>(
-        this->device, this->swapChainExtent.width, this->swapChainExtent.height, 1, VK_SAMPLE_COUNT_1_BIT, depthFormat, 
+        this->device, this->swapChainExtent.width, this->swapChainExtent.height, 1, msaaSamples, depthFormat, 
         VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_DEPTH_BIT
       );
