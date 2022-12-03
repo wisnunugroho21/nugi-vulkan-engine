@@ -28,12 +28,12 @@ namespace nugiEngine {
 			VkDescriptorSetLayout getGlobalUboDescSetLayout() { return this->globalUboDescSetLayout->getDescriptorSetLayout(); }
 
 			VkCommandBuffer getCommandBuffer() { 
-				assert(isFrameStarted && "cannot get command buffer when frame is not in progress");
+				assert(this->isFrameStarted && "cannot get command buffer when frame is not in progress");
 				return this->commandBuffers->getBuffer(this->currentFrameIndex);
 			}
 
 			int getFrameIndex() {
-				assert(isFrameStarted && "cannot get frame index when frame is not in progress");
+				assert(this->isFrameStarted && "cannot get frame index when frame is not in progress");
 				return this->currentFrameIndex;
 			}
 

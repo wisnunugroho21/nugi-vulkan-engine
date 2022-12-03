@@ -6,10 +6,10 @@
 
 namespace nugiEngine {
   struct FrameInfo {
-  int frameIndex;
-  float frameTime;
-  EngineCamera &camera;
-};
+    int frameIndex;
+    float frameTime;
+    EngineCamera &camera;
+  };
   
 } // namespace nugiEngine
 
