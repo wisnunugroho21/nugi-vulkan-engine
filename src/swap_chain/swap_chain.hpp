@@ -50,6 +50,7 @@ namespace nugiEngine {
   private:
     void init();
     void createSwapChain();
+    void createColorResources();
     void createDepthResources();
     void createRenderPass();
     void createFramebuffers();
@@ -67,6 +68,7 @@ namespace nugiEngine {
     std::vector<VkFramebuffer> swapChainFramebuffers;
     VkRenderPass renderPass;
 
+    std::vector<std::shared_ptr<EngineImage>> colorImages;
     std::vector<std::shared_ptr<EngineImage>> depthImages;
     std::vector<std::shared_ptr<EngineImage>> swapChainImages;
 

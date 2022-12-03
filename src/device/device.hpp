@@ -45,6 +45,7 @@ namespace nugiEngine {
       VkQueue getGraphicsQueue() { return this->graphicsQueue; }
       VkQueue getPresentQueue() { return this->presentQueue; }
       VkPhysicalDeviceProperties getProperties() { return this->properties; }
+      VkSampleCountFlagBits getMSAASamples() { return this->msaaSamples; }
 
       SwapChainSupportDetails getSwapChainSupport() { return this->querySwapChainSupport(this->physicalDevice); }
       QueueFamilyIndices findPhysicalQueueFamilies() { return this->findQueueFamilies(this->physicalDevice); }
@@ -69,20 +70,28 @@ namespace nugiEngine {
       std::vector<const char *> getRequiredExtensions();
       QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
       SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+      VkSampleCountFlagBits getMaxUsableFlagsCount();
 
+      // instance
       VkInstance instance;
       VkDebugUtilsMessengerEXT debugMessenger;
 
+      // device & its property
       VkDevice device;
       VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
       VkPhysicalDeviceProperties properties;
 
+      // window system
       EngineWindow &window;
       VkSurfaceKHR surface;
 
+      // command pool & queue
       VkCommandPool commandPool;
       VkQueue graphicsQueue;
       VkQueue presentQueue;
+
+      // Anti-aliasing
+      VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 
       const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
       const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};

@@ -50,12 +50,13 @@ namespace nugiEngine {
 
   // class member functions
   EngineDevice::EngineDevice(EngineWindow &window) : window{window} {
-    createInstance();
-    setupDebugMessenger();
-    createSurface();
-    pickPhysicalDevice();
-    createLogicalDevice();
-    createCommandPool();
+    this->createInstance();
+    this->setupDebugMessenger();
+    this->createSurface();
+    this->pickPhysicalDevice();
+    this->msaaSamples = this->getMaxUsableFlagsCount();
+    this->createLogicalDevice();
+    this->createCommandPool();
   }
 
   EngineDevice::~EngineDevice() {
@@ -134,7 +135,7 @@ namespace nugiEngine {
     }
 
     vkGetPhysicalDeviceProperties(this->physicalDevice, &this->properties);
-    std::cout << "physical device: " << properties.deviceName << std::endl;
+    std::cout << "physical device: " << this->properties.deviceName << std::endl;
   }
 
   void EngineDevice::createLogicalDevice() {
@@ -409,5 +410,18 @@ namespace nugiEngine {
     }
 
     throw std::runtime_error("failed to find suitable memory type!");
+  }
+
+  VkSampleCountFlagBits EngineDevice::getMaxUsableFlagsCount() {
+    VkSampleCountFlags counts = this->properties.limits.framebufferColorSampleCounts & this->properties.limits.framebufferDepthSampleCounts;
+
+    if (counts & VK_SAMPLE_COUNT_64_BIT) return VK_SAMPLE_COUNT_64_BIT;
+    if (counts & VK_SAMPLE_COUNT_32_BIT) return VK_SAMPLE_COUNT_32_BIT;
+    if (counts & VK_SAMPLE_COUNT_16_BIT) return VK_SAMPLE_COUNT_16_BIT;
+    if (counts & VK_SAMPLE_COUNT_8_BIT) return VK_SAMPLE_COUNT_8_BIT;
+    if (counts & VK_SAMPLE_COUNT_4_BIT) return VK_SAMPLE_COUNT_4_BIT;
+    if (counts & VK_SAMPLE_COUNT_2_BIT) return VK_SAMPLE_COUNT_2_BIT;
+
+    return VK_SAMPLE_COUNT_1_BIT;
   }
 }  // namespace lve

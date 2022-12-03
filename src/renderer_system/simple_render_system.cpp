@@ -89,7 +89,7 @@ namespace nugiEngine {
 		assert(this->pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
 		PipelineConfigInfo pipelineConfig{};
-		EnginePipeline::defaultPipelineConfigInfo(pipelineConfig);
+		EnginePipeline::defaultPipelineConfigInfo(this->appDevice, pipelineConfig);
 
 		pipelineConfig.renderPass = renderPass;
 		pipelineConfig.pipelineLayout = this->pipelineLayout;

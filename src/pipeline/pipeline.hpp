@@ -36,7 +36,7 @@ namespace nugiEngine {
 			EnginePipeline& operator =(const EngineDevice&) = delete;
 
 			void bind(VkCommandBuffer commandBuffer);
-			static void defaultPipelineConfigInfo(PipelineConfigInfo& configInfo);
+			static void defaultPipelineConfigInfo(EngineDevice &appDevice, PipelineConfigInfo& configInfo);
 
 		private:
 			EngineDevice& engineDevice;

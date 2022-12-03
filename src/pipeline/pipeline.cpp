@@ -125,7 +125,9 @@ namespace nugiEngine {
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->graphicPipeline);
 	}
 
-	void EnginePipeline::defaultPipelineConfigInfo(PipelineConfigInfo& configInfo) {
+	void EnginePipeline::defaultPipelineConfigInfo(EngineDevice &appDevice, PipelineConfigInfo& configInfo) {
+		auto msaaSamples = appDevice.getMSAASamples();
+
 		configInfo.inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 		configInfo.inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 		configInfo.inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
@@ -144,7 +146,7 @@ namespace nugiEngine {
 		
 		configInfo.multisampleInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 		configInfo.multisampleInfo.sampleShadingEnable = VK_FALSE;
-		configInfo.multisampleInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+		configInfo.multisampleInfo.rasterizationSamples = msaaSamples;
 		configInfo.multisampleInfo.minSampleShading = 1.0f;           // Optional
 		configInfo.multisampleInfo.pSampleMask = nullptr;             // Optional
 		configInfo.multisampleInfo.alphaToCoverageEnable = VK_FALSE;  // Optional
