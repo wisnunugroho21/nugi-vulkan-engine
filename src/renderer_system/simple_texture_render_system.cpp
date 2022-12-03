@@ -92,6 +92,8 @@ namespace nugiEngine {
 		this->pipeline->bind(commandBuffer);
 
 		for (auto& obj : gameObjects) {
+			if (obj.textureDescSet == nullptr) continue;
+			
 			VkDescriptorSet descpSet[2] = { UBODescSet, *obj.textureDescSet };
 
 			vkCmdBindDescriptorSets(

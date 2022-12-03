@@ -74,7 +74,8 @@ namespace nugiEngine {
 				// render
 				this->renderer->beginSwapChainRenderPass(commandBuffer);
 
-				this->renderSystem->render(commandBuffer, *this->renderer->getBufferDescriptorSets(frameIndex), frameInfo, this->gameObjects);
+				this->simpleRenderSystem->render(commandBuffer, *this->renderer->getBufferDescriptorSets(frameIndex), frameInfo, this->gameObjects);
+				this->textureRenderSystem->render(commandBuffer, *this->renderer->getBufferDescriptorSets(frameIndex), frameInfo, this->gameObjects);
 				this->pointLightRenderSystem->render(commandBuffer, *this->renderer->getBufferDescriptorSets(frameIndex), frameInfo, this->gameObjects);
 				
 				this->renderer->endSwapChainRenderPass(commandBuffer);
@@ -87,11 +88,9 @@ namespace nugiEngine {
 
 	void EngineApp::loadObjects() {
 		std::shared_ptr<EngineModel> flatVaseModel = EngineModel::createModelFromFile(this->device, "models/flat_vase.obj");
-		// std::shared_ptr<EngineTexture> flatVaseTexture = std::make_shared<EngineTexture>(this->device, "texture/flat_vase.obj");
 
 		auto flatVase = EngineGameObject::createGameObject();
 		flatVase.model = flatVaseModel;
-		// flatVase.texture = flatVaseTexture;
 		flatVase.transform.translation = {-0.5f, 0.5f, 0.0f};
 		flatVase.transform.scale = {3.0f, 1.5f, 3.0f};
 		flatVase.color = {1.0f, 1.0f, 1.0f};
@@ -99,16 +98,26 @@ namespace nugiEngine {
 		this->gameObjects.push_back(std::move(flatVase)); 
 
 		std::shared_ptr<EngineModel> smoothVaseModel = EngineModel::createModelFromFile(this->device, "models/smooth_vase.obj");
-		// std::shared_ptr<EngineTexture> smoothSaveTexture = std::make_shared<EngineTexture>(this->device, "texture/smooth_vase.obj");
 
 		auto smoothVase = EngineGameObject::createGameObject();
 		smoothVase.model = smoothVaseModel;
-		// smoothVase.texture = smoothSaveTexture;
 		smoothVase.transform.translation = {0.5f, 0.5f, 0.0f};
 		smoothVase.transform.scale = {3.0f, 1.5f, 3.0f};
 		smoothVase.color = {1.0f, 1.0f, 1.0f};
 
-		this->gameObjects.push_back(std::move(smoothVase)); 
+		this->gameObjects.push_back(std::move(smoothVase));
+
+		std::shared_ptr<EngineModel> vikingRoomModel = EngineModel::createModelFromFile(this->device, "models/smooth_vase.obj");
+		std::shared_ptr<EngineTexture> vikingRoomtexture = std::make_shared<EngineTexture>(this->device, "models/smooth_vase.obj");
+
+		auto vikingRoom = EngineGameObject::createGameObject();
+		vikingRoom.model = vikingRoomModel;
+		vikingRoom.texture = vikingRoomtexture;
+		vikingRoom.transform.translation = {0.0f, 2.0f, 0.0f};
+		vikingRoom.transform.scale = {1.0f, 1.0f, 1.0f};
+		vikingRoom.color = {1.0f, 1.0f, 1.0f};
+
+		this->gameObjects.push_back(std::move(vikingRoom)); 
 
 		std::shared_ptr<EngineModel> floorModel = EngineModel::createModelFromFile(this->device, "models/quad.obj");
 
@@ -123,13 +132,22 @@ namespace nugiEngine {
 
 	void EngineApp::init() {
 		this->renderer = std::make_shared<EngineRenderer>(window, device);
-		this->renderSystem = std::make_shared<EngineSimpleRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->renderer->getGlobalUboDescSetLayout());
+
+		this->simpleRenderSystem = std::make_shared<EngineSimpleRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->renderer->getGlobalUboDescSetLayout());
 		this->pointLightRenderSystem = std::make_shared<EnginePointLightRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->renderer->getGlobalUboDescSetLayout());
 
-		// this->renderSystem = std::make_shared<EngineSimpleTextureRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->renderer->getGlobalUboDescSetLayout(), this->gameObjects.size());
+		std::vector<EngineGameObject> texturedGameObjects{};
+		for (auto& obj : this->gameObjects) {
+			if (obj.texture != nullptr) {
+				auto& texturedGameObject = obj;
+				texturedGameObjects.push_back(texturedGameObject);
+			}
+		}
 
-		/* for (auto& obj : this->gameObjects) {
-			obj.textureDescSet = this->renderSystem->setupTextureDescriptorSet(obj.texture->getDescriptorInfo());
-		} */
+		this->textureRenderSystem = std::make_shared<EngineSimpleTextureRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->renderer->getGlobalUboDescSetLayout(), texturedGameObjects.size());
+
+		for (auto& obj : texturedGameObjects) {
+			obj.textureDescSet = this->textureRenderSystem->setupTextureDescriptorSet(obj.texture->getDescriptorInfo());
+		}
 	}
 }

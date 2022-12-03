@@ -79,6 +79,8 @@ namespace nugiEngine {
 		);
 
 		for (auto& obj : gameObjects) {
+			if (obj.textureDescSet != nullptr) continue;
+			
 			SimplePushConstantData pushConstant{};
 
 			pushConstant.modelMatrix = obj.transform.mat4();
