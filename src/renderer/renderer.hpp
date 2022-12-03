@@ -25,7 +25,7 @@ namespace nugiEngine {
 			float getAspectRatio() const { return this->swapChain->extentAspectRatio(); }
 			VkRenderPass getSwapChainRenderPass() const { return this->swapChain->getRenderPass(); }
 			VkDescriptorSet getBufferDescriptorSets(int index) { return this->globalUboDescriptorSets[index]; }
-			VkDescriptorSetLayout getDescriptorSetLayouts() { return this->globalUboDescSetLayout->getDescriptorSetLayout(); }
+			VkDescriptorSetLayout getGlobalUboDescSetLayout() { return this->globalUboDescSetLayout->getDescriptorSetLayout(); }
 
 			VkCommandBuffer getCommandBuffer() { 
 				assert(isFrameStarted && "cannot get command buffer when frame is not in progress");
@@ -46,6 +46,8 @@ namespace nugiEngine {
 
 		private:
 			void recreateSwapChain();
+			void createGlobalUniformBuffers(unsigned long sizeUBO);
+			void createGlobalUboDescriptor();
 
 			EngineWindow& appWindow;
 			EngineDevice& appDevice;
@@ -61,8 +63,5 @@ namespace nugiEngine {
 			uint32_t currentImageIndex = 0;
 			int currentFrameIndex = 0;
 			bool isFrameStarted = false;
-
-			void createGlobalUniformBuffers(unsigned long sizeUBO);
-			void createGlobalUboDescriptor();
 	};
 }

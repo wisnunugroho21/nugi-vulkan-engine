@@ -40,7 +40,7 @@ namespace nugiEngine {
 			auto newTime = std::chrono::high_resolution_clock::now();
 			float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
 
-			if (t == 100) {
+			if (t == 1000) {
 				std::string appTitle = std::string(APP_TITLE) + std::string(" | FPS: ") + std::to_string((1.0f / frameTime));
 				glfwSetWindowTitle(this->window.getWindow(), appTitle.c_str());
 
@@ -87,11 +87,11 @@ namespace nugiEngine {
 
 	void EngineApp::loadObjects() {
 		std::shared_ptr<EngineModel> flatVaseModel = EngineModel::createModelFromFile(this->device, "models/flat_vase.obj");
-		std::shared_ptr<EngineTexture> flatVaseTexture = std::make_shared<EngineTexture>(this->device, "texture/flat_vase.obj");
+		// std::shared_ptr<EngineTexture> flatVaseTexture = std::make_shared<EngineTexture>(this->device, "texture/flat_vase.obj");
 
 		auto flatVase = EngineGameObject::createGameObject();
 		flatVase.model = flatVaseModel;
-		flatVase.texture = flatVaseTexture;
+		// flatVase.texture = flatVaseTexture;
 		flatVase.transform.translation = {-0.5f, 0.5f, 0.0f};
 		flatVase.transform.scale = {3.0f, 1.5f, 3.0f};
 		flatVase.color = {1.0f, 1.0f, 1.0f};
@@ -99,11 +99,11 @@ namespace nugiEngine {
 		this->gameObjects.push_back(std::move(flatVase)); 
 
 		std::shared_ptr<EngineModel> smoothVaseModel = EngineModel::createModelFromFile(this->device, "models/smooth_vase.obj");
-		std::shared_ptr<EngineTexture> smoothSaveTexture = std::make_shared<EngineTexture>(this->device, "texture/smooth_vase.obj");
+		// std::shared_ptr<EngineTexture> smoothSaveTexture = std::make_shared<EngineTexture>(this->device, "texture/smooth_vase.obj");
 
 		auto smoothVase = EngineGameObject::createGameObject();
 		smoothVase.model = smoothVaseModel;
-		flatVase.texture = smoothSaveTexture;
+		// smoothVase.texture = smoothSaveTexture;
 		smoothVase.transform.translation = {0.5f, 0.5f, 0.0f};
 		smoothVase.transform.scale = {3.0f, 1.5f, 3.0f};
 		smoothVase.color = {1.0f, 1.0f, 1.0f};
@@ -112,9 +112,9 @@ namespace nugiEngine {
 	}
 
 	void EngineApp::init() {
-		this->renderer = std::make_shared<EngineRenderer>(window, device, this->gameObjects.size());
-		this->renderSystem = std::make_shared<EngineSimpleRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->renderer->getDescriptorSetLayouts());
-		this->pointLightRenderSystem = std::make_shared<EnginePointLightRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->renderer->getDescriptorSetLayouts());
+		this->renderer = std::make_shared<EngineRenderer>(window, device);
+		this->renderSystem = std::make_shared<EngineSimpleRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->renderer->getGlobalUboDescSetLayout());
+		this->pointLightRenderSystem = std::make_shared<EnginePointLightRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->renderer->getGlobalUboDescSetLayout());
 
 		// this->renderSystem = std::make_shared<EngineSimpleTextureRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->gameObjects.size());
 
