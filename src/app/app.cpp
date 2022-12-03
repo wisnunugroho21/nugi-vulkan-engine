@@ -65,7 +65,8 @@ namespace nugiEngine {
 
 				// update
 				GlobalUBO ubo{};
-				ubo.projectionView = camera.getProjectionMatrix() * camera.getViewMatrix();
+				ubo.projection = camera.getProjectionMatrix();
+				ubo.view = camera.getViewMatrix();
 				this->renderSystem->writeUniformBuffer(frameIndex, &ubo);
 
 				// render

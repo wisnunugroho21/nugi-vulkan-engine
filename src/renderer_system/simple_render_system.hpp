@@ -7,20 +7,13 @@
 #include "../frame_info.hpp"
 #include "../buffer/buffer.hpp"
 #include "../descriptor/descriptor.hpp"
+#include "../globalUbo.hpp"
 
 #include <memory>
 #include <vector>
 
 namespace nugiEngine {
-	struct GlobalUBO {
-		glm::mat4 projectionView{1.0f};
-		glm::vec4 ambientLightColor{1.0f, 1.0f, 1.0f, 0.02f};
-		glm::vec3 lightPosition{-1.0f};
-		alignas(16) glm::vec4 lightColor{-1.0f};
-	};
-
-	class EngineSimpleRenderSystem
-	{
+	class EngineSimpleRenderSystem {
 		public:
 			EngineSimpleRenderSystem(EngineDevice& device, VkRenderPass renderPass);
 			~EngineSimpleRenderSystem();
