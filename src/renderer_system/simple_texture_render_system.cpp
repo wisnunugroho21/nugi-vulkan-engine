@@ -18,10 +18,9 @@ namespace nugiEngine {
 		glm::mat4 normalMatrix{1.0f};
 	};
 
-	EngineSimpleTextureRenderSystem::EngineSimpleTextureRenderSystem(EngineDevice& device, VkRenderPass renderPass, int objCount) : appDevice{device} {
-		this->createBuffers(sizeof(GlobalUBO));
+	EngineSimpleTextureRenderSystem::EngineSimpleTextureRenderSystem(EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalUboDescSetLayout, size_t objCount) : appDevice{device} {
 		this->createDescriptor(objCount);
-		this->createPipelineLayout();
+		this->createPipelineLayout(globalUboDescSetLayout);
 		this->createPipeline(renderPass);
 	}
 
@@ -29,52 +28,7 @@ namespace nugiEngine {
 		vkDestroyPipelineLayout(this->appDevice.getLogicalDevice(), this->pipelineLayout, nullptr);
 	}
 
-	void EngineSimpleTextureRenderSystem::createBuffers(unsigned long sizeUBO) {
-		this->globalUboBuffers.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
-		for (int i = 0; i < this->globalUboBuffers.size(); i++) {
-			this->globalUboBuffers[i] = std::make_unique<EngineBuffer>(
-				this->appDevice,
-				sizeUBO,
-				1,
-				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-			);
-
-			this->globalUboBuffers[i]->map();
-		}
-	}
-
-	VkDescriptorSet EngineSimpleTextureRenderSystem::setupTextureDescriptorSet(VkDescriptorImageInfo descImageInfo) {
-		VkDescriptorSet descSet;
-		EngineDescriptorWriter(*this->textureDescSetLayout, *this->textureDescPool)
-			.writeImage(0, &descImageInfo)
-			.build(descSet);
-
-		return descSet;
-	}
-
-	void EngineSimpleTextureRenderSystem::createDescriptor(int objCount) {
-		this->bufferDescPool = 
-			EngineDescriptorPool::Builder(this->appDevice)
-				.setMaxSets(this->globalUboBuffers.size())
-				.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, this->globalUboBuffers.size())
-				.build();
-
-		this->bufferDescSetLayout = 
-			EngineDescriptorSetLayout::Builder(this->appDevice)
-				.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
-				.build();
-
-		this->bufferDescriptorSets.resize(this->globalUboBuffers.size());
-		
-		for (int iBuffers = 0; iBuffers < this->globalUboBuffers.size(); iBuffers++) {
-			auto bufferInfo = this->globalUboBuffers[iBuffers]->descriptorInfo();
-
-			EngineDescriptorWriter(*this->bufferDescSetLayout, *this->bufferDescPool)
-				.writeBuffer(0, &bufferInfo)
-				.build(this->bufferDescriptorSets[iBuffers]);
-		}
-
+	void EngineSimpleTextureRenderSystem::createDescriptor(size_t objCount) {
 		this->textureDescPool = 
 			EngineDescriptorPool::Builder(this->appDevice)
 				.setMaxSets(objCount)
@@ -87,13 +41,13 @@ namespace nugiEngine {
 				.build();
 	}
 
-	void EngineSimpleTextureRenderSystem::createPipelineLayout() {
+	void EngineSimpleTextureRenderSystem::createPipelineLayout(VkDescriptorSetLayout globalUboDescSetLayout) {
 		VkPushConstantRange pushConstantRange{};
 		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 		pushConstantRange.offset = 0;
 		pushConstantRange.size = sizeof(SimplePushConstantData);
 
-		std::vector<VkDescriptorSetLayout> descriptorSetLayouts{this->bufferDescSetLayout->getDescriptorSetLayout(), this->textureDescSetLayout->getDescriptorSetLayout()}; 
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { globalUboDescSetLayout, this->textureDescSetLayout->getDescriptorSetLayout() };
 
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -124,16 +78,20 @@ namespace nugiEngine {
 		);
 	}
 
-	void EngineSimpleTextureRenderSystem::writeUniformBuffer(int frameIndex, void* data, VkDeviceSize size, VkDeviceSize offset) {
-		this->globalUboBuffers[frameIndex]->writeToBuffer(data, size, offset);
-		this->globalUboBuffers[frameIndex]->flush(size, offset);
+	VkDescriptorSet EngineSimpleTextureRenderSystem::setupTextureDescriptorSet(VkDescriptorImageInfo descImageInfo) {
+		VkDescriptorSet descSet;
+		EngineDescriptorWriter(*this->textureDescSetLayout, *this->textureDescPool)
+			.writeImage(0, &descImageInfo)
+			.build(descSet);
+
+		return descSet;
 	}
 
-	void EngineSimpleTextureRenderSystem::render(VkCommandBuffer commandBuffer, FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects) {
+	void EngineSimpleTextureRenderSystem::render(VkCommandBuffer commandBuffer, VkDescriptorSet UBODescSet, FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects) {
 		this->pipeline->bind(commandBuffer);
 
 		for (auto& obj : gameObjects) {
-			VkDescriptorSet descpSet[2] = { this->getBufferDescriptorSets(frameInfo.frameIndex), obj.textureDescSet };
+			VkDescriptorSet descpSet[2] = { UBODescSet, obj.textureDescSet };
 
 			vkCmdBindDescriptorSets(
 				commandBuffer,

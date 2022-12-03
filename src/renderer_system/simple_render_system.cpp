@@ -18,10 +18,8 @@ namespace nugiEngine {
 		glm::mat4 normalMatrix{1.0f};
 	};
 
-	EngineSimpleRenderSystem::EngineSimpleRenderSystem(EngineDevice& device, VkRenderPass renderPass) : appDevice{device} {
-		this->createBuffers(sizeof(GlobalUBO));
-		this->createDescriptor();
-		this->createPipelineLayout();
+	EngineSimpleRenderSystem::EngineSimpleRenderSystem(EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalUboDescSetLayout) : appDevice{device} {
+		this->createPipelineLayout(globalUboDescSetLayout);
 		this->createPipeline(renderPass);
 	}
 
@@ -29,49 +27,13 @@ namespace nugiEngine {
 		vkDestroyPipelineLayout(this->appDevice.getLogicalDevice(), this->pipelineLayout, nullptr);
 	}
 
-	void EngineSimpleRenderSystem::createBuffers(unsigned long sizeUBO) {
-		this->globalUboBuffers.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
-		for (int i = 0; i < this->globalUboBuffers.size(); i++) {
-			this->globalUboBuffers[i] = std::make_unique<EngineBuffer>(
-				this->appDevice,
-				sizeUBO,
-				1,
-				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-			);
-
-			this->globalUboBuffers[i]->map();
-		}
-	}
-
-	void EngineSimpleRenderSystem::createDescriptor() {
-		this->globalPool = 
-			EngineDescriptorPool::Builder(this->appDevice)
-				.setMaxSets(EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
-				.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
-				.build();
-
-		this->globalSetLayout = 
-			EngineDescriptorSetLayout::Builder(this->appDevice)
-				.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
-				.build();
-
-		this->globalDescriptorSets.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
-		for (int i = 0; i < this->globalDescriptorSets.size(); i++) {
-			auto bufferInfo = this->globalUboBuffers[i]->descriptorInfo();
-			EngineDescriptorWriter(*this->globalSetLayout, *this->globalPool)
-				.writeBuffer(0, &bufferInfo)
-				.build(this->globalDescriptorSets[i]);
-		}
-	}
-
-	void EngineSimpleRenderSystem::createPipelineLayout() {
+	void EngineSimpleRenderSystem::createPipelineLayout(VkDescriptorSetLayout globalUboDescSetLayout) {
 		VkPushConstantRange pushConstantRange{};
 		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 		pushConstantRange.offset = 0;
 		pushConstantRange.size = sizeof(SimplePushConstantData);
 
-		std::vector<VkDescriptorSetLayout> descriptorSetLayouts{this->globalSetLayout->getDescriptorSetLayout()}; 
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { globalUboDescSetLayout };
 
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -102,14 +64,8 @@ namespace nugiEngine {
 		);
 	}
 
-	void EngineSimpleRenderSystem::writeUniformBuffer(int frameIndex, void* data, VkDeviceSize size, VkDeviceSize offset) {
-		this->globalUboBuffers[frameIndex]->writeToBuffer(data, size, offset);
-		this->globalUboBuffers[frameIndex]->flush(size, offset);
-	}
-
-	void EngineSimpleRenderSystem::render(VkCommandBuffer commandBuffer, FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects) {
+	void EngineSimpleRenderSystem::render(VkCommandBuffer commandBuffer, VkDescriptorSet UBODescSet, FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects) {
 		this->pipeline->bind(commandBuffer);
-		auto globalDescSet = this->getGlobalDescriptorSets(frameInfo.frameIndex);
 
 		vkCmdBindDescriptorSets(
 			commandBuffer,
@@ -117,7 +73,7 @@ namespace nugiEngine {
 			this->pipelineLayout,
 			0,
 			1,
-			&globalDescSet,
+			&UBODescSet,
 			0,
 			nullptr
 		);

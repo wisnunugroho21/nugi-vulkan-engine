@@ -69,13 +69,13 @@ namespace nugiEngine {
 				GlobalUBO ubo{};
 				ubo.projection = camera.getProjectionMatrix();
 				ubo.view = camera.getViewMatrix();
-				this->renderSystem->writeUniformBuffer(frameIndex, &ubo);
+				this->renderer->writeUniformBuffer(frameIndex, &ubo);
 
 				// render
 				this->renderer->beginSwapChainRenderPass(commandBuffer);
 
-				this->renderSystem->render(commandBuffer, frameInfo, this->gameObjects);
-				this->pointLightRenderSystem->render(commandBuffer, frameInfo, this->gameObjects);
+				this->renderSystem->render(commandBuffer, this->renderer->getBufferDescriptorSets(frameIndex), frameInfo, this->gameObjects);
+				this->pointLightRenderSystem->render(commandBuffer, this->renderer->getBufferDescriptorSets(frameIndex), frameInfo, this->gameObjects);
 				
 				this->renderer->endSwapChainRenderPass(commandBuffer);
 				this->renderer->endFrame(commandBuffer);
@@ -112,9 +112,9 @@ namespace nugiEngine {
 	}
 
 	void EngineApp::init() {
-		this->renderer = std::make_shared<EngineRenderer>(window, device);
-		this->renderSystem = std::make_shared<EngineSimpleRenderSystem>(this->device, this->renderer->getSwapChainRenderPass());
-		this->pointLightRenderSystem = std::make_shared<EnginePointLightRenderSystem>(this->device, this->renderer->getSwapChainRenderPass());
+		this->renderer = std::make_shared<EngineRenderer>(window, device, this->gameObjects.size());
+		this->renderSystem = std::make_shared<EngineSimpleRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->renderer->getDescriptorSetLayouts());
+		this->pointLightRenderSystem = std::make_shared<EnginePointLightRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->renderer->getDescriptorSetLayouts());
 
 		// this->renderSystem = std::make_shared<EngineSimpleTextureRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->gameObjects.size());
 

@@ -24,6 +24,8 @@ namespace nugiEngine {
 			bool isFrameInProgress() const { return this->isFrameStarted; }
 			float getAspectRatio() const { return this->swapChain->extentAspectRatio(); }
 			VkRenderPass getSwapChainRenderPass() const { return this->swapChain->getRenderPass(); }
+			VkDescriptorSet getBufferDescriptorSets(int index) { return this->globalUboDescriptorSets[index]; }
+			VkDescriptorSetLayout getDescriptorSetLayouts() { return this->globalUboDescSetLayout->getDescriptorSetLayout(); }
 
 			VkCommandBuffer getCommandBuffer() { 
 				assert(isFrameStarted && "cannot get command buffer when frame is not in progress");
@@ -35,6 +37,8 @@ namespace nugiEngine {
 				return this->currentFrameIndex;
 			}
 
+			void writeUniformBuffer(int frameIndex, void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+
 			VkCommandBuffer beginFrame();
 			void endFrame(VkCommandBuffer commandBuffer);
 			void beginSwapChainRenderPass(VkCommandBuffer commandBuffer);
@@ -45,11 +49,20 @@ namespace nugiEngine {
 
 			EngineWindow& appWindow;
 			EngineDevice& appDevice;
+
 			std::unique_ptr<EngineCommandBuffer> commandBuffers;
 			std::unique_ptr<EngineSwapChain> swapChain;
+
+			std::unique_ptr<EngineDescriptorPool> globalUboDescPool{};
+			std::unique_ptr<EngineDescriptorSetLayout> globalUboDescSetLayout{};
+			std::vector<VkDescriptorSet> globalUboDescriptorSets;
+			std::vector<std::shared_ptr<EngineBuffer>> globalUboBuffers;
 
 			uint32_t currentImageIndex = 0;
 			int currentFrameIndex = 0;
 			bool isFrameStarted = false;
+
+			void createGlobalUniformBuffers(unsigned long sizeUBO);
+			void createGlobalUboDescriptor();
 	};
 }

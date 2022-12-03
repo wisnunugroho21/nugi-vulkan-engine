@@ -15,31 +15,21 @@
 namespace nugiEngine {
 	class EngineSimpleRenderSystem {
 		public:
-			EngineSimpleRenderSystem(EngineDevice& device, VkRenderPass renderPass);
+			EngineSimpleRenderSystem(EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalUboDescSetLayout);
 			~EngineSimpleRenderSystem();
 
 			EngineSimpleRenderSystem(const EngineSimpleRenderSystem&) = delete;
 			EngineSimpleRenderSystem& operator = (const EngineSimpleRenderSystem&) = delete;
 
-			VkDescriptorSet getGlobalDescriptorSets(int index) { return this->globalDescriptorSets[index]; }
-
-			void writeUniformBuffer(int frameIndex, void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
-			void render(VkCommandBuffer commandBuffer, FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects);
+			void render(VkCommandBuffer commandBuffer, VkDescriptorSet UBODescSet, FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects);
 
 		private:
-			void createPipelineLayout();
+			void createPipelineLayout(VkDescriptorSetLayout globalUboDescSetLayouts);
 			void createPipeline(VkRenderPass renderPass);
-			void createBuffers(unsigned long sizeUBO);
-			void createDescriptor();
 
 			EngineDevice& appDevice;
 			
 			VkPipelineLayout pipelineLayout;
 			std::unique_ptr<EnginePipeline> pipeline;
-
-			std::unique_ptr<EngineDescriptorPool> globalPool{};
-			std::unique_ptr<EngineDescriptorSetLayout> globalSetLayout{};
-			std::vector<std::shared_ptr<EngineBuffer>> globalUboBuffers;
-			std::vector<VkDescriptorSet> globalDescriptorSets;
 	};
 }
