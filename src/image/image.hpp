@@ -32,8 +32,8 @@ namespace nugiEngine
       VkFormat format;
       VkImageAspectFlags aspectFlags;
       
-      int32_t width;
-      int32_t height;
+      uint32_t width;
+      uint32_t height;
       uint32_t mipLevels;
       bool isImageCreatedByUs = false;
 

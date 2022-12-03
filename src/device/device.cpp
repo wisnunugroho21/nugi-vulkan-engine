@@ -89,7 +89,7 @@ namespace nugiEngine {
     createInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 
     auto extensions = this->getRequiredExtensions();
-    extensions.push_back("VK_KHR_portability_enumeration");
+    extensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
     createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
     createInfo.ppEnabledExtensionNames = extensions.data();
 
