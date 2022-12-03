@@ -26,6 +26,11 @@ namespace nugiEngine {
 			return EngineGameObject{currentId++};
 		}
 
+		static std::shared_ptr<EngineGameObject> createSharedGameObject() {
+			static id_t currentId = 0;
+			return std::make_shared<EngineGameObject>(currentId++);
+		}
+
 		EngineGameObject(const EngineGameObject &) = delete;
 		EngineGameObject& operator = (const EngineGameObject &) = delete;
 		EngineGameObject(EngineGameObject &&) = default;

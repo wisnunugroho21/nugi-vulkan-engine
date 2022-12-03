@@ -88,13 +88,13 @@ namespace nugiEngine {
 		return descSet;
 	}
 
-	void EngineSimpleTextureRenderSystem::render(VkCommandBuffer commandBuffer, VkDescriptorSet UBODescSet, FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects) {
+	void EngineSimpleTextureRenderSystem::render(VkCommandBuffer commandBuffer, VkDescriptorSet UBODescSet, FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &gameObjects) {
 		this->pipeline->bind(commandBuffer);
 
 		for (auto& obj : gameObjects) {
-			if (obj.textureDescSet == nullptr) continue;
+			if (obj->textureDescSet == nullptr) continue;
 			
-			VkDescriptorSet descpSet[2] = { UBODescSet, *obj.textureDescSet };
+			VkDescriptorSet descpSet[2] = { UBODescSet, *obj->textureDescSet };
 
 			vkCmdBindDescriptorSets(
 				commandBuffer,
@@ -109,8 +109,8 @@ namespace nugiEngine {
 
 			SimplePushConstantData pushConstant{};
 
-			pushConstant.modelMatrix = obj.transform.mat4();
-			pushConstant.normalMatrix = obj.transform.normalMatrix();
+			pushConstant.modelMatrix = obj->transform.mat4();
+			pushConstant.normalMatrix = obj->transform.normalMatrix();
 
 			vkCmdPushConstants(
 				commandBuffer, 
@@ -121,8 +121,8 @@ namespace nugiEngine {
 				&pushConstant
 			);
 
-			obj.model->bind(commandBuffer);
-			obj.model->draw(commandBuffer);
+			obj->model->bind(commandBuffer);
+			obj->model->draw(commandBuffer);
 		}
 	}
 }

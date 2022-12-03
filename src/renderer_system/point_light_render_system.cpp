@@ -61,7 +61,7 @@ namespace nugiEngine {
 		);
 	}
 
-	void EnginePointLightRenderSystem::render(VkCommandBuffer commandBuffer, VkDescriptorSet UBODescSet, FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects) {
+	void EnginePointLightRenderSystem::render(VkCommandBuffer commandBuffer, VkDescriptorSet UBODescSet, FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &gameObjects) {
 		this->pipeline->bind(commandBuffer);
 
 		vkCmdBindDescriptorSets(

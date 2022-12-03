@@ -89,43 +89,43 @@ namespace nugiEngine {
 	void EngineApp::loadObjects() {
 		std::shared_ptr<EngineModel> flatVaseModel = EngineModel::createModelFromFile(this->device, "models/flat_vase.obj");
 
-		auto flatVase = EngineGameObject::createGameObject();
-		flatVase.model = flatVaseModel;
-		flatVase.transform.translation = {-0.5f, 0.5f, 0.0f};
-		flatVase.transform.scale = {3.0f, 1.5f, 3.0f};
-		flatVase.color = {1.0f, 1.0f, 1.0f};
+		auto flatVase = EngineGameObject::createSharedGameObject();
+		flatVase->model = flatVaseModel;
+		flatVase->transform.translation = {-0.5f, 0.5f, 0.0f};
+		flatVase->transform.scale = {3.0f, 1.5f, 3.0f};
+		flatVase->color = {1.0f, 1.0f, 1.0f};
 
 		this->gameObjects.push_back(std::move(flatVase)); 
 
 		std::shared_ptr<EngineModel> smoothVaseModel = EngineModel::createModelFromFile(this->device, "models/smooth_vase.obj");
 
-		auto smoothVase = EngineGameObject::createGameObject();
-		smoothVase.model = smoothVaseModel;
-		smoothVase.transform.translation = {0.5f, 0.5f, 0.0f};
-		smoothVase.transform.scale = {3.0f, 1.5f, 3.0f};
-		smoothVase.color = {1.0f, 1.0f, 1.0f};
+		auto smoothVase = EngineGameObject::createSharedGameObject();
+		smoothVase->model = smoothVaseModel;
+		smoothVase->transform.translation = {0.5f, 0.5f, 0.0f};
+		smoothVase->transform.scale = {3.0f, 1.5f, 3.0f};
+		smoothVase->color = {1.0f, 1.0f, 1.0f};
 
 		this->gameObjects.push_back(std::move(smoothVase));
 
-		std::shared_ptr<EngineModel> vikingRoomModel = EngineModel::createModelFromFile(this->device, "models/smooth_vase.obj");
-		std::shared_ptr<EngineTexture> vikingRoomtexture = std::make_shared<EngineTexture>(this->device, "models/smooth_vase.obj");
+		std::shared_ptr<EngineModel> vikingRoomModel = EngineModel::createModelFromFile(this->device, "models/viking_room.obj");
+		std::shared_ptr<EngineTexture> vikingRoomtexture = std::make_shared<EngineTexture>(this->device, "textures/viking_room.png");
 
-		auto vikingRoom = EngineGameObject::createGameObject();
-		vikingRoom.model = vikingRoomModel;
-		vikingRoom.texture = vikingRoomtexture;
-		vikingRoom.transform.translation = {0.0f, 2.0f, 0.0f};
-		vikingRoom.transform.scale = {1.0f, 1.0f, 1.0f};
-		vikingRoom.color = {1.0f, 1.0f, 1.0f};
+		auto vikingRoom = EngineGameObject::createSharedGameObject();
+		vikingRoom->model = vikingRoomModel;
+		vikingRoom->texture = vikingRoomtexture;
+		vikingRoom->transform.translation = {0.0f, -1.0f, -3.0f};
+		vikingRoom->transform.scale = {1.0f, 1.0f, 1.0f};
+		vikingRoom->color = {1.0f, 1.0f, 1.0f};
 
 		this->gameObjects.push_back(std::move(vikingRoom)); 
 
 		std::shared_ptr<EngineModel> floorModel = EngineModel::createModelFromFile(this->device, "models/quad.obj");
 
-		auto floor = EngineGameObject::createGameObject();
-		floor.model = floorModel;
-		floor.transform.translation = {0.0f, 0.5f, 0.0f};
-		floor.transform.scale = {3.0f, 1.0f, 3.0f};
-		floor.color = {1.0f, 1.0f, 1.0f};
+		auto floor = EngineGameObject::createSharedGameObject();
+		floor->model = floorModel;
+		floor->transform.translation = {0.0f, 0.5f, 0.0f};
+		floor->transform.scale = {3.0f, 1.0f, 3.0f};
+		floor->color = {1.0f, 1.0f, 1.0f};
 
 		this->gameObjects.push_back(std::move(floor));
 	}
@@ -136,9 +136,9 @@ namespace nugiEngine {
 		this->simpleRenderSystem = std::make_shared<EngineSimpleRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->renderer->getGlobalUboDescSetLayout());
 		this->pointLightRenderSystem = std::make_shared<EnginePointLightRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->renderer->getGlobalUboDescSetLayout());
 
-		std::vector<EngineGameObject> texturedGameObjects{};
+		std::vector<std::shared_ptr<EngineGameObject>> texturedGameObjects{};
 		for (auto& obj : this->gameObjects) {
-			if (obj.texture != nullptr) {
+			if (obj->texture != nullptr) {
 				auto& texturedGameObject = obj;
 				texturedGameObjects.push_back(texturedGameObject);
 			}
@@ -147,7 +147,7 @@ namespace nugiEngine {
 		this->textureRenderSystem = std::make_shared<EngineSimpleTextureRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->renderer->getGlobalUboDescSetLayout(), texturedGameObjects.size());
 
 		for (auto& obj : texturedGameObjects) {
-			obj.textureDescSet = this->textureRenderSystem->setupTextureDescriptorSet(obj.texture->getDescriptorInfo());
+			obj->textureDescSet = this->textureRenderSystem->setupTextureDescriptorSet(obj->texture->getDescriptorInfo());
 		}
 	}
 }

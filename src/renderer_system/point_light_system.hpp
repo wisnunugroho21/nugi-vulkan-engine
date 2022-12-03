@@ -21,7 +21,7 @@ namespace nugiEngine {
 			EnginePointLightRenderSystem(const EnginePointLightRenderSystem&) = delete;
 			EnginePointLightRenderSystem& operator = (const EnginePointLightRenderSystem&) = delete;
 
-			void render(VkCommandBuffer commandBuffer, VkDescriptorSet UBODescSet, FrameInfo &frameInfo, std::vector<EngineGameObject> &gameObjects);
+			void render(VkCommandBuffer commandBuffer, VkDescriptorSet UBODescSet, FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &gameObjects);
 
 		private:
 			void createPipelineLayout(VkDescriptorSetLayout globalUboDescSetLayout);
