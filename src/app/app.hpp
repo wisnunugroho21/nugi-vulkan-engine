@@ -31,7 +31,6 @@ namespace nugiEngine {
 
 			EngineWindow window{WIDTH, HEIGHT, "Testing vulkan"};
 			EngineDevice device{window};
-			EngineRenderer renderer{window, device};
 			
 			std::shared_ptr<EngineRenderer> renderer{};
 			std::shared_ptr<EngineSimpleTextureRenderSystem> renderSystem{};
