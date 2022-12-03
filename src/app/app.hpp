@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../renderer_system/simple_texture_render_system.hpp"
 #include "../window/window.hpp"
 #include "../device/device.hpp"
 #include "../game_object/game_object.hpp"
@@ -26,12 +27,14 @@ namespace nugiEngine {
 
 		private:
 			void loadObjects();
+			void init();
 
 			EngineWindow window{WIDTH, HEIGHT, "Testing vulkan"};
 			EngineDevice device{window};
-			EngineRenderer renderer{window, device};
+			
+			std::shared_ptr<EngineRenderer> renderer{};
+			std::shared_ptr<EngineSimpleTextureRenderSystem> renderSystem{};
 
-			std::unique_ptr<EngineDescriptorPool> globalPool{};
 			std::vector<EngineGameObject> gameObjects;
 	};
 }

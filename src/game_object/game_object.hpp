@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../model/model.hpp"
+#include "../texture/texture.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <memory>
@@ -35,9 +36,11 @@ namespace nugiEngine {
 		id_t getId() { return this->objectId; }
 
 		TransformComponent transform{};
-		std::shared_ptr<EngineModel> model{};
 		glm::vec3 color{};
 
+		std::shared_ptr<EngineModel> model{};
+		std::shared_ptr<EngineTexture> texture{};
+		VkDescriptorSet textureDescSet{};
 	private:
 		id_t objectId;
 	};

@@ -62,8 +62,8 @@ namespace nugiEngine {
 			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 		);
-		
-		this->engineDevice.copyBuffer(stagingBuffer.getBuffer(), this->vertexBuffer->getBuffer(), bufferSize);
+
+		this->vertexBuffer->copyBuffer(stagingBuffer.getBuffer(), bufferSize);
 	}
 
 	void EngineModel::createIndexBuffer(const std::vector<uint32_t> &indices) { 
@@ -96,7 +96,7 @@ namespace nugiEngine {
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 		);
 
-		this->engineDevice.copyBuffer(stagingBuffer.getBuffer(), this->indexBuffer->getBuffer(), bufferSize);
+		this->indexBuffer->copyBuffer(stagingBuffer.getBuffer(), bufferSize);
 	}
 
 	void EngineModel::bind(VkCommandBuffer commandBuffer) {
@@ -190,9 +190,9 @@ namespace nugiEngine {
 				}
 
 				if (index.texcoord_index >= 0) {
-					vertex.uv = {
+					vertex.uv = { // temoirary. for OBJ object only
 						attrib.texcoords[2 * index.texcoord_index + 0],
-						attrib.texcoords[2 * index.texcoord_index + 1]
+    				1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
 					};
 				}
 

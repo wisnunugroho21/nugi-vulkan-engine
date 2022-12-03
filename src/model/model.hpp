@@ -51,6 +51,7 @@ namespace nugiEngine
 		
 	private:
 		EngineDevice &engineDevice;
+		
 		std::unique_ptr<EngineBuffer> vertexBuffer;
 		uint32_t vertextCount;
 

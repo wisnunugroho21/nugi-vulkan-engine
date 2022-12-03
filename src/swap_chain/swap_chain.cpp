@@ -1,4 +1,5 @@
 #include "swap_chain.hpp"
+#include "../command/command_buffer.hpp"
 
 // std
 #include <array>
@@ -23,66 +24,56 @@ namespace nugiEngine {
   }
 
   EngineSwapChain::~EngineSwapChain() {
-    for (auto imageView : swapChainImageViews) {
-      vkDestroyImageView(device.getLogicalDevice(), imageView, nullptr);
-    }
-    swapChainImageViews.clear();
-
     if (swapChain != nullptr) {
-      vkDestroySwapchainKHR(device.getLogicalDevice(), swapChain, nullptr);
+      vkDestroySwapchainKHR(this->device.getLogicalDevice(), this->swapChain, nullptr);
       swapChain = nullptr;
     }
 
-    for (int i = 0; i < depthImages.size(); i++) {
-      vkDestroyImageView(device.getLogicalDevice(), depthImageViews[i], nullptr);
-      vkDestroyImage(device.getLogicalDevice(), depthImages[i], nullptr);
-      vkFreeMemory(device.getLogicalDevice(), depthImageMemorys[i], nullptr);
+    for (auto framebuffer : this->swapChainFramebuffers) {
+      vkDestroyFramebuffer(this->device.getLogicalDevice(), framebuffer, nullptr);
     }
 
-    for (auto framebuffer : swapChainFramebuffers) {
-      vkDestroyFramebuffer(device.getLogicalDevice(), framebuffer, nullptr);
-    }
-
-    vkDestroyRenderPass(device.getLogicalDevice(), renderPass, nullptr);
+    vkDestroyRenderPass(this->device.getLogicalDevice(), this->renderPass, nullptr);
 
     // cleanup synchronization objects
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-      vkDestroySemaphore(device.getLogicalDevice(), renderFinishedSemaphores[i], nullptr);
-      vkDestroySemaphore(device.getLogicalDevice(), imageAvailableSemaphores[i], nullptr);
-      vkDestroyFence(device.getLogicalDevice(), inFlightFences[i], nullptr);
+      vkDestroySemaphore(this->device.getLogicalDevice(), this->renderFinishedSemaphores[i], nullptr);
+      vkDestroySemaphore(this->device.getLogicalDevice(), this->imageAvailableSemaphores[i], nullptr);
+      vkDestroyFence(this->device.getLogicalDevice(), this->inFlightFences[i], nullptr);
     }
   }
 
   VkResult EngineSwapChain::acquireNextImage(uint32_t *imageIndex) {
     vkWaitForFences(
-      device.getLogicalDevice(),
+      this->device.getLogicalDevice(),
       1,
-      &inFlightFences[currentFrame],
+      &this->inFlightFences[this->currentFrame],
       VK_TRUE,
       std::numeric_limits<uint64_t>::max());
 
     VkResult result = vkAcquireNextImageKHR(
-      device.getLogicalDevice(),
-      swapChain,
+      this->device.getLogicalDevice(),
+      this->swapChain,
       std::numeric_limits<uint64_t>::max(),
-      imageAvailableSemaphores[currentFrame],  // must be a not signaled semaphore
+      this->imageAvailableSemaphores[this->currentFrame],  // must be a not signaled semaphore
       VK_NULL_HANDLE,
       imageIndex);
 
     return result;
   }
 
-  VkResult EngineSwapChain::submitCommandBuffers(
-      const VkCommandBuffer *buffers, uint32_t *imageIndex) {
-    if (this->imagesInFlight[*imageIndex] != VK_NULL_HANDLE) {
+  VkResult EngineSwapChain::executeAndPresentRenders(const VkCommandBuffer *buffers, uint32_t *imageIndex) {
+    if (imagesInFlight[*imageIndex] != VK_NULL_HANDLE) {
       vkWaitForFences(device.getLogicalDevice(), 1, &imagesInFlight[*imageIndex], VK_TRUE, UINT64_MAX);
     }
-    this->imagesInFlight[*imageIndex] = inFlightFences[this->currentFrame];
+
+    imagesInFlight[*imageIndex] = inFlightFences[currentFrame];
+    vkResetFences(device.getLogicalDevice(), 1, &inFlightFences[currentFrame]);
 
     VkSubmitInfo submitInfo = {};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-    VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[this->currentFrame]};
+    VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[currentFrame]};
     VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = waitSemaphores;
@@ -91,13 +82,11 @@ namespace nugiEngine {
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = buffers;
 
-    VkSemaphore signalSemaphores[] = {this->renderFinishedSemaphores[this->currentFrame]};
+    VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
-
-    vkResetFences(device.getLogicalDevice(), 1, &inFlightFences[currentFrame]);
-    if (vkQueueSubmit(device.getGraphicsQueue(), 1, &submitInfo, inFlightFences[currentFrame]) !=
-        VK_SUCCESS) {
+    
+    if (vkQueueSubmit(device.getGraphicsQueue(), 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) {
       throw std::runtime_error("failed to submit draw command buffer!");
     }
 
@@ -121,12 +110,12 @@ namespace nugiEngine {
   }
 
   void EngineSwapChain::init() {
-    createSwapChain();
-    createImageViews();
-    createRenderPass();
-    createDepthResources();
-    createFramebuffers();
-    createSyncObjects();
+    this->createSwapChain();
+    this->createRenderPass();
+    this->createColorResources();
+    this->createDepthResources();
+    this->createFramebuffers();
+    this->createSyncObjects();
   }
 
   void EngineSwapChain::createSwapChain() {
@@ -144,7 +133,7 @@ namespace nugiEngine {
 
     VkSwapchainCreateInfoKHR createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    createInfo.surface = device.getSurface();
+    createInfo.surface = this->device.getSurface();
 
     createInfo.minImageCount = imageCount;
     createInfo.imageFormat = surfaceFormat.format;
@@ -153,7 +142,7 @@ namespace nugiEngine {
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    QueueFamilyIndices indices = device.findPhysicalQueueFamilies();
+    QueueFamilyIndices indices = this->device.findPhysicalQueueFamilies();
     uint32_t queueFamilyIndices[] = {indices.graphicsFamily, indices.presentFamily};
 
     if (indices.graphicsFamily != indices.presentFamily) {
@@ -182,39 +171,27 @@ namespace nugiEngine {
     // allowed to create a swap chain with more. That's why we'll first query the final number of
     // images with vkGetSwapchainImagesKHR, then resize the container and finally call it again to
     // retrieve the handles.
+    std::vector<VkImage> tempSwapChainImages;
     vkGetSwapchainImagesKHR(this->device.getLogicalDevice(), swapChain, &imageCount, nullptr);
-    swapChainImages.resize(imageCount);
-    vkGetSwapchainImagesKHR(this->device.getLogicalDevice(), swapChain, &imageCount, this->swapChainImages.data());
+    tempSwapChainImages.resize(imageCount);
+    vkGetSwapchainImagesKHR(this->device.getLogicalDevice(), swapChain, &imageCount, tempSwapChainImages.data());
 
-    swapChainImageFormat = surfaceFormat.format;
-    swapChainExtent = extent;
-  }
+    this->swapChainImageFormat = surfaceFormat.format;
+    this->swapChainExtent = extent;
 
-  void EngineSwapChain::createImageViews() {
-    swapChainImageViews.resize(swapChainImages.size());
-    for (size_t i = 0; i < swapChainImages.size(); i++) {
-      VkImageViewCreateInfo viewInfo{};
-      viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-      viewInfo.image = swapChainImages[i];
-      viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-      viewInfo.format = swapChainImageFormat;
-      viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-      viewInfo.subresourceRange.baseMipLevel = 0;
-      viewInfo.subresourceRange.levelCount = 1;
-      viewInfo.subresourceRange.baseArrayLayer = 0;
-      viewInfo.subresourceRange.layerCount = 1;
-
-      if (vkCreateImageView(this->device.getLogicalDevice(), &viewInfo, nullptr, &swapChainImageViews[i]) !=
-          VK_SUCCESS) {
-        throw std::runtime_error("failed to create texture image view!");
-      }
+    this->swapChainImages.clear();
+    for (uint32_t i = 0; i < imageCount; i++) {
+      auto swapChainImage = std::make_shared<EngineImage>(this->device, tempSwapChainImages[i], 1, this->swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+      this->swapChainImages.push_back(swapChainImage);
     }
   }
 
   void EngineSwapChain::createRenderPass() {
+    auto msaaSamples = this->device.getMSAASamples();
+
     VkAttachmentDescription depthAttachment{};
     depthAttachment.format = this->findDepthFormat();
-    depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    depthAttachment.samples = msaaSamples;
     depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -226,25 +203,40 @@ namespace nugiEngine {
     depthAttachmentRef.attachment = 1;
     depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-    VkAttachmentDescription colorAttachment = {};
+    VkAttachmentDescription colorAttachment{};
     colorAttachment.format = this->getSwapChainImageFormat();
-    colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    colorAttachment.samples = msaaSamples;
     colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
     colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
     VkAttachmentReference colorAttachmentRef = {};
     colorAttachmentRef.attachment = 0;
     colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+    VkAttachmentDescription colorResolveAttachment{};
+    colorResolveAttachment.format = this->getSwapChainImageFormat();
+    colorResolveAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    colorResolveAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    colorResolveAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    colorResolveAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    colorResolveAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    colorResolveAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    colorResolveAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+    VkAttachmentReference colorResolveAttachmentRef{};
+    colorResolveAttachmentRef.attachment = 2;
+    colorResolveAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
     VkSubpassDescription subpass = {};
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     subpass.colorAttachmentCount = 1;
     subpass.pColorAttachments = &colorAttachmentRef;
     subpass.pDepthStencilAttachment = &depthAttachmentRef;
+    subpass.pResolveAttachments = &colorResolveAttachmentRef;
 
     VkSubpassDependency dependency = {};
     dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -257,7 +249,7 @@ namespace nugiEngine {
     dependency.dstAccessMask =
       VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
-    std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
+    std::array<VkAttachmentDescription, 3> attachments = {colorAttachment, depthAttachment, colorResolveAttachment};
     VkRenderPassCreateInfo renderPassInfo = {};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
@@ -273,11 +265,15 @@ namespace nugiEngine {
   }
 
   void EngineSwapChain::createFramebuffers() {
-    swapChainFramebuffers.resize(imageCount());
-    for (size_t i = 0; i < imageCount(); i++) {
-      std::array<VkImageView, 2> attachments = {this->swapChainImageViews[i], this->depthImageViews[i]};
+    this->swapChainFramebuffers.resize(this->imageCount());
+    for (size_t i = 0; i < this->imageCount(); i++) {
+      std::array<VkImageView, 3> attachments = {
+        this->colorImages[i]->getImageView(), 
+        this->depthImages[i]->getImageView(),
+        this->swapChainImages[i]->getImageView()
+      };
 
-      VkExtent2D swapChainExtent = getSwapChainExtent();
+      VkExtent2D swapChainExtent = this->getSwapChainExtent();
       VkFramebufferCreateInfo framebufferInfo = {};
       framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
       framebufferInfo.renderPass = renderPass;
@@ -291,10 +287,27 @@ namespace nugiEngine {
         this->device.getLogicalDevice(),
         &framebufferInfo,
         nullptr,
-        &swapChainFramebuffers[i]) != VK_SUCCESS) 
+        &this->swapChainFramebuffers[i]) != VK_SUCCESS) 
       {
         throw std::runtime_error("failed to create framebuffer!");
       }
+    }
+  }
+
+  void EngineSwapChain::createColorResources() {
+    VkFormat colorFormat = this->swapChainImageFormat;
+
+    auto msaaSamples = this->device.getMSAASamples();
+    this->colorImages.clear();
+
+    for (int i = 0; i < this->imageCount(); i++) {
+      auto colorImage = std::make_shared<EngineImage>(
+        this->device, this->swapChainExtent.width, this->swapChainExtent.height, 1, msaaSamples, colorFormat,
+        VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_COLOR_BIT
+      );
+
+      this->colorImages.push_back(colorImage);
     }
   }
 
@@ -302,49 +315,17 @@ namespace nugiEngine {
     VkFormat depthFormat = this->findDepthFormat();
     this->swapChainDepthFormat = depthFormat;
     
-    VkExtent2D swapChainExtent = this->getSwapChainExtent();
+    auto msaaSamples = this->device.getMSAASamples();
+    this->depthImages.clear();
 
-    depthImages.resize(this->imageCount());
-    depthImageMemorys.resize(this->imageCount());
-    depthImageViews.resize(this->imageCount());
+    for (int i = 0; i < this->imageCount(); i++) {
+      auto depthImage = std::make_shared<EngineImage>(
+        this->device, this->swapChainExtent.width, this->swapChainExtent.height, 1, msaaSamples, depthFormat, 
+        VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_DEPTH_BIT
+      );
 
-    for (int i = 0; i < depthImages.size(); i++) {
-      VkImageCreateInfo imageInfo{};
-      imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-      imageInfo.imageType = VK_IMAGE_TYPE_2D;
-      imageInfo.extent.width = swapChainExtent.width;
-      imageInfo.extent.height = swapChainExtent.height;
-      imageInfo.extent.depth = 1;
-      imageInfo.mipLevels = 1;
-      imageInfo.arrayLayers = 1;
-      imageInfo.format = depthFormat;
-      imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-      imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-      imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-      imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-      imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-      imageInfo.flags = 0;
-
-      device.createImageWithInfo(
-        imageInfo,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-        depthImages[i],
-        depthImageMemorys[i]);
-
-      VkImageViewCreateInfo viewInfo{};
-      viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-      viewInfo.image = depthImages[i];
-      viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-      viewInfo.format = depthFormat;
-      viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-      viewInfo.subresourceRange.baseMipLevel = 0;
-      viewInfo.subresourceRange.levelCount = 1;
-      viewInfo.subresourceRange.baseArrayLayer = 0;
-      viewInfo.subresourceRange.layerCount = 1;
-
-      if (vkCreateImageView(device.getLogicalDevice(), &viewInfo, nullptr, &depthImageViews[i]) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create texture image view!");
-      }
+      this->depthImages.push_back(depthImage);
     }
   }
 
@@ -362,17 +343,16 @@ namespace nugiEngine {
     fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-      if (vkCreateSemaphore(device.getLogicalDevice(), &semaphoreInfo, nullptr, &this->imageAvailableSemaphores[i]) != VK_SUCCESS ||
-          vkCreateSemaphore(device.getLogicalDevice(), &semaphoreInfo, nullptr, &this->renderFinishedSemaphores[i]) != VK_SUCCESS ||
-          vkCreateFence(device.getLogicalDevice(), &fenceInfo, nullptr, &this->inFlightFences[i]) != VK_SUCCESS) 
+      if (vkCreateSemaphore(this->device.getLogicalDevice(), &semaphoreInfo, nullptr, &this->imageAvailableSemaphores[i]) != VK_SUCCESS ||
+          vkCreateSemaphore(this->device.getLogicalDevice(), &semaphoreInfo, nullptr, &this->renderFinishedSemaphores[i]) != VK_SUCCESS ||
+          vkCreateFence(this->device.getLogicalDevice(), &fenceInfo, nullptr, &this->inFlightFences[i]) != VK_SUCCESS) 
       {
         throw std::runtime_error("failed to create synchronization objects for a frame!");
       }
     }
   }
 
-  VkSurfaceFormatKHR EngineSwapChain::chooseSwapSurfaceFormat(
-      const std::vector<VkSurfaceFormatKHR> &availableFormats) {
+  VkSurfaceFormatKHR EngineSwapChain::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats) {
     for (const auto &availableFormat : availableFormats) {
       if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB &&
           availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) 
@@ -384,8 +364,7 @@ namespace nugiEngine {
     return availableFormats[0];
   }
 
-  VkPresentModeKHR EngineSwapChain::chooseSwapPresentMode(
-      const std::vector<VkPresentModeKHR> &availablePresentModes) {
+  VkPresentModeKHR EngineSwapChain::chooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes) {
     for (const auto &availablePresentMode : availablePresentModes) {
       if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
         std::cout << "Present mode: Mailbox" << std::endl;
@@ -423,10 +402,9 @@ namespace nugiEngine {
   }
 
   VkFormat EngineSwapChain::findDepthFormat() {
-    return device.findSupportedFormat(
+    return this->device.findSupportedFormat(
       {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
       VK_IMAGE_TILING_OPTIMAL,
       VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
   }
-
 }
