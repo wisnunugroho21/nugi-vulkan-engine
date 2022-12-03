@@ -116,6 +116,7 @@ namespace nugiEngine {
 		floor.model = floorModel;
 		floor.transform.translation = {0.0f, 0.5f, 0.0f};
 		floor.transform.scale = {3.0f, 1.0f, 3.0f};
+		floor.color = {1.0f, 1.0f, 1.0f};
 
 		this->gameObjects.push_back(std::move(floor));
 	}
