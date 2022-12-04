@@ -69,6 +69,8 @@ namespace nugiEngine {
 				GlobalUBO ubo{};
 				ubo.projection = camera.getProjectionMatrix();
 				ubo.view = camera.getViewMatrix();
+
+				this->pointLightRenderSystem->update(frameInfo, this->gameObjects, ubo);
 				this->renderer->writeUniformBuffer(frameIndex, &ubo);
 
 				// render
@@ -128,6 +130,9 @@ namespace nugiEngine {
 		floor->color = {1.0f, 1.0f, 1.0f};
 
 		this->gameObjects.push_back(std::move(floor));
+
+		auto pointLight = EngineGameObject::createSharedPointLight(1.0f);
+		this->gameObjects.push_back(pointLight);
 	}
 
 	void EngineApp::init() {
