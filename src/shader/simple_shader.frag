@@ -9,7 +9,7 @@ layout(location = 0) out vec4 outColor;
 struct PointLight {
   vec4 position;
   vec4 color;
-}
+};
 
 layout(set = 0, binding = 0) uniform GlobalUbo {
     mat4 projection;
@@ -25,7 +25,7 @@ layout(push_constant) uniform Push {
 } push;
 
 void main() {
-    vec3 diffuseLight = ubo.ambientLight.xyz * ubo.ambientLight.w;
+    vec3 diffuseLight = ubo.ambientLightColor.xyz * ubo.ambientLightColor.w;
     vec3 surfaceNormal = normalize(fragNormalWorld);
 
     for (int i = 0; i < ubo.numLights; i++) {

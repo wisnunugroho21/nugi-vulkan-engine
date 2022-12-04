@@ -131,7 +131,7 @@ namespace nugiEngine {
 
 		this->gameObjects.push_back(std::move(floor));
 
-		auto pointLight = EngineGameObject::createSharedPointLight(1.0f);
+		auto pointLight = EngineGameObject::createSharedPointLight(0.5f, 0.0f);
 		this->gameObjects.push_back(pointLight);
 	}
 

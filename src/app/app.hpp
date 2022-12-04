@@ -40,7 +40,6 @@ namespace nugiEngine {
 			std::shared_ptr<EngineSimpleRenderSystem> simpleRenderSystem{};
 			std::shared_ptr<EngineSimpleTextureRenderSystem> textureRenderSystem{};
 			std::shared_ptr<EnginePointLightRenderSystem> pointLightRenderSystem{};
-			// std::shared_ptr<EngineSimpleTextureRenderSystem> renderSystem{};
 
 			std::vector<std::shared_ptr<EngineGameObject>> gameObjects;
 	};
