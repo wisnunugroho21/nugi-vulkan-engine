@@ -18,8 +18,10 @@ namespace nugiEngine {
 		glm::mat4 normalMatrix{1.0f};
 	};
 
-	EngineSimpleTextureRenderSystem::EngineSimpleTextureRenderSystem(EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalUboDescSetLayout, size_t objCount) : appDevice{device} {
-		this->createDescriptor(objCount);
+	EngineSimpleTextureRenderSystem::EngineSimpleTextureRenderSystem(EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalUboDescSetLayout) 
+		: appDevice{device} 
+	{
+		this->createDescriptor();
 		this->createPipelineLayout(globalUboDescSetLayout);
 		this->createPipeline(renderPass);
 	}
@@ -28,13 +30,7 @@ namespace nugiEngine {
 		vkDestroyPipelineLayout(this->appDevice.getLogicalDevice(), this->pipelineLayout, nullptr);
 	}
 
-	void EngineSimpleTextureRenderSystem::createDescriptor(size_t objCount) {
-		this->textureDescPool = 
-			EngineDescriptorPool::Builder(this->appDevice)
-				.setMaxSets(objCount)
-        .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, objCount)
-				.build();
-
+	void EngineSimpleTextureRenderSystem::createDescriptor() {
 		this->textureDescSetLayout = 
 			EngineDescriptorSetLayout::Builder(this->appDevice)
         .addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
@@ -78,10 +74,10 @@ namespace nugiEngine {
 		);
 	}
 
-	std::shared_ptr<VkDescriptorSet> EngineSimpleTextureRenderSystem::setupTextureDescriptorSet(VkDescriptorImageInfo descImageInfo) {
+	std::shared_ptr<VkDescriptorSet> EngineSimpleTextureRenderSystem::setupTextureDescriptorSet(EngineDescriptorPool &descriptorPool, VkDescriptorImageInfo descImageInfo) {
 		std::shared_ptr<VkDescriptorSet> descSet = std::make_shared<VkDescriptorSet>();
 
-		EngineDescriptorWriter(*this->textureDescSetLayout, *this->textureDescPool)
+		EngineDescriptorWriter(*this->textureDescSetLayout, descriptorPool)
 			.writeImage(0, &descImageInfo)
 			.build(descSet.get());
 

@@ -53,10 +53,11 @@ namespace nugiEngine {
 	}
 
 	void EngineRenderer::createGlobalUboDescriptor() {
-		this->globalUboDescPool = 
+		this->descriptorPool = 
 			EngineDescriptorPool::Builder(this->appDevice)
-				.setMaxSets(this->globalUboBuffers.size())
-				.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, this->globalUboBuffers.size())
+				.setMaxSets(100 * EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
+				.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
+				.addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 100)
 				.build();
 
 		this->globalUboDescSetLayout = 
@@ -70,7 +71,7 @@ namespace nugiEngine {
 			this->globalUboDescriptorSets[iBuffers] = std::make_shared<VkDescriptorSet>();
 			auto bufferInfo = this->globalUboBuffers[iBuffers]->descriptorInfo();
 
-			EngineDescriptorWriter(*this->globalUboDescSetLayout, *this->globalUboDescPool)
+			EngineDescriptorWriter(*this->globalUboDescSetLayout, *this->descriptorPool)
 				.writeBuffer(0, &bufferInfo)
 				.build(this->globalUboDescriptorSets[iBuffers].get());
 		}

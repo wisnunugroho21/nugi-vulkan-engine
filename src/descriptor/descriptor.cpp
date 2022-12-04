@@ -23,8 +23,8 @@ namespace nugiEngine {
     return *this;
   }
   
-  std::unique_ptr<EngineDescriptorSetLayout> EngineDescriptorSetLayout::Builder::build() const {
-    return std::make_unique<EngineDescriptorSetLayout>(this->engineDevice, bindings);
+  std::shared_ptr<EngineDescriptorSetLayout> EngineDescriptorSetLayout::Builder::build() const {
+    return std::make_shared<EngineDescriptorSetLayout>(this->engineDevice, bindings);
   }
   
   // *************** Descriptor Set Layout *********************
@@ -74,8 +74,8 @@ namespace nugiEngine {
     return *this;
   }
   
-  std::unique_ptr<EngineDescriptorPool> EngineDescriptorPool::Builder::build() const {
-    return std::make_unique<EngineDescriptorPool>(this->engineDevice, this->maxSets, this->poolFlags, this->poolSizes);
+  std::shared_ptr<EngineDescriptorPool> EngineDescriptorPool::Builder::build() const {
+    return std::make_shared<EngineDescriptorPool>(this->engineDevice, this->maxSets, this->poolFlags, this->poolSizes);
   }
   
   // *************** Descriptor Pool *********************

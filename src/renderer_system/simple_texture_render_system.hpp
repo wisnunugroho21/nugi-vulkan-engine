@@ -16,17 +16,17 @@
 namespace nugiEngine {
 	class EngineSimpleTextureRenderSystem {
 		public:
-			EngineSimpleTextureRenderSystem(EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalUboDescSetLayout, size_t objCount);
+			EngineSimpleTextureRenderSystem(EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalUboDescSetLayout);
 			~EngineSimpleTextureRenderSystem();
 
 			EngineSimpleTextureRenderSystem(const EngineSimpleTextureRenderSystem&) = delete;
 			EngineSimpleTextureRenderSystem& operator = (const EngineSimpleTextureRenderSystem&) = delete;
 			
-			std::shared_ptr<VkDescriptorSet> setupTextureDescriptorSet(VkDescriptorImageInfo descImageInfo);
+			std::shared_ptr<VkDescriptorSet> setupTextureDescriptorSet(EngineDescriptorPool &descriptorPool, VkDescriptorImageInfo descImageInfo);
 			void render(VkCommandBuffer commandBuffer, VkDescriptorSet UBODescSet, FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &gameObjects);
 
 		private:
-			void createDescriptor(size_t objCount);
+			void createDescriptor();
 			void createPipelineLayout(VkDescriptorSetLayout globalUboDescSetLayout);
 			void createPipeline(VkRenderPass renderPass);
 
@@ -35,7 +35,6 @@ namespace nugiEngine {
 			VkPipelineLayout pipelineLayout;
 			std::unique_ptr<EnginePipeline> pipeline;
 
-			std::unique_ptr<EngineDescriptorPool> textureDescPool{};
-			std::unique_ptr<EngineDescriptorSetLayout> textureDescSetLayout{};
+			std::shared_ptr<EngineDescriptorSetLayout> textureDescSetLayout{};
 	};
 }

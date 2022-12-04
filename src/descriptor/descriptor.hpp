@@ -21,7 +21,7 @@ class EngineDescriptorSetLayout {
       VkShaderStageFlags stageFlags,
       uint32_t count = 1
     );
-    std::unique_ptr<EngineDescriptorSetLayout> build() const;
+    std::shared_ptr<EngineDescriptorSetLayout> build() const;
  
    private:
     EngineDevice &engineDevice;
@@ -53,7 +53,7 @@ class EngineDescriptorPool {
     Builder &addPoolSize(VkDescriptorType descriptorType, uint32_t count);
     Builder &setPoolFlags(VkDescriptorPoolCreateFlags flags);
     Builder &setMaxSets(uint32_t count);
-    std::unique_ptr<EngineDescriptorPool> build() const;
+    std::shared_ptr<EngineDescriptorPool> build() const;
  
    private:
     EngineDevice &engineDevice;

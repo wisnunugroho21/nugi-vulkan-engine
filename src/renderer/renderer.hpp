@@ -24,8 +24,10 @@ namespace nugiEngine {
 			bool isFrameInProgress() const { return this->isFrameStarted; }
 			float getAspectRatio() const { return this->swapChain->extentAspectRatio(); }
 			VkRenderPass getSwapChainRenderPass() const { return this->swapChain->getRenderPass(); }
+			
+			std::shared_ptr<EngineDescriptorPool> getDescriptorPool() { return this->descriptorPool; }
+			std::shared_ptr<EngineDescriptorSetLayout> getGlobalUboDescSetLayout() { return this->globalUboDescSetLayout; }
 			std::shared_ptr<VkDescriptorSet> getGlobalUboDescriptorSets(int index) { return this->globalUboDescriptorSets[index]; }
-			VkDescriptorSetLayout getGlobalUboDescSetLayout() { return this->globalUboDescSetLayout->getDescriptorSetLayout(); }
 
 			VkCommandBuffer getCommandBuffer() { 
 				assert(this->isFrameStarted && "cannot get command buffer when frame is not in progress");
@@ -55,8 +57,8 @@ namespace nugiEngine {
 			std::unique_ptr<EngineCommandBuffer> commandBuffers;
 			std::unique_ptr<EngineSwapChain> swapChain;
 
-			std::unique_ptr<EngineDescriptorPool> globalUboDescPool{};
-			std::unique_ptr<EngineDescriptorSetLayout> globalUboDescSetLayout{};
+			std::shared_ptr<EngineDescriptorPool> descriptorPool{};
+			std::shared_ptr<EngineDescriptorSetLayout> globalUboDescSetLayout{};
 			std::vector<std::shared_ptr<VkDescriptorSet>> globalUboDescriptorSets;
 			std::vector<std::shared_ptr<EngineBuffer>> globalUboBuffers;
 
