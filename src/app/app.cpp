@@ -74,9 +74,9 @@ namespace nugiEngine {
 				// render
 				this->renderer->beginSwapChainRenderPass(commandBuffer);
 
-				this->simpleRenderSystem->render(commandBuffer, *this->renderer->getBufferDescriptorSets(frameIndex), frameInfo, this->gameObjects);
-				this->textureRenderSystem->render(commandBuffer, *this->renderer->getBufferDescriptorSets(frameIndex), frameInfo, this->gameObjects);
-				this->pointLightRenderSystem->render(commandBuffer, *this->renderer->getBufferDescriptorSets(frameIndex), frameInfo, this->gameObjects);
+				this->simpleRenderSystem->render(commandBuffer, *this->renderer->getGlobalUboDescriptorSets(frameIndex), frameInfo, this->gameObjects);
+				this->textureRenderSystem->render(commandBuffer, *this->renderer->getGlobalUboDescriptorSets(frameIndex), frameInfo, this->gameObjects);
+				this->pointLightRenderSystem->render(commandBuffer, *this->renderer->getGlobalUboDescriptorSets(frameIndex), frameInfo, this->gameObjects);
 				
 				this->renderer->endSwapChainRenderPass(commandBuffer);
 				this->renderer->endFrame(commandBuffer);
