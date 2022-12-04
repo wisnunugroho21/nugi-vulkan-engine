@@ -126,8 +126,9 @@ namespace nugiEngine {
     VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
 
     uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
-    if (swapChainSupport.capabilities.maxImageCount > 0 &&
-        imageCount > swapChainSupport.capabilities.maxImageCount) {
+    if (swapChainSupport.capabilities.maxImageCount > 0 && 
+      imageCount > swapChainSupport.capabilities.maxImageCount) 
+    {
       imageCount = swapChainSupport.capabilities.maxImageCount;
     }
 
@@ -276,11 +277,11 @@ namespace nugiEngine {
       VkExtent2D swapChainExtent = this->getSwapChainExtent();
       VkFramebufferCreateInfo framebufferInfo = {};
       framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-      framebufferInfo.renderPass = renderPass;
+      framebufferInfo.renderPass = this->renderPass;
       framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
       framebufferInfo.pAttachments = attachments.data();
-      framebufferInfo.width = swapChainExtent.width;
-      framebufferInfo.height = swapChainExtent.height;
+      framebufferInfo.width = this->swapChainExtent.width;
+      framebufferInfo.height = this->swapChainExtent.height;
       framebufferInfo.layers = 1;
 
       if (vkCreateFramebuffer(

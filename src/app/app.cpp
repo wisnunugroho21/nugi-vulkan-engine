@@ -1,6 +1,7 @@
 #include "app.hpp"
 
 #include "../camera/camera.hpp"
+#include "../mouse_controller/mouse_controller.hpp"
 #include "../keyboard_controller/keyboard_controller.hpp"
 #include "../buffer/buffer.hpp"
 #include "../frame_info.hpp"
@@ -29,6 +30,8 @@ namespace nugiEngine {
 
 		auto viewObject = EngineGameObject::createGameObject();
 		viewObject.transform.translation.z = -2.5f;
+
+		EngineMouseController mouseController{};
 		EngineKeyboardController keyboardController{};
 
 		auto currentTime = std::chrono::high_resolution_clock::now();
@@ -52,6 +55,8 @@ namespace nugiEngine {
 			currentTime = newTime;
 
 			keyboardController.moveInPlaceXZ(this->window.getWindow(), frameTime, viewObject);
+			mouseController.rotateInPlaceXZ(this->window.getWindow(), frameTime, viewObject);
+
 			camera.setViewYXZ(viewObject.transform.translation, viewObject.transform.rotation);
 
 			auto aspect = this->renderer->getAspectRatio();
