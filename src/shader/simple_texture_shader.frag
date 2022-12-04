@@ -56,7 +56,7 @@ void main() {
         specularLight += intensity * blinnTerm;
     }
 
-    vec4 finalLightColor = vec4(diffuseLight * fragColor + specularLight * frag, 1.0);
+    vec4 finalLightColor = vec4(diffuseLight * fragColor + specularLight * fragColor, 1.0);
 
     outColor = finalLightColor * texture(texSampler, fragTexCoord);
 }
