@@ -43,6 +43,20 @@ namespace nugiEngine {
     this->viewMatrix[3][0] = -glm::dot(u, position);
     this->viewMatrix[3][1] = -glm::dot(v, position);
     this->viewMatrix[3][2] = -glm::dot(w, position);
+
+    this->inverseViewMatrix = glm::mat4{1.f};
+    this->inverseViewMatrix[0][0] = u.x;
+    this->inverseViewMatrix[0][1] = u.y;
+    this->inverseViewMatrix[0][2] = u.z;
+    this->inverseViewMatrix[1][0] = v.x;
+    this->inverseViewMatrix[1][1] = v.y;
+    this->inverseViewMatrix[1][2] = v.z;
+    this->inverseViewMatrix[2][0] = w.x;
+    this->inverseViewMatrix[2][1] = w.y;
+    this->inverseViewMatrix[2][2] = w.z;
+    this->inverseViewMatrix[3][0] = position.x;
+    this->inverseViewMatrix[3][1] = position.y;
+    this->inverseViewMatrix[3][2] = position.z;
   }
 
   void EngineCamera::setViewTarget(glm::vec3 position, glm::vec3 target, glm::vec3 up) {
@@ -74,6 +88,20 @@ namespace nugiEngine {
     this->viewMatrix[3][0] = -glm::dot(u, position);
     this->viewMatrix[3][1] = -glm::dot(v, position);
     this->viewMatrix[3][2] = -glm::dot(w, position);
+
+    this->inverseViewMatrix = glm::mat4{1.f};
+    this->inverseViewMatrix[0][0] = u.x;
+    this->inverseViewMatrix[0][1] = u.y;
+    this->inverseViewMatrix[0][2] = u.z;
+    this->inverseViewMatrix[1][0] = v.x;
+    this->inverseViewMatrix[1][1] = v.y;
+    this->inverseViewMatrix[1][2] = v.z;
+    this->inverseViewMatrix[2][0] = w.x;
+    this->inverseViewMatrix[2][1] = w.y;
+    this->inverseViewMatrix[2][2] = w.z;
+    this->inverseViewMatrix[3][0] = position.x;
+    this->inverseViewMatrix[3][1] = position.y;
+    this->inverseViewMatrix[3][2] = position.z;
   }
   
 } // namespace nugiEngine

@@ -69,6 +69,7 @@ namespace nugiEngine {
 				GlobalUBO ubo{};
 				ubo.projection = camera.getProjectionMatrix();
 				ubo.view = camera.getViewMatrix();
+				ubo.inverseView = camera.getInverseViewMatrix();
 
 				this->pointLightRenderSystem->update(frameInfo, this->gameObjects, ubo);
 				this->renderer->writeUniformBuffer(frameIndex, &ubo);
