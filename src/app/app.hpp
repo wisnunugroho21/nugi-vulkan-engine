@@ -7,7 +7,7 @@
 #include "../descriptor/descriptor.hpp"
 #include "../renderer_system/simple_texture_render_system.hpp"
 #include "../renderer_system/simple_render_system.hpp"
-#include "../renderer_system/point_light_system.hpp"
+#include "../renderer_system/point_light_render_system.hpp"
 
 #include <memory>
 #include <vector>

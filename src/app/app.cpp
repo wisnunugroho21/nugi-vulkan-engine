@@ -131,8 +131,31 @@ namespace nugiEngine {
 
 		this->gameObjects.push_back(std::move(floor));
 
-		auto pointLight = EngineGameObject::createSharedPointLight(0.5f, 0.0f);
+		auto pointLight = EngineGameObject::createSharedPointLight(0.5f, 0.05f);
 		this->gameObjects.push_back(pointLight);
+
+		std::vector<glm::vec3> lightColors{
+       {1.f, .1f, .1f},
+       {.1f, .1f, 1.f},
+       {.1f, 1.f, .1f},
+       {1.f, 1.f, .1f},
+       {.1f, 1.f, 1.f},
+       {1.f, 1.f, 1.f}  //
+   	};
+
+   	for (int i = 0; i < lightColors.size(); i++) {
+			auto rotateLight = glm::rotate(
+				glm::mat4(1.f),
+				(i * glm::two_pi<float>()) / lightColors.size(),
+				{0.f, -1.f, 0.f}
+			);
+
+			auto pointLight = EngineGameObject::createSharedPointLight(0.5f, 0.05f);
+			pointLight->color = lightColors[i];
+			pointLight->transform.translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
+
+			this->gameObjects.push_back(pointLight);
+		}
 	}
 
 	void EngineApp::init() {

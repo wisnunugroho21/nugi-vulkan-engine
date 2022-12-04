@@ -1,4 +1,4 @@
-#include "point_light_system.hpp"
+#include "point_light_render_system.hpp"
 
 #include "../swap_chain/swap_chain.hpp"
 
@@ -68,10 +68,16 @@ namespace nugiEngine {
 	}
 
 	void EnginePointLightRenderSystem::update(FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &pointLightObjects, GlobalUBO &ubo) {
+		auto rotateLight = glm::rotate(glm::mat4(1.f), 0.5f * frameInfo.frameTime, {0.f, -1.f, 0.f});
 		int lightIndex = 0;
+
 		for (auto& plo : pointLightObjects) {
 			if (plo->pointLights == nullptr) continue;
 
+			// update light position
+     	plo->transform.translation = glm::vec3(rotateLight * glm::vec4(plo->transform.translation, 1.f));
+
+			// copy light to ubo
 			ubo.pointLights[lightIndex].position = glm::vec4{ plo->transform.translation, 1.0f };
 			ubo.pointLights[lightIndex].color = glm::vec4{ plo->color, plo->pointLights->lightIntensity };
 
@@ -79,7 +85,6 @@ namespace nugiEngine {
 		}
 
 		ubo.numLights = lightIndex;
-
 	}
 
 	void EnginePointLightRenderSystem::render(VkCommandBuffer commandBuffer, VkDescriptorSet UBODescSet, FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &pointLightObjects) {
