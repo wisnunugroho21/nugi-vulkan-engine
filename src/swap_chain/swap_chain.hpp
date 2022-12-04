@@ -25,14 +25,14 @@ namespace nugiEngine {
     EngineSwapChain(const EngineSwapChain &) = delete;
     EngineSwapChain& operator=(const EngineSwapChain &) = delete;
 
-    VkFramebuffer getFrameBuffer(int index) { return this->swapChainFramebuffers[index]; }
-    VkRenderPass getRenderPass() { return this->renderPass; }
-    VkImageView getImageView(int index) { return this->swapChainImages[index]->getImageView(); }
-    size_t imageCount() { return this->swapChainImages.size(); }
-    VkFormat getSwapChainImageFormat() { return this->swapChainImageFormat; }
+    VkFramebuffer getFrameBuffer(int index) const { return this->swapChainFramebuffers[index]; }
+    VkRenderPass getRenderPass() const { return this->renderPass; }
+    VkImageView getImageView(int index) const { return this->swapChainImages[index]->getImageView(); }
+    size_t imageCount() const { return this->swapChainImages.size(); }
+    VkFormat getSwapChainImageFormat() const { return this->swapChainImageFormat; }
     VkExtent2D getSwapChainExtent() { return this->swapChainExtent; }
-    uint32_t width() { return this->swapChainExtent.width; }
-    uint32_t height() { return this->swapChainExtent.height; }
+    uint32_t width() const { return this->swapChainExtent.width; }
+    uint32_t height() const { return this->swapChainExtent.height; }
 
     float extentAspectRatio() {
       return static_cast<float>(this->swapChainExtent.width) / static_cast<float>(this->swapChainExtent.height);

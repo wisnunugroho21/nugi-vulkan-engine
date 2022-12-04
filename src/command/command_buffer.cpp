@@ -127,7 +127,7 @@ namespace nugiEngine {
 		vkQueueWaitIdle(queue);
 	}
 
-	VkCommandBuffer EngineCommandBuffer::getBuffer(int32_t index) { 
+	VkCommandBuffer EngineCommandBuffer::getBuffer(int32_t index) const { 
 		if (index == -1) {
 			index = static_cast<int32_t>(this->commandBuffers.size()) - 1;
 		}

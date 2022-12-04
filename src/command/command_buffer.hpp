@@ -21,7 +21,7 @@ namespace nugiEngine
         std::vector<VkPipelineStageFlags> *waitStages = nullptr, std::vector<VkSemaphore> *signalSemaphores = nullptr, 
         VkFence fence = VK_NULL_HANDLE);
 
-      VkCommandBuffer getBuffer(int32_t index = -1);
+      VkCommandBuffer getBuffer(int32_t index = -1) const;
 
       void beginSingleTimeCommands(VkCommandBuffer commandBuffers);
       void beginReccuringCommands(VkCommandBuffer commandBuffers);

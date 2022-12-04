@@ -25,11 +25,11 @@ namespace nugiEngine {
 			float getAspectRatio() const { return this->swapChain->extentAspectRatio(); }
 			VkRenderPass getSwapChainRenderPass() const { return this->swapChain->getRenderPass(); }
 			
-			std::shared_ptr<EngineDescriptorPool> getDescriptorPool() { return this->descriptorPool; }
-			std::shared_ptr<EngineDescriptorSetLayout> getGlobalUboDescSetLayout() { return this->globalUboDescSetLayout; }
-			std::shared_ptr<VkDescriptorSet> getGlobalUboDescriptorSets(int index) { return this->globalUboDescriptorSets[index]; }
+			std::shared_ptr<EngineDescriptorPool> getDescriptorPool() const { return this->descriptorPool; }
+			std::shared_ptr<EngineDescriptorSetLayout> getGlobalUboDescSetLayout() const { return this->globalUboDescSetLayout; }
+			std::shared_ptr<VkDescriptorSet> getGlobalUboDescriptorSets(int index) const { return this->globalUboDescriptorSets[index]; }
 
-			VkCommandBuffer getCommandBuffer() { 
+			VkCommandBuffer getCommandBuffer() const { 
 				assert(this->isFrameStarted && "cannot get command buffer when frame is not in progress");
 				return this->commandBuffers->getBuffer(this->currentFrameIndex);
 			}
