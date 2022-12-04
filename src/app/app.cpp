@@ -131,9 +131,6 @@ namespace nugiEngine {
 
 		this->gameObjects.push_back(std::move(floor));
 
-		auto pointLight = EngineGameObject::createSharedPointLight(0.5f, 0.05f);
-		this->gameObjects.push_back(pointLight);
-
 		std::vector<glm::vec3> lightColors{
        {1.f, .1f, .1f},
        {.1f, .1f, 1.f},
