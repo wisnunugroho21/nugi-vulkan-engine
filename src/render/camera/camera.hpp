@@ -17,10 +17,12 @@ namespace nugiEngine {
       const glm::mat4 getProjectionMatrix() const { return this->projectionMatrix; }
       const glm::mat4 getViewMatrix() const { return this->viewMatrix; }
       const glm::mat4 getInverseViewMatrix() const { return this->inverseViewMatrix; }
+      const glm::mat4 getInverseProjectionMatrix() const { return this->inverseProjectionMatrix; }
 
     private:
       glm::mat4 projectionMatrix{1.0f};
       glm::mat4 viewMatrix{1.0f};
+      glm::mat4 inverseProjectionMatrix{1.0f};
       glm::mat4 inverseViewMatrix{1.0f};
   };
 } // namespace nugiEngine

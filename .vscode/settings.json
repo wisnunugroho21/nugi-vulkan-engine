@@ -72,6 +72,8 @@
         "set": "cpp",
         "unordered_set": "cpp",
         "map": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "numeric": "cpp",
+        "random": "cpp"
     }
 }

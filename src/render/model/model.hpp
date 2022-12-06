@@ -32,19 +32,25 @@ namespace nugiEngine
 		std::vector<Vertex> vertices{};
 		std::vector<uint32_t> indices{};
 
-		void loadModel(const std::string &filePath);
+		void loadModel(std::string &filePath);
+		
+		glm::vec3 getMinimumPoint();
+		glm::vec3 getMaximunPoint();
 	};
 
 	class EngineModel
 	{
 	public:
-		EngineModel(EngineDevice &device, const ModelData &data);
+		EngineModel(EngineDevice &device, ModelData &data);
 		~EngineModel();
 
 		EngineModel(const EngineModel&) = delete;
 		EngineModel& operator = (const EngineModel&) = delete;
 
-		static std::unique_ptr<EngineModel> createModelFromFile(EngineDevice &device, const std::string &filePath);
+		static std::unique_ptr<EngineModel> createModelFromFile(EngineDevice &device, std::string filePath);
+
+		glm::vec3 getMinimumPoint() const { return this->minimumPoint; }
+		glm::vec3 getMaximumPoint() const { return this->maximumPoint; }
 
 		void bind(VkCommandBuffer commandBuffer);
 		void draw(VkCommandBuffer commandBuffer);
@@ -59,6 +65,8 @@ namespace nugiEngine
 		uint32_t indexCount;
 
 		bool hasIndexBuffer = false;
+		glm::vec3 minimumPoint;
+		glm::vec3 maximumPoint;
 
 		void createVertexBuffers(const std::vector<Vertex> &vertices);
 		void createIndexBuffer(const std::vector<uint32_t> &indices);

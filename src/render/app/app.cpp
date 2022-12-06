@@ -57,6 +57,8 @@ namespace nugiEngine {
 			keyboardController.moveInPlaceXZ(this->window.getWindow(), frameTime, viewObject);
 			mouseController.rotateInPlaceXZ(this->window.getWindow(), frameTime, viewObject);
 
+			mouseController.detectObject(window.getWindow(), gameObjects, camera, window.getExtent().width, window.getExtent().height);
+
 			camera.setViewYXZ(viewObject.transform.translation, viewObject.transform.rotation);
 
 			auto aspect = this->renderer->getAspectRatio();

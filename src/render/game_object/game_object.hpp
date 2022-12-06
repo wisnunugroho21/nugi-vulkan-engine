@@ -24,15 +24,13 @@ namespace nugiEngine {
 	class EngineGameObject
 	{
 	public:
-		using id_t = unsigned int;
-
 		static EngineGameObject createGameObject() {
-			static id_t currentId = 0;
+			static uint32_t currentId = 0;
 			return EngineGameObject{currentId++};
 		}
 
 		static std::shared_ptr<EngineGameObject> createSharedGameObject() {
-			static id_t currentId = 0;
+			static uint32_t currentId = 0;
 			return std::make_shared<EngineGameObject>(currentId++);
 		}
 
@@ -46,7 +44,7 @@ namespace nugiEngine {
 
 		EngineGameObject(id_t id) : objectId{id} {}
 
-		id_t getId() { return this->objectId; }
+		uint32_t getId() { return this->objectId; }
 
 		TransformComponent transform{};
 		glm::vec3 color{};

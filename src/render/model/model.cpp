@@ -23,14 +23,17 @@ namespace std {
 } // namespace std
 
 namespace nugiEngine {
-	EngineModel::EngineModel(EngineDevice &device, const ModelData &datas) : engineDevice{device} {
+	EngineModel::EngineModel(EngineDevice &device, ModelData &datas) : engineDevice{device} {
 		this->createVertexBuffers(datas.vertices);
 		this->createIndexBuffer(datas.indices);
+
+		this->minimumPoint = datas.getMinimumPoint();
+		this->maximumPoint = datas.getMaximunPoint();
 	}
 
 	EngineModel::~EngineModel() {}
 
-	std::unique_ptr<EngineModel> EngineModel::createModelFromFile(EngineDevice &device, const std::string &filePath) {
+	std::unique_ptr<EngineModel> EngineModel::createModelFromFile(EngineDevice &device, std::string filePath) {
 		ModelData modelData;
 		modelData.loadModel(filePath);
 
@@ -149,7 +152,7 @@ namespace nugiEngine {
 		return attributeDescription;
 	}
 
-	void ModelData::loadModel(const std::string &filePath) {
+	void ModelData::loadModel(std::string &filePath) {
 		tinyobj::attrib_t attrib;
 		std::vector<tinyobj::shape_t> shapes;
 		std::vector<tinyobj::material_t> materials;
@@ -204,6 +207,50 @@ namespace nugiEngine {
 				this->indices.push_back(uniqueVertices[vertex]);
 			}
 		}
+	}
+
+	glm::vec3 ModelData::getMinimumPoint() {
+		float minX = 999;
+		float minY = 999;
+		float minZ = 999;
+
+		for(const auto &vertex : this->vertices) {
+			if (vertex.position.x < minX) {
+				minX = vertex.position.x;
+			}
+
+			if (vertex.position.y < minY) {
+				minY = vertex.position.y;
+			}
+
+			if (vertex.position.z < minZ) {
+				minZ = vertex.position.z;
+			}
+		}
+
+		return glm::vec3{minX, minY, minZ};
+	}
+
+	glm::vec3 ModelData::getMaximunPoint() {
+		float maxX = 0;
+		float maxY = 0;
+		float maxZ = 0;
+
+		for(const auto &vertex : this->vertices) {
+			if (vertex.position.x > maxX) {
+				maxX = vertex.position.x;
+			}
+
+			if (vertex.position.y > maxY) {
+				maxY = vertex.position.y;
+			}
+
+			if (vertex.position.z > maxZ) {
+				maxZ = vertex.position.z;
+			}
+		}
+
+		return glm::vec3{maxX, maxY, maxZ};
 	}
     
 } // namespace nugiEngine

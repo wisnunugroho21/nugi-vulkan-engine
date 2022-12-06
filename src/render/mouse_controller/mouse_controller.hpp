@@ -2,6 +2,8 @@
 
 #include "../game_object/game_object.hpp"
 #include "../window/window.hpp"
+#include "../camera/camera.hpp"
+#include "../../pyshic/ray_caster.hpp"
 
 namespace nugiEngine {
   class EngineMouseController
@@ -13,6 +15,8 @@ namespace nugiEngine {
     };
 
     void rotateInPlaceXZ(GLFWwindow* window, float dt, EngineGameObject& gameObject);
+    int detectObject(GLFWwindow* window, std::vector<std::shared_ptr<EngineGameObject>> gameObjects, EngineCamera camera, int width, int height);
+    static float getNormCoordPosition(float diff, float pos);
 
     KeyMappings keymaps{};
     float lookSpeed{0.5f};
