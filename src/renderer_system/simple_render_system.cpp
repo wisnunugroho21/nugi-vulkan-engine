@@ -18,8 +18,8 @@ namespace nugiEngine {
 		glm::mat4 normalMatrix{1.0f};
 	};
 
-	EngineSimpleRenderSystem::EngineSimpleRenderSystem(EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalUboDescSetLayout) : appDevice{device} {
-		this->createPipelineLayout(globalUboDescSetLayout);
+	EngineSimpleRenderSystem::EngineSimpleRenderSystem(EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalDescSetLayout) : appDevice{device} {
+		this->createPipelineLayout(globalDescSetLayout);
 		this->createPipeline(renderPass);
 	}
 
@@ -27,13 +27,13 @@ namespace nugiEngine {
 		vkDestroyPipelineLayout(this->appDevice.getLogicalDevice(), this->pipelineLayout, nullptr);
 	}
 
-	void EngineSimpleRenderSystem::createPipelineLayout(VkDescriptorSetLayout globalUboDescSetLayout) {
+	void EngineSimpleRenderSystem::createPipelineLayout(VkDescriptorSetLayout globalDescSetLayout) {
 		VkPushConstantRange pushConstantRange{};
 		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 		pushConstantRange.offset = 0;
 		pushConstantRange.size = sizeof(SimplePushConstantData);
 
-		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { globalUboDescSetLayout };
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { globalDescSetLayout };
 
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
