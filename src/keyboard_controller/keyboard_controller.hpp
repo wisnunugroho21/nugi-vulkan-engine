@@ -24,7 +24,6 @@ namespace nugiEngine {
 
     KeyMappings keymaps{};
     float moveSpeed{3.0f};
-    float lookSpeed{1.5f};
   };
   
 } // namespace nugiEngine
