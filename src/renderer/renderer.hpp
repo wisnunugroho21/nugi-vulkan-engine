@@ -26,8 +26,8 @@ namespace nugiEngine {
 			VkRenderPass getSwapChainRenderPass() const { return this->swapChain->getRenderPass(); }
 			
 			std::shared_ptr<EngineDescriptorPool> getDescriptorPool() const { return this->descriptorPool; }
-			std::shared_ptr<EngineDescriptorSetLayout> getGlobalUboDescSetLayout() const { return this->globalUboDescSetLayout; }
-			std::shared_ptr<VkDescriptorSet> getGlobalUboDescriptorSets(int index) const { return this->globalUboDescriptorSets[index]; }
+			std::shared_ptr<EngineDescriptorSetLayout> getglobalDescSetLayout() const { return this->globalDescSetLayout; }
+			std::shared_ptr<VkDescriptorSet> getGlobalDescriptorSets(int index) const { return this->globalDescriptorSets[index]; }
 
 			VkCommandBuffer getCommandBuffer() const { 
 				assert(this->isFrameStarted && "cannot get command buffer when frame is not in progress");
@@ -40,6 +40,7 @@ namespace nugiEngine {
 			}
 
 			void writeUniformBuffer(int frameIndex, void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+			void writeLightBuffer(int frameIndex, void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
 
 			VkCommandBuffer beginFrame();
 			void endFrame(VkCommandBuffer commandBuffer);
@@ -48,7 +49,7 @@ namespace nugiEngine {
 
 		private:
 			void recreateSwapChain();
-			void createGlobalUniformBuffers(unsigned long sizeUBO);
+			void createGlobalBuffers(unsigned long sizeUBO, unsigned long sizeLightBuffer);
 			void createGlobalUboDescriptor();
 
 			EngineWindow& appWindow;
@@ -58,9 +59,11 @@ namespace nugiEngine {
 			std::unique_ptr<EngineSwapChain> swapChain;
 
 			std::shared_ptr<EngineDescriptorPool> descriptorPool{};
-			std::shared_ptr<EngineDescriptorSetLayout> globalUboDescSetLayout{};
-			std::vector<std::shared_ptr<VkDescriptorSet>> globalUboDescriptorSets;
-			std::vector<std::shared_ptr<EngineBuffer>> globalUboBuffers;
+			std::shared_ptr<EngineDescriptorSetLayout> globalDescSetLayout{};
+			std::vector<std::shared_ptr<VkDescriptorSet>> globalDescriptorSets;
+
+			std::vector<std::shared_ptr<EngineBuffer>> globalLightBuffers;
+			std::vector<std::shared_ptr<EngineBuffer>> globalUniformBuffers;
 
 			uint32_t currentImageIndex = 0;
 			int currentFrameIndex = 0;

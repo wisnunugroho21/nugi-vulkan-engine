@@ -15,7 +15,7 @@
 namespace nugiEngine {
 	class EngineSimpleRenderSystem {
 		public:
-			EngineSimpleRenderSystem(EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalUboDescSetLayout);
+			EngineSimpleRenderSystem(EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalDescSetLayout);
 			~EngineSimpleRenderSystem();
 
 			EngineSimpleRenderSystem(const EngineSimpleRenderSystem&) = delete;
@@ -24,7 +24,7 @@ namespace nugiEngine {
 			void render(VkCommandBuffer commandBuffer, VkDescriptorSet UBODescSet, FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &gameObjects);
 
 		private:
-			void createPipelineLayout(VkDescriptorSetLayout globalUboDescSetLayouts);
+			void createPipelineLayout(VkDescriptorSetLayout globalDescSetLayouts);
 			void createPipeline(VkRenderPass renderPass);
 
 			EngineDevice& appDevice;

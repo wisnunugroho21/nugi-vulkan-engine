@@ -15,7 +15,7 @@ namespace nugiEngine {
     void rotateInPlaceXZ(GLFWwindow* window, float dt, EngineGameObject& gameObject);
 
     KeyMappings keymaps{};
-    float lookSpeed{0.5f};
+    float lookSpeed{2.0f};
 
     bool isDragged = false;
     double firstDragged_x = 0;

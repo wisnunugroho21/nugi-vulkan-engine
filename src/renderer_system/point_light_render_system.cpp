@@ -18,8 +18,8 @@ namespace nugiEngine {
 		float radius;
 	};
 	
-	EnginePointLightRenderSystem::EnginePointLightRenderSystem(EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalUboDescSetLayout) : appDevice{device} {
-		this->createPipelineLayout(globalUboDescSetLayout);
+	EnginePointLightRenderSystem::EnginePointLightRenderSystem(EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalDescSetLayout) : appDevice{device} {
+		this->createPipelineLayout(globalDescSetLayout);
 		this->createPipeline(renderPass);
 	}
 
@@ -27,13 +27,13 @@ namespace nugiEngine {
 		vkDestroyPipelineLayout(this->appDevice.getLogicalDevice(), this->pipelineLayout, nullptr);
 	}
 
-	void EnginePointLightRenderSystem::createPipelineLayout(VkDescriptorSetLayout globalUboDescSetLayout) {
+	void EnginePointLightRenderSystem::createPipelineLayout(VkDescriptorSetLayout globalDescSetLayout) {
 		VkPushConstantRange pushConstantRange{};
 		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 		pushConstantRange.offset = 0;
 		pushConstantRange.size = sizeof(PointLightPushConstant);
 
-		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { globalUboDescSetLayout };
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { globalDescSetLayout };
 
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -67,7 +67,7 @@ namespace nugiEngine {
 		);
 	}
 
-	void EnginePointLightRenderSystem::update(FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &pointLightObjects, GlobalUBO &ubo) {
+	void EnginePointLightRenderSystem::update(FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &pointLightObjects, GlobalLight &globalLight) {
 		auto rotateLight = glm::rotate(glm::mat4(1.f), 0.5f * frameInfo.frameTime, {0.f, -1.f, 0.f});
 		int lightIndex = 0;
 
@@ -78,13 +78,13 @@ namespace nugiEngine {
      	plo->transform.translation = glm::vec3(rotateLight * glm::vec4(plo->transform.translation, 1.f));
 
 			// copy light to ubo
-			ubo.pointLights[lightIndex].position = glm::vec4{ plo->transform.translation, 1.0f };
-			ubo.pointLights[lightIndex].color = glm::vec4{ plo->color, plo->pointLights->lightIntensity };
+			globalLight.pointLights[lightIndex].position = glm::vec4{ plo->transform.translation, 1.0f };
+			globalLight.pointLights[lightIndex].color = glm::vec4{ plo->color, plo->pointLights->lightIntensity };
 
 			lightIndex++;
 		}
 
-		ubo.numLights = lightIndex;
+		globalLight.numLights = lightIndex;
 	}
 
 	void EnginePointLightRenderSystem::render(VkCommandBuffer commandBuffer, VkDescriptorSet UBODescSet, FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &pointLightObjects) {

@@ -15,17 +15,17 @@
 namespace nugiEngine {
 	class EnginePointLightRenderSystem {
 		public:
-			EnginePointLightRenderSystem(EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalUboDescSetLayout);
+			EnginePointLightRenderSystem(EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalDescSetLayout);
 			~EnginePointLightRenderSystem();
 
 			EnginePointLightRenderSystem(const EnginePointLightRenderSystem&) = delete;
 			EnginePointLightRenderSystem& operator = (const EnginePointLightRenderSystem&) = delete;
 
-			void update(FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &pointLightObjects,  GlobalUBO &ubo);
+			void update(FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &pointLightObjects, GlobalLight &globalLight);
 			void render(VkCommandBuffer commandBuffer, VkDescriptorSet UBODescSet, FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &pointLightObjects);
 
 		private:
-			void createPipelineLayout(VkDescriptorSetLayout globalUboDescSetLayout);
+			void createPipelineLayout(VkDescriptorSetLayout globalDescSetLayout);
 			void createPipeline(VkRenderPass renderPass);
 
 			EngineDevice& appDevice;

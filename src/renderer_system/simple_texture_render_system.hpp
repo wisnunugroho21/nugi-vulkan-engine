@@ -16,7 +16,7 @@
 namespace nugiEngine {
 	class EngineSimpleTextureRenderSystem {
 		public:
-			EngineSimpleTextureRenderSystem(EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalUboDescSetLayout);
+			EngineSimpleTextureRenderSystem(EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalDescSetLayout);
 			~EngineSimpleTextureRenderSystem();
 
 			EngineSimpleTextureRenderSystem(const EngineSimpleTextureRenderSystem&) = delete;
@@ -27,7 +27,7 @@ namespace nugiEngine {
 
 		private:
 			void createDescriptor();
-			void createPipelineLayout(VkDescriptorSetLayout globalUboDescSetLayout);
+			void createPipelineLayout(VkDescriptorSetLayout globalDescSetLayout);
 			void createPipeline(VkRenderPass renderPass);
 
 			EngineDevice& appDevice;

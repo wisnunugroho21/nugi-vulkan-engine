@@ -16,10 +16,13 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
     mat4 projection;
     mat4 view;
     mat4 inverseView;
+} ubo;
+
+layout(set = 0, binding = 1) uniform GlobalLight {
     vec4 ambientLightColor;
     PointLight pointLights[10];
     int numLights;
-} ubo;
+} globalLight;
 
 layout(set = 1, binding = 0) uniform sampler2D texSampler;
 
@@ -29,15 +32,15 @@ layout(push_constant) uniform Push {
 } push;
 
 void main() {
-    vec3 diffuseLight = ubo.ambientLightColor.xyz * ubo.ambientLightColor.w;
+    vec3 diffuseLight = globalLight.ambientLightColor.xyz * globalLight.ambientLightColor.w;
     vec3 surfaceNormal = normalize(fragNormalWorld);
     vec3 specularLight = vec3(0.0);
 
     vec3 cameraPosWorld = ubo.inverseView[3].xyz;
     vec3 viewDirection = normalize(cameraPosWorld - fragPosWorld);
 
-    for (int i = 0; i < ubo.numLights; i++) {
-        PointLight light = ubo.pointLights[i];
+    for (int i = 0; i < globalLight.numLights; i++) {
+        PointLight light = globalLight.pointLights[i];
 
         vec3 directionToLight = light.position.xyz - fragPosWorld;
         float attenuation = 1.0 / dot(directionToLight, directionToLight);
