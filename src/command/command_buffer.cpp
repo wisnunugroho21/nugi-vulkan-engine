@@ -3,108 +3,88 @@
 #include <iostream>
 
 namespace nugiEngine {
-	EngineCommandBuffer::EngineCommandBuffer(EngineDevice& device, uint32_t size) : device(device) {
-		this->createCommandBuffers(size);
-	}
-
 	EngineCommandBuffer::~EngineCommandBuffer() {
-		this->freeCommandBuffers();
+		vkFreeCommandBuffers(
+      this->appDevice.getLogicalDevice(), 
+      this->appDevice.getCommandPool(), 
+      1, 
+      &this->commandBuffer
+    );
 	}
 
-  void EngineCommandBuffer::createCommandBuffers(uint32_t size) {
-		this->commandBuffers.resize(size);
+  std::vector<std::shared_ptr<EngineCommandBuffer>> EngineCommandBuffer::createCommandBuffers(EngineDevice &appDevice, uint32_t size) {
+		std::vector<VkCommandBuffer> commandBuffers{size};
+		std::vector<std::shared_ptr<EngineCommandBuffer>> appCommandBuffers;
 
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandPool = this->device.getCommandPool();
-		allocInfo.commandBufferCount = static_cast<uint32_t>(this->commandBuffers.size());
+		allocInfo.commandPool = appDevice.getCommandPool();
+		allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 
-		if (vkAllocateCommandBuffers(this->device.getLogicalDevice(), &allocInfo, this->commandBuffers.data()) != VK_SUCCESS) {
+		if (vkAllocateCommandBuffers(appDevice.getLogicalDevice(), &allocInfo, commandBuffers.data()) != VK_SUCCESS) {
+			throw std::runtime_error("failed to allocate command buffer");
+		}
+
+		for (size_t i = 0; i < size; i++) {
+			appCommandBuffers.push_back(
+				std::make_shared<EngineCommandBuffer>(appDevice, commandBuffers[i])
+			);
+		}
+
+		return appCommandBuffers;
+	}
+
+	EngineCommandBuffer::EngineCommandBuffer(EngineDevice& device, VkCommandBuffer commandBuffer) 
+		: appDevice{device}, commandBuffer {commandBuffer} 
+	{
+
+	}
+
+	EngineCommandBuffer::EngineCommandBuffer(EngineDevice& device) : appDevice{device} {
+		VkCommandBufferAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandPool = this->appDevice.getCommandPool();
+		allocInfo.commandBufferCount = 1;
+
+		if (vkAllocateCommandBuffers(appDevice.getLogicalDevice(), &allocInfo, &this->commandBuffer) != VK_SUCCESS) {
 			throw std::runtime_error("failed to allocate command buffer");
 		}
 	}
 
-  void EngineCommandBuffer::freeCommandBuffers() {
-		vkFreeCommandBuffers(
-      this->device.getLogicalDevice(), 
-      this->device.getCommandPool(), 
-      static_cast<uint32_t>(this->commandBuffers.size()), 
-      this->commandBuffers.data()
-    );
-    
-		this->commandBuffers.clear();
-	}
-
-	void EngineCommandBuffer::beginSingleTimeCommands(int32_t index) {
+	void EngineCommandBuffer::beginSingleTimeCommands() {
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-		if (index == -1) {
-			index = static_cast<int32_t>(this->commandBuffers.size()) - 1;
-		}
-
-		if (vkBeginCommandBuffer(this->commandBuffers[index], &beginInfo) != VK_SUCCESS) {
+		if (vkBeginCommandBuffer(this->commandBuffer, &beginInfo) != VK_SUCCESS) {
 			std::cerr << "Failed to start recording buffer" << '\n';
 		}
 	}
 
-	void EngineCommandBuffer::beginReccuringCommands(int32_t index) {
+	void EngineCommandBuffer::beginReccuringCommands() {
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-		if (index == -1) {
-			index = static_cast<int32_t>(this->commandBuffers.size()) - 1;
-		}
-
-		if (vkBeginCommandBuffer(this->commandBuffers[index], &beginInfo) != VK_SUCCESS) {
+		if (vkBeginCommandBuffer(this->commandBuffer, &beginInfo) != VK_SUCCESS) {
 			std::cerr << "Failed to start recording command buffer" << '\n';
 		}
 	}
 
-	void EngineCommandBuffer::beginSingleTimeCommands(VkCommandBuffer commandBuffer) {
-		VkCommandBufferBeginInfo beginInfo{};
-		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-		if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
-			std::cerr << "Failed to start recording buffer" << '\n';
-		}
-	}
-
-	void EngineCommandBuffer::beginReccuringCommands(VkCommandBuffer commandBuffer) {
-		VkCommandBufferBeginInfo beginInfo{};
-		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-		if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
-			std::cerr << "Failed to start recording command buffer" << '\n';
-		}
-	}
-
-	void EngineCommandBuffer::endCommands(int32_t index) {
-		if (index == -1) {
-			index = static_cast<int32_t>(this->commandBuffers.size()) - 1;
-		}
-
-		if (vkEndCommandBuffer(this->commandBuffers[index]) != VK_SUCCESS) {
+	void EngineCommandBuffer::endCommands() {
+		if (vkEndCommandBuffer(this->commandBuffer) != VK_SUCCESS) {
 			std::cerr << "Failed to end recording command buffer" << '\n';
 		}
 	}
 
-	void EngineCommandBuffer::endCommands(VkCommandBuffer commandBuffer) {
-		if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
-			std::cerr << "Failed to end recording command buffer" << '\n';
-		}
-	}
-
-	void EngineCommandBuffer::submitCommands(VkQueue queue, int32_t index, std::vector<VkSemaphore> *waitSemaphores, 
+	void EngineCommandBuffer::submitCommands(VkQueue queue, std::vector<VkSemaphore> *waitSemaphores, 
       std::vector<VkPipelineStageFlags> *waitStages, std::vector<VkSemaphore> *signalSemaphores, VkFence fence) 
 	{
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &this->commandBuffers[index];
+		submitInfo.pCommandBuffers = &this->commandBuffer;
 
 		if (waitSemaphores != nullptr) {
 			submitInfo.waitSemaphoreCount = waitSemaphores->size();
@@ -124,14 +104,8 @@ namespace nugiEngine {
 			std::cerr << "Failed to submitting command buffer" << '\n';
 		}
 
-		vkQueueWaitIdle(queue);
-	}
-
-	VkCommandBuffer EngineCommandBuffer::getBuffer(int32_t index) const { 
-		if (index == -1) {
-			index = static_cast<int32_t>(this->commandBuffers.size()) - 1;
+		if (vkQueueWaitIdle(queue) != VK_SUCCESS) {
+			std::cerr << "Failed to waiting queue" << '\n';
 		}
-
-		return this->commandBuffers[index]; 
 	}
 } // namespace nugiEngine

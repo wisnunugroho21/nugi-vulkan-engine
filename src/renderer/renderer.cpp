@@ -8,7 +8,7 @@
 namespace nugiEngine {
 	EngineRenderer::EngineRenderer(EngineWindow& window, EngineDevice& device) : appDevice{device}, appWindow{window} {
 		this->recreateSwapChain();
-		this->commandBuffers = std::make_unique<EngineCommandBuffer>(device, EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
+		this->commandBuffers = EngineCommandBuffer::createCommandBuffers(device, EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
 
 		this->createGlobalBuffers(sizeof(GlobalUBO), sizeof(GlobalLight));
 		this->createGlobalUboDescriptor();
@@ -97,12 +97,12 @@ namespace nugiEngine {
 		this->globalUniformBuffers[frameIndex]->flush(size, offset);
 	}
 
-	void EngineRenderer::writeLightBuffer(int frameIndex, void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0) {
+	void EngineRenderer::writeLightBuffer(int frameIndex, void* data, VkDeviceSize size, VkDeviceSize offset) {
 		this->globalLightBuffers[frameIndex]->writeToBuffer(data, size, offset);
 		this->globalLightBuffers[frameIndex]->flush(size, offset);
 	}
 
-	VkCommandBuffer EngineRenderer::beginFrame() {
+	std::shared_ptr<EngineCommandBuffer> EngineRenderer::beginFrame() {
 		assert(!this->isFrameStarted && "can't call beginframe while frame still in progress");
 
 		auto result = this->swapChain->acquireNextImage(&this->currentImageIndex);
@@ -117,16 +117,17 @@ namespace nugiEngine {
 
 		this->isFrameStarted = true;
 
-		this->commandBuffers->beginReccuringCommands(this->currentFrameIndex);
-		return this->commandBuffers->getBuffer(this->currentFrameIndex);
+		this->commandBuffers[this->currentFrameIndex]->beginReccuringCommands();
+		return this->commandBuffers[this->currentFrameIndex];
 	}
 
-	void EngineRenderer::endFrame(VkCommandBuffer commandBuffer) {
+	void EngineRenderer::endFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
 		assert(this->isFrameStarted && "can't call endframe if frame is not in progress");
 
-		EngineCommandBuffer::endCommands(commandBuffer);
+		commandBuffer->endCommands();
+		VkCommandBuffer buffer = commandBuffer->getCommandBuffer();
 
-		auto result = this->swapChain->executeAndPresentRenders(&commandBuffer, &this->currentImageIndex);
+		auto result = this->swapChain->executeAndPresentRenders(&buffer, &this->currentImageIndex);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || this->appWindow.wasResized()) {
 			this->appWindow.resetResizedFlag();
 			this->recreateSwapChain();
@@ -138,9 +139,9 @@ namespace nugiEngine {
 		this->currentFrameIndex = (this->currentFrameIndex + 1) % EngineSwapChain::MAX_FRAMES_IN_FLIGHT;
 	}
 
-	void EngineRenderer::beginSwapChainRenderPass(VkCommandBuffer commandBuffer) {
+	void EngineRenderer::beginSwapChainRenderPass(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
 		assert(this->isFrameStarted && "Can't call beginSwapChainRenderPass if frame is not in progress");
-		assert(commandBuffer == this->getCommandBuffer() && "Can't begin render pass on command buffer from different frame");
+		assert(commandBuffer->getCommandBuffer() == this->getCommandBuffer() && "Can't begin render pass on command buffer from different frame");
 
 		VkRenderPassBeginInfo renderBeginInfo{};
 		renderBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -156,7 +157,7 @@ namespace nugiEngine {
 		renderBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 		renderBeginInfo.pClearValues = clearValues.data();
 
-		vkCmdBeginRenderPass(commandBuffer, &renderBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdBeginRenderPass(commandBuffer->getCommandBuffer(), &renderBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 		VkViewport viewport{};
 		viewport.x = 0.0f;
@@ -167,14 +168,14 @@ namespace nugiEngine {
 		viewport.maxDepth = 1.0f;
 
 		VkRect2D scissor{{0, 0}, this->swapChain->getSwapChainExtent()};
-		vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+		vkCmdSetViewport(commandBuffer->getCommandBuffer(), 0, 1, &viewport);
+		vkCmdSetScissor(commandBuffer->getCommandBuffer(), 0, 1, &scissor);
 	}
 
-	void EngineRenderer::endSwapChainRenderPass(VkCommandBuffer commandBuffer) {
+	void EngineRenderer::endSwapChainRenderPass(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
 		assert(this->isFrameStarted && "Can't call endSwapChainRenderPass if frame is not in progress");
-		assert(commandBuffer == this->getCommandBuffer() && "Can't end render pass on command buffer from different frame");
+		assert(commandBuffer->getCommandBuffer() == this->getCommandBuffer() && "Can't end render pass on command buffer from different frame");
 
-		vkCmdEndRenderPass(commandBuffer);
+		vkCmdEndRenderPass(commandBuffer->getCommandBuffer());
 	}
 }

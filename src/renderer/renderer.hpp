@@ -31,7 +31,7 @@ namespace nugiEngine {
 
 			VkCommandBuffer getCommandBuffer() const { 
 				assert(this->isFrameStarted && "cannot get command buffer when frame is not in progress");
-				return this->commandBuffers->getBuffer(this->currentFrameIndex);
+				return this->commandBuffers[this->currentFrameIndex]->getCommandBuffer();
 			}
 
 			int getFrameIndex() {
@@ -42,10 +42,10 @@ namespace nugiEngine {
 			void writeUniformBuffer(int frameIndex, void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
 			void writeLightBuffer(int frameIndex, void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
 
-			VkCommandBuffer beginFrame();
-			void endFrame(VkCommandBuffer commandBuffer);
-			void beginSwapChainRenderPass(VkCommandBuffer commandBuffer);
-			void endSwapChainRenderPass(VkCommandBuffer commandBuffer);
+			std::shared_ptr<EngineCommandBuffer> beginFrame();
+			void endFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer);
+			void beginSwapChainRenderPass(std::shared_ptr<EngineCommandBuffer> commandBuffer);
+			void endSwapChainRenderPass(std::shared_ptr<EngineCommandBuffer> commandBuffer);
 
 		private:
 			void recreateSwapChain();
@@ -55,8 +55,8 @@ namespace nugiEngine {
 			EngineWindow& appWindow;
 			EngineDevice& appDevice;
 
-			std::unique_ptr<EngineCommandBuffer> commandBuffers;
 			std::unique_ptr<EngineSwapChain> swapChain;
+			std::vector<std::shared_ptr<EngineCommandBuffer>> commandBuffers;
 
 			std::shared_ptr<EngineDescriptorPool> descriptorPool{};
 			std::shared_ptr<EngineDescriptorSetLayout> globalDescSetLayout{};
