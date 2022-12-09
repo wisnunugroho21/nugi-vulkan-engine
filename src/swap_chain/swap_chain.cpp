@@ -29,12 +29,6 @@ namespace nugiEngine {
       swapChain = nullptr;
     }
 
-    for (auto framebuffer : this->swapChainFramebuffers) {
-      vkDestroyFramebuffer(this->device.getLogicalDevice(), framebuffer, nullptr);
-    }
-
-    vkDestroyRenderPass(this->device.getLogicalDevice(), this->renderPass, nullptr);
-
     // cleanup synchronization objects
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
       vkDestroySemaphore(this->device.getLogicalDevice(), this->renderFinishedSemaphores[i], nullptr);
@@ -111,10 +105,9 @@ namespace nugiEngine {
 
   void EngineSwapChain::init() {
     this->createSwapChain();
-    this->createRenderPass();
     this->createColorResources();
     this->createDepthResources();
-    this->createFramebuffers();
+    this->createRenderPass();
     this->createSyncObjects();
   }
 
@@ -205,7 +198,7 @@ namespace nugiEngine {
     depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
     VkAttachmentDescription colorAttachment{};
-    colorAttachment.format = this->getSwapChainImageFormat();
+    colorAttachment.format = this->swapChainImageFormat;
     colorAttachment.samples = msaaSamples;
     colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -219,7 +212,7 @@ namespace nugiEngine {
     colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
     VkAttachmentDescription colorResolveAttachment{};
-    colorResolveAttachment.format = this->getSwapChainImageFormat();
+    colorResolveAttachment.format = this->swapChainImageFormat;
     colorResolveAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
     colorResolveAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     colorResolveAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -250,49 +243,22 @@ namespace nugiEngine {
     dependency.dstAccessMask =
       VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
-    std::array<VkAttachmentDescription, 3> attachments = {colorAttachment, depthAttachment, colorResolveAttachment};
-    VkRenderPassCreateInfo renderPassInfo = {};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-    renderPassInfo.pAttachments = attachments.data();
-    renderPassInfo.subpassCount = 1;
-    renderPassInfo.pSubpasses = &subpass;
-    renderPassInfo.dependencyCount = 1;
-    renderPassInfo.pDependencies = &dependency;
+		EngineRenderPass::Builder renderPassBuilder = EngineRenderPass::Builder(this->device, this->swapChainExtent.width, this->swapChainExtent.height)
+			.addAttachments(colorAttachment)
+			.addAttachments(depthAttachment)
+			.addAttachments(colorResolveAttachment)
+			.addSubpass(subpass)
+			.addDependency(dependency);
 
-    if (vkCreateRenderPass(this->device.getLogicalDevice(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
-      throw std::runtime_error("failed to create render pass!");
-    }
-  }
-
-  void EngineSwapChain::createFramebuffers() {
-    this->swapChainFramebuffers.resize(this->imageCount());
-    for (size_t i = 0; i < this->imageCount(); i++) {
-      std::array<VkImageView, 3> attachments = {
+    for (int i = 0; i < this->imageCount(); i++) {
+			renderPassBuilder.addViewImages({
         this->colorImages[i]->getImageView(), 
         this->depthImages[i]->getImageView(),
         this->swapChainImages[i]->getImageView()
-      };
-
-      VkExtent2D swapChainExtent = this->getSwapChainExtent();
-      VkFramebufferCreateInfo framebufferInfo = {};
-      framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-      framebufferInfo.renderPass = this->renderPass;
-      framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-      framebufferInfo.pAttachments = attachments.data();
-      framebufferInfo.width = this->swapChainExtent.width;
-      framebufferInfo.height = this->swapChainExtent.height;
-      framebufferInfo.layers = 1;
-
-      if (vkCreateFramebuffer(
-        this->device.getLogicalDevice(),
-        &framebufferInfo,
-        nullptr,
-        &this->swapChainFramebuffers[i]) != VK_SUCCESS) 
-      {
-        throw std::runtime_error("failed to create framebuffer!");
-      }
+      });
     }
+
+		this->renderPass = renderPassBuilder.build();
   }
 
   void EngineSwapChain::createColorResources() {

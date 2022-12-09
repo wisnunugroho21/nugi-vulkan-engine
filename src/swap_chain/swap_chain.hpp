@@ -2,6 +2,7 @@
 
 #include "../device/device.hpp"
 #include "../image/image.hpp"
+#include "../renderpass/renderpass.hpp"
 
 // vulkan headers
 #include <vulkan/vulkan.h>
@@ -25,8 +26,8 @@ namespace nugiEngine {
     EngineSwapChain(const EngineSwapChain &) = delete;
     EngineSwapChain& operator=(const EngineSwapChain &) = delete;
 
-    VkFramebuffer getFrameBuffer(int index) const { return this->swapChainFramebuffers[index]; }
-    VkRenderPass getRenderPass() const { return this->renderPass; }
+    VkFramebuffer getFrameBuffer(int index) const { return this->renderPass->getFramebuffers(index); }
+    VkRenderPass getRenderPass() const { return this->renderPass->getRenderPass(); }
     VkImageView getImageView(int index) const { return this->swapChainImages[index]->getImageView(); }
     size_t imageCount() const { return this->swapChainImages.size(); }
     VkFormat getSwapChainImageFormat() const { return this->swapChainImageFormat; }
@@ -53,7 +54,6 @@ namespace nugiEngine {
     void createColorResources();
     void createDepthResources();
     void createRenderPass();
-    void createFramebuffers();
     void createSyncObjects();
 
     // Helper functions
@@ -65,8 +65,7 @@ namespace nugiEngine {
     VkFormat swapChainDepthFormat;
     VkExtent2D swapChainExtent;
 
-    std::vector<VkFramebuffer> swapChainFramebuffers;
-    VkRenderPass renderPass;
+    std::shared_ptr<EngineRenderPass> renderPass;
 
     std::vector<std::shared_ptr<EngineImage>> colorImages;
     std::vector<std::shared_ptr<EngineImage>> depthImages;
