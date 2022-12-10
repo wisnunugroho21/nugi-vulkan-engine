@@ -61,24 +61,30 @@ namespace nugiEngine {
     };
   }
 
-  EngineGameObject EngineGameObject::createPointLight(float intensity, float radius, glm::vec3 color) {
+  EngineGameObject EngineGameObject::createLight(float intensity = 10.0f, float radius = 1.0f, glm::vec3 color = glm::vec3{1.0f}, int lightType = 0, float cutoff = glm::radians(45), glm::vec3 direction = glm::vec3{0.0f}) {
     EngineGameObject gameObject = EngineGameObject::createGameObject();
     gameObject.color =  color;
     gameObject.transform.scale.x = radius;
     
-    gameObject.pointLights = std::make_unique<PointLightComponent>();
-    gameObject.pointLights->lightIntensity = intensity;
+    gameObject.light = std::make_unique<LightComponent>();
+    gameObject.light->intensity = intensity;
+    gameObject.light->type = lightType;
+    gameObject.light->direction = direction;
+    gameObject.light->cutoff = cutoff;
 
     return gameObject;
   }
 
-  std::shared_ptr<EngineGameObject> EngineGameObject::createSharedPointLight(float intensity, float radius, glm::vec3 color) {
+  std::shared_ptr<EngineGameObject> EngineGameObject::createSharedLight(float intensity = 10.0f, float radius = 1.0f, glm::vec3 color = glm::vec3{1.0f}, int lightType = 0, float cutoff = glm::radians(45), glm::vec3 direction = glm::vec3{0.0f}) {
     std::shared_ptr<EngineGameObject> gameObject = EngineGameObject::createSharedGameObject();
     gameObject->color =  color;
     gameObject->transform.scale.x = radius;
     
-    gameObject->pointLights = std::make_unique<PointLightComponent>();
-    gameObject->pointLights->lightIntensity = intensity;
+    gameObject->light = std::make_unique<LightComponent>();
+    gameObject->light->intensity = intensity;
+    gameObject->light->type = lightType;
+    gameObject->light->direction = direction;
+    gameObject->light->cutoff = cutoff;
 
     return gameObject;
   }

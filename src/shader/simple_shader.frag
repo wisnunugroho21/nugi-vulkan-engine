@@ -9,6 +9,9 @@ layout(location = 0) out vec4 outColor;
 struct PointLight {
   vec4 position;
   vec4 color;
+  vec3 direction;
+	float cutoff;
+  int type;
 };
 
 layout(set = 0, binding = 0) uniform GlobalUbo {
@@ -42,10 +45,22 @@ void main() {
         vec3 directionToLight = light.position.xyz - fragPosWorld;
         float attenuation = 1.0 / dot(directionToLight, directionToLight);
         directionToLight = normalize(directionToLight);
+
+				// spotlight
+				if (light.type == 1) {
+					vec3 directionFromLight = -1.0 * directionToLight;
+					vec3 spotlightDirection = normalize(light.direction);
+					float cosAngLightDirection = dot(directionFromLight, spotlightDirection);
+
+					if (cosAngLightDirection <= light.cutoff) {
+						continue;
+					}
+				}
         
         float cosAngIncidence = max(dot(surfaceNormal, directionToLight), 0);
         vec3 intensity = light.color.xyz * light.color.w * attenuation;
 
+				// diffuse light
         diffuseLight += intensity * cosAngIncidence;
 
         // specular light

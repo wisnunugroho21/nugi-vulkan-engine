@@ -13,6 +13,9 @@ layout(location = 3) out vec2 fragTexCoord;
 struct PointLight {
   vec4 position;
   vec4 color;
+  vec3 direction;
+	float cutoff;
+  int type;
 };
 
 layout(set = 0, binding = 0) uniform GlobalUbo {

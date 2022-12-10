@@ -15,9 +15,12 @@ namespace nugiEngine {
 		glm::mat4 mat4();
 		glm::mat3 normalMatrix();
 	};
-
-	struct PointLightComponent {
-		float lightIntensity = 1.0f;
+	
+	struct LightComponent {
+		float intensity = 1.0f;
+		float cutoff = glm::radians(45);
+		int type = 0;
+		glm::vec3 direction{0.0f};
 	};
 	
 
@@ -36,8 +39,8 @@ namespace nugiEngine {
 			return std::make_shared<EngineGameObject>(currentId++);
 		}
 
-		static EngineGameObject createPointLight(float intensity = 10.0f, float radius = 1.0f, glm::vec3 color = glm::vec3{1.0f});
-		static std::shared_ptr<EngineGameObject> createSharedPointLight(float intensity = 10.0f, float radius = 1.0f, glm::vec3 color = glm::vec3{1.0f});
+		static EngineGameObject createLight(float intensity = 10.0f, float radius = 1.0f, glm::vec3 color = glm::vec3{1.0f}, int lightType = 0, float cutoff = glm::radians(45), glm::vec3 direction = glm::vec3{0.0f});
+		static std::shared_ptr<EngineGameObject> createSharedLight(float intensity = 10.0f, float radius = 1.0f, glm::vec3 color = glm::vec3{1.0f}, int lightType = 0, float cutoff = glm::radians(45), glm::vec3 direction = glm::vec3{0.0f});
 
 		EngineGameObject(const EngineGameObject &) = delete;
 		EngineGameObject& operator = (const EngineGameObject &) = delete;
@@ -54,7 +57,8 @@ namespace nugiEngine {
 		std::shared_ptr<EngineModel> model{};
 		std::shared_ptr<EngineTexture> texture{};
 		std::shared_ptr<VkDescriptorSet> textureDescSet{};
-		std::unique_ptr<PointLightComponent> pointLights = nullptr;
+		std::unique_ptr<LightComponent> light = nullptr;
+
 	private:
 		id_t objectId;
 	};

@@ -63,14 +63,17 @@ namespace nugiEngine {
 		int lightIndex = 0;
 
 		for (auto& plo : pointLightObjects) {
-			if (plo->pointLights == nullptr) continue;
+			if (plo->light == nullptr) continue;
 
 			// update light position
      	plo->transform.translation = glm::vec3(rotateLight * glm::vec4(plo->transform.translation, 1.f));
 
 			// copy light to ubo
 			globalLight.pointLights[lightIndex].position = glm::vec4{ plo->transform.translation, 1.0f };
-			globalLight.pointLights[lightIndex].color = glm::vec4{ plo->color, plo->pointLights->lightIntensity };
+			globalLight.pointLights[lightIndex].color = glm::vec4{ plo->color, plo->light->intensity };
+			globalLight.pointLights[lightIndex].type = plo->light->type;
+			globalLight.pointLights[lightIndex].direction = plo->light->direction;
+			globalLight.pointLights[lightIndex].cutoff = plo->light->cutoff;
 
 			lightIndex++;
 		}
@@ -93,11 +96,11 @@ namespace nugiEngine {
 		);
 
 		for (auto& plo : pointLightObjects) {
-			if (plo->pointLights == nullptr) continue;
+			if (plo->light == nullptr) continue;
 
 			PointLightPushConstant pushConstant{};
 			pushConstant.position = glm::vec4{ plo->transform.translation, 1.0f };
-			pushConstant.color = glm::vec4{ plo->color, plo->pointLights->lightIntensity };
+			pushConstant.color = glm::vec4{ plo->color, plo->light->intensity };
 			pushConstant.radius = plo->transform.scale.x;
 
 			vkCmdPushConstants(
@@ -111,9 +114,5 @@ namespace nugiEngine {
 
 			vkCmdDraw(commandBuffer, 6, 1, 0, 0);
 		}
-
-
-
-		
 	}
 }

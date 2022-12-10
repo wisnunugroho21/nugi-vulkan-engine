@@ -6,6 +6,9 @@ layout (location = 0) out vec4 outColor;
 struct PointLight {
   vec4 position;
   vec4 color;
+  vec3 direction;
+	float cutoff;
+  int type;
 };
 
 layout(set = 0, binding = 0) uniform GlobalUbo {
