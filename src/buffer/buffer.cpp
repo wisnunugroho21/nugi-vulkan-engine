@@ -230,22 +230,22 @@ namespace nugiEngine {
   }
 
   void EngineBuffer::copyBuffer(VkBuffer srcBuffer, VkDeviceSize size) {
-    EngineCommandBuffer commandBuffer{this->engineDevice, 1};
-    commandBuffer.beginSingleTimeCommands(0);
+    EngineCommandBuffer commandBuffer{this->engineDevice};
+    commandBuffer.beginSingleTimeCommands();
 
     VkBufferCopy copyRegion{};
     copyRegion.srcOffset = 0;  // Optional
     copyRegion.dstOffset = 0;  // Optional
     copyRegion.size = size;
-    vkCmdCopyBuffer(commandBuffer.getBuffer(0), srcBuffer, this->buffer, 1, &copyRegion);
+    vkCmdCopyBuffer(commandBuffer.getCommandBuffer(), srcBuffer, this->buffer, 1, &copyRegion);
 
-    commandBuffer.endCommands(0);
-    commandBuffer.submitCommands(this->engineDevice.getGraphicsQueue(), 0, nullptr, nullptr, nullptr, nullptr);
+    commandBuffer.endCommands();
+    commandBuffer.submitCommands(this->engineDevice.getGraphicsQueue());
   }
 
   void EngineBuffer::copyBufferToImage(VkImage image, uint32_t width, uint32_t height, uint32_t layerCount) {
-    EngineCommandBuffer commandBuffer{this->engineDevice, 1};
-    commandBuffer.beginSingleTimeCommands(0);
+    EngineCommandBuffer commandBuffer{this->engineDevice};
+    commandBuffer.beginSingleTimeCommands();
 
     VkBufferImageCopy region{};
     region.bufferOffset = 0;
@@ -261,15 +261,16 @@ namespace nugiEngine {
     region.imageExtent = {width, height, 1};
 
     vkCmdCopyBufferToImage(
-      commandBuffer.getBuffer(0),
+      commandBuffer.getCommandBuffer(),
       this->buffer,
       image,
       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
       1,
-      &region);
+      &region
+    );
 
-    commandBuffer.endCommands(0);
-    commandBuffer.submitCommands(this->engineDevice.getGraphicsQueue(), 0, nullptr, nullptr, nullptr, nullptr);
+    commandBuffer.endCommands();
+    commandBuffer.submitCommands(this->engineDevice.getGraphicsQueue());
   }
   
  

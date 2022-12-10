@@ -21,9 +21,8 @@ namespace nugiEngine {
 			EngineRenderer(const EngineRenderer&) = delete;
 			EngineRenderer& operator = (const EngineRenderer&) = delete;
 
+			std::shared_ptr<EngineSwapChain> getSwapChain() const { return this->swapChain; }
 			bool isFrameInProgress() const { return this->isFrameStarted; }
-			float getAspectRatio() const { return this->swapChain->extentAspectRatio(); }
-			VkRenderPass getSwapChainRenderPass() const { return this->swapChain->getRenderPass(); }
 			
 			std::shared_ptr<EngineDescriptorPool> getDescriptorPool() const { return this->descriptorPool; }
 			std::shared_ptr<EngineDescriptorSetLayout> getglobalDescSetLayout() const { return this->globalDescSetLayout; }
@@ -31,7 +30,7 @@ namespace nugiEngine {
 
 			VkCommandBuffer getCommandBuffer() const { 
 				assert(this->isFrameStarted && "cannot get command buffer when frame is not in progress");
-				return this->commandBuffers->getBuffer(this->currentFrameIndex);
+				return this->commandBuffers[this->currentFrameIndex]->getCommandBuffer();
 			}
 
 			int getFrameIndex() {
@@ -39,24 +38,30 @@ namespace nugiEngine {
 				return this->currentFrameIndex;
 			}
 
+			int getImageIndex() {
+				assert(this->isFrameStarted && "cannot get frame index when frame is not in progress");
+				return this->currentImageIndex;
+			}
+
 			void writeUniformBuffer(int frameIndex, void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
 			void writeLightBuffer(int frameIndex, void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
 
-			VkCommandBuffer beginFrame();
-			void endFrame(VkCommandBuffer commandBuffer);
-			void beginSwapChainRenderPass(VkCommandBuffer commandBuffer);
-			void endSwapChainRenderPass(VkCommandBuffer commandBuffer);
+			std::shared_ptr<EngineCommandBuffer> beginFrame();
+			void endFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer);
+
+			bool presentFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer);
 
 		private:
 			void recreateSwapChain();
 			void createGlobalBuffers(unsigned long sizeUBO, unsigned long sizeLightBuffer);
 			void createGlobalUboDescriptor();
+			void createSyncObjects(int imageCount);
 
 			EngineWindow& appWindow;
 			EngineDevice& appDevice;
 
-			std::unique_ptr<EngineCommandBuffer> commandBuffers;
-			std::unique_ptr<EngineSwapChain> swapChain;
+			std::shared_ptr<EngineSwapChain> swapChain;
+			std::vector<std::shared_ptr<EngineCommandBuffer>> commandBuffers;
 
 			std::shared_ptr<EngineDescriptorPool> descriptorPool{};
 			std::shared_ptr<EngineDescriptorSetLayout> globalDescSetLayout{};
@@ -64,6 +69,11 @@ namespace nugiEngine {
 
 			std::vector<std::shared_ptr<EngineBuffer>> globalLightBuffers;
 			std::vector<std::shared_ptr<EngineBuffer>> globalUniformBuffers;
+
+			std::vector<VkSemaphore> imageAvailableSemaphores;
+			std::vector<VkSemaphore> renderFinishedSemaphores;
+			std::vector<VkFence> inFlightFences;
+			std::vector<VkFence> imagesInFlight;
 
 			uint32_t currentImageIndex = 0;
 			int currentFrameIndex = 0;

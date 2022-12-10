@@ -20,7 +20,9 @@
 namespace nugiEngine {
 	EngineApp::EngineApp() {
 		this->loadObjects();
-		this->init();
+
+		this->renderer = std::make_unique<EngineRenderer>(this->window, this->device);
+		this->recreateSubRendererAndSubsystem();
 	}
 
 	EngineApp::~EngineApp() {}
@@ -59,7 +61,7 @@ namespace nugiEngine {
 
 			camera.setViewYXZ(viewObject.transform.translation, viewObject.transform.rotation);
 
-			auto aspect = this->renderer->getAspectRatio();
+			auto aspect = this->renderer->getSwapChain()->extentAspectRatio();
 			camera.setPerspectiveProjection(glm::radians(50.0f), aspect, 0.1f, 10.0f);
 
 			if (auto commandBuffer = this->renderer->beginFrame()) {
@@ -82,14 +84,18 @@ namespace nugiEngine {
 				this->renderer->writeLightBuffer(frameIndex, &lightingObjects);
 
 				// render
-				this->renderer->beginSwapChainRenderPass(commandBuffer);
+				this->swapChainSubRenderer->beginRenderPass(commandBuffer, this->renderer->getImageIndex());
 
-				this->simpleRenderSystem->render(commandBuffer, *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
-				this->textureRenderSystem->render(commandBuffer, *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
-				this->pointLightRenderSystem->render(commandBuffer, *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
+				this->simpleRenderSystem->render(commandBuffer->getCommandBuffer(), *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
+				this->textureRenderSystem->render(commandBuffer->getCommandBuffer(), *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
+				this->pointLightRenderSystem->render(commandBuffer->getCommandBuffer(), *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
 				
-				this->renderer->endSwapChainRenderPass(commandBuffer);
+				this->swapChainSubRenderer->endRenderPass(commandBuffer);
 				this->renderer->endFrame(commandBuffer);
+
+				if (!this->renderer->presentFrame(commandBuffer)) {
+					this->recreateSubRendererAndSubsystem();
+				}
 			}
 		}
 
@@ -163,11 +169,13 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineApp::init() {
-		this->renderer = std::make_shared<EngineRenderer>(window, device);
+	void EngineApp::recreateSubRendererAndSubsystem() {
+		this->swapChainSubRenderer = std::make_unique<EngineSwapChainSubRenderer>(this->device, this->renderer->getSwapChain()->getswapChainImages(), 
+			this->renderer->getSwapChain()->getSwapChainImageFormat(), this->renderer->getSwapChain()->imageCount(), 
+			this->renderer->getSwapChain()->width(), this->renderer->getSwapChain()->height());
 
-		this->simpleRenderSystem = std::make_shared<EngineSimpleRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->renderer->getglobalDescSetLayout()->getDescriptorSetLayout());
-		this->pointLightRenderSystem = std::make_shared<EnginePointLightRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->renderer->getglobalDescSetLayout()->getDescriptorSetLayout());
+		this->simpleRenderSystem = std::make_unique<EngineSimpleRenderSystem>(this->device, this->swapChainSubRenderer->getRenderPass()->getRenderPass(), this->renderer->getglobalDescSetLayout()->getDescriptorSetLayout());
+		this->pointLightRenderSystem = std::make_unique<EnginePointLightRenderSystem>(this->device, this->swapChainSubRenderer->getRenderPass()->getRenderPass(), this->renderer->getglobalDescSetLayout()->getDescriptorSetLayout());
 
 		std::vector<std::shared_ptr<EngineGameObject>> texturedGameObjects{};
 		for (auto& obj : this->gameObjects) {
@@ -177,7 +185,7 @@ namespace nugiEngine {
 			}
 		}
 
-		this->textureRenderSystem = std::make_shared<EngineSimpleTextureRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->renderer->getglobalDescSetLayout()->getDescriptorSetLayout());
+		this->textureRenderSystem = std::make_unique<EngineTextureRenderSystem>(this->device, this->swapChainSubRenderer->getRenderPass()->getRenderPass(), this->renderer->getglobalDescSetLayout()->getDescriptorSetLayout());
 
 		for (auto& obj : texturedGameObjects) {
 			obj->textureDescSet = this->textureRenderSystem->setupTextureDescriptorSet(*this->renderer->getDescriptorPool(), obj->texture->getDescriptorInfo());

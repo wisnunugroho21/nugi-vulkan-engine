@@ -83,8 +83,8 @@ namespace nugiEngine {
   }
 
   void EngineImage::transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout) {
-    EngineCommandBuffer commandBuffer{this->appDevice, 1};
-    commandBuffer.beginSingleTimeCommands(0);
+    EngineCommandBuffer commandBuffer{this->appDevice};
+    commandBuffer.beginSingleTimeCommands();
 
     VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -121,7 +121,7 @@ namespace nugiEngine {
     }
 
     vkCmdPipelineBarrier(
-      commandBuffer.getBuffer(0), 
+      commandBuffer.getCommandBuffer(), 
       sourceStage, 
       destinationStage,
       0,
@@ -131,8 +131,8 @@ namespace nugiEngine {
       &barrier
     );
 
-    commandBuffer.endCommands(0);
-    commandBuffer.submitCommands(this->appDevice.getGraphicsQueue(), 0, nullptr, nullptr, nullptr, nullptr);
+    commandBuffer.endCommands();
+    commandBuffer.submitCommands(this->appDevice.getGraphicsQueue());
   }
 
   void EngineImage::generateMipMap() {
@@ -148,8 +148,8 @@ namespace nugiEngine {
       throw std::runtime_error("texture image format does not support linear blitting!");
     }
 
-    EngineCommandBuffer commandBuffer{this->appDevice, 1};
-    commandBuffer.beginSingleTimeCommands(0);
+    EngineCommandBuffer commandBuffer{this->appDevice};
+    commandBuffer.beginSingleTimeCommands();
 
     VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -172,7 +172,7 @@ namespace nugiEngine {
       barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 
       vkCmdPipelineBarrier(
-        commandBuffer.getBuffer(0),
+        commandBuffer.getCommandBuffer(),
         VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
         0, nullptr,
         0, nullptr,
@@ -195,7 +195,7 @@ namespace nugiEngine {
       blit.dstSubresource.layerCount = 1;
 
       vkCmdBlitImage(
-        commandBuffer.getBuffer(0),
+        commandBuffer.getCommandBuffer(),
         this->image, 
         VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
         this->image, 
@@ -211,7 +211,7 @@ namespace nugiEngine {
       barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
       vkCmdPipelineBarrier(
-        commandBuffer.getBuffer(0),
+        commandBuffer.getCommandBuffer(),
         VK_PIPELINE_STAGE_TRANSFER_BIT, 
         VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 
         0,
@@ -232,15 +232,15 @@ namespace nugiEngine {
     barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
     vkCmdPipelineBarrier(
-      commandBuffer.getBuffer(0),
+      commandBuffer.getCommandBuffer(),
       VK_PIPELINE_STAGE_TRANSFER_BIT, 
       VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
       0, nullptr,
       0, nullptr,
       1, &barrier);
 
-    commandBuffer.endCommands(0);
-    commandBuffer.submitCommands(this->appDevice.getGraphicsQueue(), 0, nullptr, nullptr, nullptr, nullptr);
+    commandBuffer.endCommands();
+    commandBuffer.submitCommands(this->appDevice.getGraphicsQueue());
   }
   
 } // namespace nugiEngine

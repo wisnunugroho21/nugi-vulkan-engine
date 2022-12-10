@@ -3,36 +3,34 @@
 #include "../device/device.hpp"
 
 #include <vector>
+#include <memory>
 
 namespace nugiEngine
 {
   class EngineCommandBuffer {
     public:
-      EngineCommandBuffer(EngineDevice& device, uint32_t size);
+      EngineCommandBuffer(EngineDevice& device, VkCommandBuffer commandBuffer);
+      EngineCommandBuffer(EngineDevice& device);
+
       ~EngineCommandBuffer();
 
       EngineCommandBuffer(const EngineCommandBuffer&) = delete;
       EngineCommandBuffer& operator=(const EngineCommandBuffer&) = delete;
 
-      void beginSingleTimeCommands(int32_t index = -1);
-      void beginReccuringCommands(int32_t index = -1);
-      void endCommands(int32_t index = -1);
-      void submitCommands(VkQueue queue, int32_t index = -1, std::vector<VkSemaphore> *waitSemaphores = nullptr, 
-        std::vector<VkPipelineStageFlags> *waitStages = nullptr, std::vector<VkSemaphore> *signalSemaphores = nullptr, 
+      static std::vector<std::shared_ptr<EngineCommandBuffer>> createCommandBuffers(EngineDevice &appDevice, uint32_t size);
+
+      void beginSingleTimeCommands();
+      void beginReccuringCommands();
+      void endCommands();
+      void submitCommands(VkQueue queue, std::vector<VkSemaphore> waitSemaphores = {}, 
+        std::vector<VkPipelineStageFlags> waitStages = {}, std::vector<VkSemaphore> signalSemaphores = {}, 
         VkFence fence = VK_NULL_HANDLE);
 
-      VkCommandBuffer getBuffer(int32_t index = -1) const;
-
-      void beginSingleTimeCommands(VkCommandBuffer commandBuffers);
-      void beginReccuringCommands(VkCommandBuffer commandBuffers);
-      static void endCommands(VkCommandBuffer commandBuffers);
+      VkCommandBuffer getCommandBuffer() const { return this->commandBuffer; }
 
     private:
-      EngineDevice& device;
-      std::vector<VkCommandBuffer> commandBuffers;
-
-      void createCommandBuffers(uint32_t size);
-      void freeCommandBuffers();
+      EngineDevice& appDevice;
+      VkCommandBuffer commandBuffer;
   };
   
 } // namespace nugiEngine

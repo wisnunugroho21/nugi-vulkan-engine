@@ -50,18 +50,10 @@ namespace nugiEngine {
 	void EngineSimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
 		assert(this->pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
-		PipelineConfigInfo pipelineConfig{};
-		EnginePipeline::defaultPipelineConfigInfo(this->appDevice, pipelineConfig);
-
-		pipelineConfig.renderPass = renderPass;
-		pipelineConfig.pipelineLayout = this->pipelineLayout;
-
-		this->pipeline = std::make_unique<EnginePipeline>(
-			this->appDevice, 
-			"shader/simple_shader.vert.spv",
-			"shader/simple_shader.frag.spv",
-			pipelineConfig
-		);
+		this->pipeline = EnginePipeline::Builder(this->appDevice, "shader/simple_shader.vert.spv", "shader/simple_shader.frag.spv", 
+				this->pipelineLayout, renderPass)
+			.setDefault()
+			.build();
 	}
 
 	void EngineSimpleRenderSystem::render(VkCommandBuffer commandBuffer, VkDescriptorSet UBODescSet, FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &gameObjects) {

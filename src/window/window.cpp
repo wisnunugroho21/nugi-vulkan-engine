@@ -48,7 +48,7 @@ namespace nugiEngine {
 
   void EngineWindow::frameBufferResizedCallback(GLFWwindow *window, int width, int height) {
     auto currentWindow = reinterpret_cast<EngineWindow*>(glfwGetWindowUserPointer(window));
-    currentWindow->frameBufferResized = false;
+    currentWindow->frameBufferResized = true;
     currentWindow->width = width;
     currentWindow->height = height;
   }

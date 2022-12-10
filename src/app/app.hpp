@@ -5,9 +5,10 @@
 #include "../game_object/game_object.hpp"
 #include "../renderer/renderer.hpp"
 #include "../descriptor/descriptor.hpp"
-#include "../renderer_system/simple_texture_render_system.hpp"
 #include "../renderer_system/simple_render_system.hpp"
+#include "../renderer_system/texture_render_system.hpp"
 #include "../renderer_system/point_light_render_system.hpp"
+#include "../renderer_sub/swapchain_sub_renderer.hpp"
 
 #include <memory>
 #include <vector>
@@ -31,15 +32,17 @@ namespace nugiEngine {
 
 		private:
 			void loadObjects();
-			void init();
+			void recreateSubRendererAndSubsystem();
 
 			EngineWindow window{WIDTH, HEIGHT, APP_TITLE};
 			EngineDevice device{window};
 			
-			std::shared_ptr<EngineRenderer> renderer{};
-			std::shared_ptr<EngineSimpleRenderSystem> simpleRenderSystem{};
-			std::shared_ptr<EngineSimpleTextureRenderSystem> textureRenderSystem{};
-			std::shared_ptr<EnginePointLightRenderSystem> pointLightRenderSystem{};
+			std::unique_ptr<EngineRenderer> renderer{};
+			std::unique_ptr<EngineSwapChainSubRenderer> swapChainSubRenderer{};
+
+			std::unique_ptr<EngineSimpleRenderSystem> simpleRenderSystem{};
+			std::unique_ptr<EngineTextureRenderSystem> textureRenderSystem{};
+			std::unique_ptr<EnginePointLightRenderSystem> pointLightRenderSystem{};
 
 			std::vector<std::shared_ptr<EngineGameObject>> gameObjects;
 	};
