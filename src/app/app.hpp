@@ -5,10 +5,10 @@
 #include "../game_object/game_object.hpp"
 #include "../renderer/renderer.hpp"
 #include "../descriptor/descriptor.hpp"
-#include "../renderer_system/simple_texture_render_system.hpp"
 #include "../renderer_system/simple_render_system.hpp"
+#include "../renderer_system/texture_render_system.hpp"
 #include "../renderer_system/point_light_render_system.hpp"
-#include "../renderer_sub/sub_renderer.hpp"
+#include "../renderer_sub/swapchain_sub_renderer.hpp"
 
 #include <memory>
 #include <vector>
@@ -38,10 +38,10 @@ namespace nugiEngine {
 			EngineDevice device{window};
 			
 			std::unique_ptr<EngineRenderer> renderer{};
-			std::unique_ptr<EngineSubRenderer> subRenderer{};
+			std::unique_ptr<EngineSwapChainSubRenderer> swapChainSubRenderer{};
 
 			std::unique_ptr<EngineSimpleRenderSystem> simpleRenderSystem{};
-			std::unique_ptr<EngineSimpleTextureRenderSystem> textureRenderSystem{};
+			std::unique_ptr<EngineTextureRenderSystem> textureRenderSystem{};
 			std::unique_ptr<EnginePointLightRenderSystem> pointLightRenderSystem{};
 
 			std::vector<std::shared_ptr<EngineGameObject>> gameObjects;

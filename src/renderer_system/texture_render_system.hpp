@@ -14,13 +14,13 @@
 #include <vector>
 
 namespace nugiEngine {
-	class EngineSimpleTextureRenderSystem {
+	class EngineTextureRenderSystem {
 		public:
-			EngineSimpleTextureRenderSystem(EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalDescSetLayout);
-			~EngineSimpleTextureRenderSystem();
+			EngineTextureRenderSystem(EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalDescSetLayout);
+			~EngineTextureRenderSystem();
 
-			EngineSimpleTextureRenderSystem(const EngineSimpleTextureRenderSystem&) = delete;
-			EngineSimpleTextureRenderSystem& operator = (const EngineSimpleTextureRenderSystem&) = delete;
+			EngineTextureRenderSystem(const EngineTextureRenderSystem&) = delete;
+			EngineTextureRenderSystem& operator = (const EngineTextureRenderSystem&) = delete;
 			
 			std::shared_ptr<VkDescriptorSet> setupTextureDescriptorSet(EngineDescriptorPool &descriptorPool, VkDescriptorImageInfo descImageInfo);
 			void render(VkCommandBuffer commandBuffer, VkDescriptorSet UBODescSet, FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &gameObjects);

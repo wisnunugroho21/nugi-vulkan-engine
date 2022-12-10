@@ -1,10 +1,10 @@
-#include "sub_renderer.hpp"
+#include "swapchain_sub_renderer.hpp"
 
 #include <assert.h>
 #include <array>
 
 namespace nugiEngine {
-  EngineSubRenderer::EngineSubRenderer(EngineDevice &device, std::vector<std::shared_ptr<EngineImage>> swapChainImages, VkFormat swapChainImageFormat, int imageCount, int width, int height) 
+  EngineSwapChainSubRenderer::EngineSwapChainSubRenderer(EngineDevice &device, std::vector<std::shared_ptr<EngineImage>> swapChainImages, VkFormat swapChainImageFormat, int imageCount, int width, int height) 
     : device{device}, swapChainImages{swapChainImages}, width{width}, height{height}
   {
     this->createColorResources(swapChainImageFormat, imageCount);
@@ -12,7 +12,7 @@ namespace nugiEngine {
     this->createRenderPass(swapChainImageFormat, imageCount);
   }
 
-  void EngineSubRenderer::createColorResources(VkFormat swapChainImageFormat, int imageCount) {
+  void EngineSwapChainSubRenderer::createColorResources(VkFormat swapChainImageFormat, int imageCount) {
     VkFormat colorFormat = swapChainImageFormat;
 
     auto msaaSamples = this->device.getMSAASamples();
@@ -29,7 +29,7 @@ namespace nugiEngine {
     }
   }
 
-  void EngineSubRenderer::createDepthResources(int imageCount) {
+  void EngineSwapChainSubRenderer::createDepthResources(int imageCount) {
     VkFormat depthFormat = this->findDepthFormat();
     
     auto msaaSamples = this->device.getMSAASamples();
@@ -46,7 +46,7 @@ namespace nugiEngine {
     }
   }
 
-  void EngineSubRenderer::createRenderPass(VkFormat swapChainImageFormat, int imageCount) {
+  void EngineSwapChainSubRenderer::createRenderPass(VkFormat swapChainImageFormat, int imageCount) {
     auto msaaSamples = this->device.getMSAASamples();
 
     VkAttachmentDescription depthAttachment{};
@@ -127,14 +127,14 @@ namespace nugiEngine {
 		this->renderPass = renderPassBuilder.build();
   }
 
-  VkFormat EngineSubRenderer::findDepthFormat() {
+  VkFormat EngineSwapChainSubRenderer::findDepthFormat() {
     return this->device.findSupportedFormat(
       {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
       VK_IMAGE_TILING_OPTIMAL,
       VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
   }
 
-  void EngineSubRenderer::beginRenderPass(std::shared_ptr<EngineCommandBuffer> commandBuffer, int currentImageIndex) {
+  void EngineSwapChainSubRenderer::beginRenderPass(std::shared_ptr<EngineCommandBuffer> commandBuffer, int currentImageIndex) {
 		VkRenderPassBeginInfo renderBeginInfo{};
 		renderBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		renderBeginInfo.renderPass = this->getRenderPass()->getRenderPass();
@@ -164,7 +164,7 @@ namespace nugiEngine {
 		vkCmdSetScissor(commandBuffer->getCommandBuffer(), 0, 1, &scissor);
 	}
 
-	void EngineSubRenderer::endRenderPass(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
+	void EngineSwapChainSubRenderer::endRenderPass(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
 		vkCmdEndRenderPass(commandBuffer->getCommandBuffer());
 	}
   

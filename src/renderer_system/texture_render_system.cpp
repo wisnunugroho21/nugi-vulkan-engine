@@ -1,4 +1,4 @@
-#include "simple_texture_render_system.hpp"
+#include "texture_render_system.hpp"
 
 #include "../swap_chain/swap_chain.hpp"
 
@@ -18,7 +18,7 @@ namespace nugiEngine {
 		glm::mat4 normalMatrix{1.0f};
 	};
 
-	EngineSimpleTextureRenderSystem::EngineSimpleTextureRenderSystem(EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalDescSetLayout) 
+	EngineTextureRenderSystem::EngineTextureRenderSystem(EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalDescSetLayout) 
 		: appDevice{device} 
 	{
 		this->createDescriptor();
@@ -26,18 +26,18 @@ namespace nugiEngine {
 		this->createPipeline(renderPass);
 	}
 
-	EngineSimpleTextureRenderSystem::~EngineSimpleTextureRenderSystem() {
+	EngineTextureRenderSystem::~EngineTextureRenderSystem() {
 		vkDestroyPipelineLayout(this->appDevice.getLogicalDevice(), this->pipelineLayout, nullptr);
 	}
 
-	void EngineSimpleTextureRenderSystem::createDescriptor() {
+	void EngineTextureRenderSystem::createDescriptor() {
 		this->textureDescSetLayout = 
 			EngineDescriptorSetLayout::Builder(this->appDevice)
         .addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
 				.build();
 	}
 
-	void EngineSimpleTextureRenderSystem::createPipelineLayout(VkDescriptorSetLayout globalDescSetLayout) {
+	void EngineTextureRenderSystem::createPipelineLayout(VkDescriptorSetLayout globalDescSetLayout) {
 		VkPushConstantRange pushConstantRange{};
 		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 		pushConstantRange.offset = 0;
@@ -57,7 +57,7 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineSimpleTextureRenderSystem::createPipeline(VkRenderPass renderPass) {
+	void EngineTextureRenderSystem::createPipeline(VkRenderPass renderPass) {
 		assert(this->pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
 		this->pipeline = EnginePipeline::Builder(this->appDevice, "shader/simple_texture_shader.vert.spv", "shader/simple_texture_shader.frag.spv", 
@@ -66,7 +66,7 @@ namespace nugiEngine {
 			.build();
 	}
 
-	std::shared_ptr<VkDescriptorSet> EngineSimpleTextureRenderSystem::setupTextureDescriptorSet(EngineDescriptorPool &descriptorPool, VkDescriptorImageInfo descImageInfo) {
+	std::shared_ptr<VkDescriptorSet> EngineTextureRenderSystem::setupTextureDescriptorSet(EngineDescriptorPool &descriptorPool, VkDescriptorImageInfo descImageInfo) {
 		std::shared_ptr<VkDescriptorSet> descSet = std::make_shared<VkDescriptorSet>();
 
 		EngineDescriptorWriter(*this->textureDescSetLayout, descriptorPool)
@@ -76,7 +76,7 @@ namespace nugiEngine {
 		return descSet;
 	}
 
-	void EngineSimpleTextureRenderSystem::render(VkCommandBuffer commandBuffer, VkDescriptorSet UBODescSet, FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &gameObjects) {
+	void EngineTextureRenderSystem::render(VkCommandBuffer commandBuffer, VkDescriptorSet UBODescSet, FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &gameObjects) {
 		this->pipeline->bind(commandBuffer);
 
 		for (auto& obj : gameObjects) {
