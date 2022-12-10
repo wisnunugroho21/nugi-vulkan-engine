@@ -8,8 +8,7 @@
 #include <memory>
 
 namespace nugiEngine {
-  class EngineSubRenderer
-  {
+  class EngineSubRenderer {
     public:
       EngineSubRenderer(EngineDevice &device, std::vector<std::shared_ptr<EngineImage>> swapChainImages, VkFormat swapChainImageFormat, int imageCount, int width, int height);
       std::shared_ptr<EngineRenderPass> getRenderPass() const { return this->renderPass; }

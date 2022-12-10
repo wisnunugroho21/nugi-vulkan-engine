@@ -50,21 +50,12 @@ namespace nugiEngine {
 	void EnginePointLightRenderSystem::createPipeline(VkRenderPass renderPass) {
 		assert(this->pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
-		PipelineConfigInfo pipelineConfig{};
-		EnginePipeline::defaultPipelineConfigInfo(this->appDevice, pipelineConfig);
-
-		pipelineConfig.bindingDescriptions.clear();
-		pipelineConfig.attributeDescriptions.clear();
-
-		pipelineConfig.renderPass = renderPass;
-		pipelineConfig.pipelineLayout = this->pipelineLayout;
-
-		this->pipeline = std::make_unique<EnginePipeline>(
-			this->appDevice, 
-			"shader/point_light.vert.spv",
-			"shader/point_light.frag.spv",
-			pipelineConfig
-		);
+		this->pipeline = EnginePipeline::Builder(this->appDevice, "shader/point_light.vert.spv", "shader/point_light.frag.spv", 
+				this->pipelineLayout, renderPass)
+			.setDefault()
+			.setBindingDescriptions({})
+			.setAttributeDescriptions({})
+			.build();
 	}
 
 	void EnginePointLightRenderSystem::update(FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &pointLightObjects, GlobalLight &globalLight) {

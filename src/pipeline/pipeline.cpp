@@ -7,6 +7,147 @@
 #include <stdexcept>
 
 namespace nugiEngine {
+	EnginePipeline::Builder::Builder(EngineDevice& appDevice, const std::string& vertFilePath, const std::string& fragFilePath, VkPipelineLayout pipelineLayout, VkRenderPass renderPass) 
+		: appDevice{appDevice}, vertFilePath{vertFilePath}, fragFilePath{fragFilePath}
+	{
+		this->configInfo.pipelineLayout = pipelineLayout;
+		this->configInfo.renderPass = renderPass;
+	}
+
+	EnginePipeline::Builder EnginePipeline::Builder::setDefault() {
+		auto msaaSamples = this->appDevice.getMSAASamples();
+
+		this->configInfo.inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+		this->configInfo.inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+		this->configInfo.inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
+		
+		this->configInfo.rasterizationInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+		this->configInfo.rasterizationInfo.depthClampEnable = VK_FALSE;
+		this->configInfo.rasterizationInfo.rasterizerDiscardEnable = VK_FALSE;
+		this->configInfo.rasterizationInfo.polygonMode = VK_POLYGON_MODE_FILL;
+		this->configInfo.rasterizationInfo.lineWidth = 1.0f;
+		this->configInfo.rasterizationInfo.cullMode = VK_CULL_MODE_NONE;
+		this->configInfo.rasterizationInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+		this->configInfo.rasterizationInfo.depthBiasEnable = VK_FALSE;
+		this->configInfo.rasterizationInfo.depthBiasConstantFactor = 0.0f;  // Optional
+		this->configInfo.rasterizationInfo.depthBiasClamp = 0.0f;           // Optional
+		this->configInfo.rasterizationInfo.depthBiasSlopeFactor = 0.0f;     // Optional
+		
+		this->configInfo.multisampleInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+		this->configInfo.multisampleInfo.sampleShadingEnable = VK_TRUE;
+		this->configInfo.multisampleInfo.rasterizationSamples = msaaSamples;
+		this->configInfo.multisampleInfo.minSampleShading = 0.2f;           
+		this->configInfo.multisampleInfo.pSampleMask = nullptr;             // Optional
+		this->configInfo.multisampleInfo.alphaToCoverageEnable = VK_FALSE;  // Optional
+		this->configInfo.multisampleInfo.alphaToOneEnable = VK_FALSE;       // Optional
+		
+		this->configInfo.colorBlendAttachment.colorWriteMask =
+			VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+		this->configInfo.colorBlendAttachment.blendEnable = VK_FALSE;
+		this->configInfo.colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;   // Optional
+		this->configInfo.colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;  // Optional
+		this->configInfo.colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;              // Optional
+		this->configInfo.colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;   // Optional
+		this->configInfo.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;  // Optional
+		this->configInfo.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;              // Optional
+		
+		this->configInfo.colorBlendInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+		this->configInfo.colorBlendInfo.logicOpEnable = VK_FALSE;
+		this->configInfo.colorBlendInfo.logicOp = VK_LOGIC_OP_COPY;  // Optional
+		this->configInfo.colorBlendInfo.attachmentCount = 1;
+		this->configInfo.colorBlendInfo.pAttachments = &this->configInfo.colorBlendAttachment;
+		this->configInfo.colorBlendInfo.blendConstants[0] = 0.0f;  // Optional
+		this->configInfo.colorBlendInfo.blendConstants[1] = 0.0f;  // Optional
+		this->configInfo.colorBlendInfo.blendConstants[2] = 0.0f;  // Optional
+		this->configInfo.colorBlendInfo.blendConstants[3] = 0.0f;  // Optional
+		
+		this->configInfo.depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+		this->configInfo.depthStencilInfo.depthTestEnable = VK_TRUE;
+		this->configInfo.depthStencilInfo.depthWriteEnable = VK_TRUE;
+		this->configInfo.depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS;
+		this->configInfo.depthStencilInfo.depthBoundsTestEnable = VK_FALSE;
+		this->configInfo.depthStencilInfo.minDepthBounds = 0.0f;  // Optional
+		this->configInfo.depthStencilInfo.maxDepthBounds = 1.0f;  // Optional
+		this->configInfo.depthStencilInfo.stencilTestEnable = VK_FALSE;
+		this->configInfo.depthStencilInfo.front = {};  // Optional
+		this->configInfo.depthStencilInfo.back = {};   // Optional
+
+		this->configInfo.dynamicStateEnables = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+		this->configInfo.dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+		this->configInfo.dynamicStateInfo.pDynamicStates = this->configInfo.dynamicStateEnables.data();
+		this->configInfo.dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(this->configInfo.dynamicStateEnables.size());
+		this->configInfo.dynamicStateInfo.flags = 0;
+
+		this->configInfo.bindingDescriptions = Vertex::getVertexBindingDescriptions();
+		this->configInfo.attributeDescriptions = Vertex::getVertexAttributeDescriptions();
+
+		return *this;
+	}
+
+	EnginePipeline::Builder EnginePipeline::Builder::setSubpass(uint32_t subpass) {
+		this->configInfo.subpass = subpass;
+		return *this;
+	}
+
+	EnginePipeline::Builder EnginePipeline::Builder::setBindingDescriptions(std::vector<VkVertexInputBindingDescription> bindingDescriptions) {
+		this->configInfo.bindingDescriptions = bindingDescriptions;
+		return *this;
+	}
+
+	EnginePipeline::Builder EnginePipeline::Builder::setAttributeDescriptions (std::vector<VkVertexInputAttributeDescription> attributeDescriptions) {
+		this->configInfo.attributeDescriptions = attributeDescriptions;
+		return *this;
+	}
+
+	EnginePipeline::Builder EnginePipeline::Builder::setInputAssemblyInfo(VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo) {
+		this->configInfo.inputAssemblyInfo = inputAssemblyInfo;
+		return *this;
+	}
+
+	EnginePipeline::Builder EnginePipeline::Builder::setRasterizationInfo(VkPipelineRasterizationStateCreateInfo rasterizationInfo) {
+		this->configInfo.rasterizationInfo = rasterizationInfo;
+		return *this;
+	}
+
+	EnginePipeline::Builder EnginePipeline::Builder::setMultisampleInfo(VkPipelineMultisampleStateCreateInfo multisampleInfo) {
+		this->configInfo.multisampleInfo = multisampleInfo;
+		return *this;
+	}
+
+	EnginePipeline::Builder EnginePipeline::Builder::setColorBlendAttachment(VkPipelineColorBlendAttachmentState colorBlendAttachment) {
+		this->configInfo.colorBlendAttachment = colorBlendAttachment;
+		return *this;
+	}
+
+	EnginePipeline::Builder EnginePipeline::Builder::setColorBlendInfo(VkPipelineColorBlendStateCreateInfo colorBlendInfo) {
+		this->configInfo.colorBlendInfo = colorBlendInfo;
+		return *this;
+	}
+
+	EnginePipeline::Builder EnginePipeline::Builder::setDepthStencilInfo(VkPipelineDepthStencilStateCreateInfo depthStencilInfo) {
+		this->configInfo.depthStencilInfo = depthStencilInfo;
+		return *this;
+	}
+
+	EnginePipeline::Builder EnginePipeline::Builder::setDynamicStateEnables(std::vector<VkDynamicState> dynamicStateEnables) {
+		this->configInfo.dynamicStateEnables = dynamicStateEnables;
+		return *this;
+	}
+
+	EnginePipeline::Builder EnginePipeline::Builder::setDynamicStateInfo(VkPipelineDynamicStateCreateInfo dynamicStateInfo) {
+		this->configInfo.dynamicStateInfo = dynamicStateInfo;
+		return *this;
+	}
+
+	std::unique_ptr<EnginePipeline> EnginePipeline::Builder::build() {
+		return std::make_unique<EnginePipeline>(
+			this->appDevice, 
+			this->vertFilePath, 
+			this->fragFilePath, 
+			this->configInfo
+		);
+	}
+
 	EnginePipeline::EnginePipeline(
 		EngineDevice& device, 
 		const std::string& vertFilePath, 
@@ -123,74 +264,5 @@ namespace nugiEngine {
 
 	void EnginePipeline::bind(VkCommandBuffer commandBuffer) {
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->graphicPipeline);
-	}
-
-	void EnginePipeline::defaultPipelineConfigInfo(EngineDevice &appDevice, PipelineConfigInfo& configInfo) {
-		auto msaaSamples = appDevice.getMSAASamples();
-
-		configInfo.inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-		configInfo.inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-		configInfo.inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
-		
-		configInfo.rasterizationInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-		configInfo.rasterizationInfo.depthClampEnable = VK_FALSE;
-		configInfo.rasterizationInfo.rasterizerDiscardEnable = VK_FALSE;
-		configInfo.rasterizationInfo.polygonMode = VK_POLYGON_MODE_FILL;
-		configInfo.rasterizationInfo.lineWidth = 1.0f;
-		configInfo.rasterizationInfo.cullMode = VK_CULL_MODE_NONE;
-		configInfo.rasterizationInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
-		configInfo.rasterizationInfo.depthBiasEnable = VK_FALSE;
-		configInfo.rasterizationInfo.depthBiasConstantFactor = 0.0f;  // Optional
-		configInfo.rasterizationInfo.depthBiasClamp = 0.0f;           // Optional
-		configInfo.rasterizationInfo.depthBiasSlopeFactor = 0.0f;     // Optional
-		
-		configInfo.multisampleInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-		configInfo.multisampleInfo.sampleShadingEnable = VK_TRUE;
-		configInfo.multisampleInfo.rasterizationSamples = msaaSamples;
-		configInfo.multisampleInfo.minSampleShading = 0.2f;           
-		configInfo.multisampleInfo.pSampleMask = nullptr;             // Optional
-		configInfo.multisampleInfo.alphaToCoverageEnable = VK_FALSE;  // Optional
-		configInfo.multisampleInfo.alphaToOneEnable = VK_FALSE;       // Optional
-		
-		configInfo.colorBlendAttachment.colorWriteMask =
-			VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT |
-			VK_COLOR_COMPONENT_A_BIT;
-		configInfo.colorBlendAttachment.blendEnable = VK_FALSE;
-		configInfo.colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;   // Optional
-		configInfo.colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;  // Optional
-		configInfo.colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;              // Optional
-		configInfo.colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;   // Optional
-		configInfo.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;  // Optional
-		configInfo.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;              // Optional
-		
-		configInfo.colorBlendInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-		configInfo.colorBlendInfo.logicOpEnable = VK_FALSE;
-		configInfo.colorBlendInfo.logicOp = VK_LOGIC_OP_COPY;  // Optional
-		configInfo.colorBlendInfo.attachmentCount = 1;
-		configInfo.colorBlendInfo.pAttachments = &configInfo.colorBlendAttachment;
-		configInfo.colorBlendInfo.blendConstants[0] = 0.0f;  // Optional
-		configInfo.colorBlendInfo.blendConstants[1] = 0.0f;  // Optional
-		configInfo.colorBlendInfo.blendConstants[2] = 0.0f;  // Optional
-		configInfo.colorBlendInfo.blendConstants[3] = 0.0f;  // Optional
-		
-		configInfo.depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-		configInfo.depthStencilInfo.depthTestEnable = VK_TRUE;
-		configInfo.depthStencilInfo.depthWriteEnable = VK_TRUE;
-		configInfo.depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS;
-		configInfo.depthStencilInfo.depthBoundsTestEnable = VK_FALSE;
-		configInfo.depthStencilInfo.minDepthBounds = 0.0f;  // Optional
-		configInfo.depthStencilInfo.maxDepthBounds = 1.0f;  // Optional
-		configInfo.depthStencilInfo.stencilTestEnable = VK_FALSE;
-		configInfo.depthStencilInfo.front = {};  // Optional
-		configInfo.depthStencilInfo.back = {};   // Optional
-
-		configInfo.dynamicStateEnables = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
-		configInfo.dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-		configInfo.dynamicStateInfo.pDynamicStates = configInfo.dynamicStateEnables.data();
-		configInfo.dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(configInfo.dynamicStateEnables.size());
-		configInfo.dynamicStateInfo.flags = 0;
-
-		configInfo.bindingDescriptions = Vertex::getVertexBindingDescriptions();
-		configInfo.attributeDescriptions = Vertex::getVertexAttributeDescriptions();
 	}
 } // namespace nugiEngine

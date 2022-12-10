@@ -60,18 +60,10 @@ namespace nugiEngine {
 	void EngineSimpleTextureRenderSystem::createPipeline(VkRenderPass renderPass) {
 		assert(this->pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
-		PipelineConfigInfo pipelineConfig{};
-		EnginePipeline::defaultPipelineConfigInfo(this->appDevice, pipelineConfig);
-
-		pipelineConfig.renderPass = renderPass;
-		pipelineConfig.pipelineLayout = this->pipelineLayout;
-
-		this->pipeline = std::make_unique<EnginePipeline>(
-			this->appDevice, 
-			"shader/simple_texture_shader.vert.spv",
-			"shader/simple_texture_shader.frag.spv",
-			pipelineConfig
-		);
+		this->pipeline = EnginePipeline::Builder(this->appDevice, "shader/simple_texture_shader.vert.spv", "shader/simple_texture_shader.frag.spv", 
+				this->pipelineLayout, renderPass)
+			.setDefault()
+			.build();
 	}
 
 	std::shared_ptr<VkDescriptorSet> EngineSimpleTextureRenderSystem::setupTextureDescriptorSet(EngineDescriptorPool &descriptorPool, VkDescriptorImageInfo descImageInfo) {

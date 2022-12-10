@@ -24,9 +24,36 @@ namespace nugiEngine {
 		VkPipelineDynamicStateCreateInfo dynamicStateInfo;
 	};
 	
-	class EnginePipeline
-	{
+	class EnginePipeline {
 		public:
+			class Builder {
+				public:
+					Builder(EngineDevice& appDevice, const std::string& vertFilePath, const std::string& fragFilePath, VkPipelineLayout pipelineLayout, VkRenderPass renderPass);
+
+					Builder setDefault();
+
+					Builder setSubpass(uint32_t subpass);
+					Builder setBindingDescriptions(std::vector<VkVertexInputBindingDescription> bindingDescriptions);
+					Builder setAttributeDescriptions (std::vector<VkVertexInputAttributeDescription> attributeDescriptions);
+
+					Builder setInputAssemblyInfo(VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo);
+					Builder setRasterizationInfo(VkPipelineRasterizationStateCreateInfo rasterizationInfo);
+					Builder setMultisampleInfo(VkPipelineMultisampleStateCreateInfo multisampleInfo);
+					Builder setColorBlendAttachment(VkPipelineColorBlendAttachmentState colorBlendAttachment);
+					Builder setColorBlendInfo(VkPipelineColorBlendStateCreateInfo colorBlendInfo);
+					Builder setDepthStencilInfo(VkPipelineDepthStencilStateCreateInfo depthStencilInfo);
+					Builder setDynamicStateEnables(std::vector<VkDynamicState> dynamicStateEnables);
+					Builder setDynamicStateInfo(VkPipelineDynamicStateCreateInfo dynamicStateInfo);
+
+					std::unique_ptr<EnginePipeline> build();
+
+				private:
+					PipelineConfigInfo configInfo;
+					EngineDevice& appDevice;
+					const std::string& vertFilePath;
+					const std::string& fragFilePath;
+			};
+
 			EnginePipeline(
 				EngineDevice& device, 
 				const std::string& vertFilePath, 
@@ -39,7 +66,6 @@ namespace nugiEngine {
 			EnginePipeline& operator =(const EngineDevice&) = delete;
 
 			void bind(VkCommandBuffer commandBuffer);
-			static void defaultPipelineConfigInfo(EngineDevice &appDevice, PipelineConfigInfo& configInfo);
 
 		private:
 			EngineDevice& engineDevice;
