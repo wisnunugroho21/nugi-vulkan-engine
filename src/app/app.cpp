@@ -62,7 +62,7 @@ namespace nugiEngine {
 
 			camera.setViewYXZ(viewObject.transform.translation, viewObject.transform.rotation);
 
-			auto aspect = this->renderer->getAspectRatio();
+			auto aspect = this->renderer->getSwapChain()->extentAspectRatio();
 			camera.setPerspectiveProjection(glm::radians(50.0f), aspect, 0.1f, 10.0f);
 
 			if (auto commandBuffer = this->renderer->beginFrame()) {
@@ -85,7 +85,7 @@ namespace nugiEngine {
 				this->renderer->writeLightBuffer(frameIndex, &lightingObjects);
 
 				// render
-				this->subRenderer->beginRenderPass(commandBuffer, frameIndex);
+				this->subRenderer->beginRenderPass(commandBuffer, this->renderer->getImageIndex());
 
 				this->simpleRenderSystem->render(commandBuffer->getCommandBuffer(), *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
 				this->textureRenderSystem->render(commandBuffer->getCommandBuffer(), *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
@@ -171,10 +171,12 @@ namespace nugiEngine {
 	}
 
 	void EngineApp::recreateSubRendererAndSubsystem() {
-		this->subRenderer = std::make_unique<EngineSubRenderer>(this->device, this->renderer->getSwapChainImageFormat(), this->renderer->getSwapChainImageFormat(), this->renderer->getSwapChainExtent().width, this->renderer->getSwapChainExtent().height);
+		this->subRenderer = std::make_unique<EngineSubRenderer>(this->device, this->renderer->getSwapChain()->getswapChainImages(), 
+			this->renderer->getSwapChain()->getSwapChainImageFormat(), this->renderer->getSwapChain()->imageCount(), 
+			this->renderer->getSwapChain()->width(), this->renderer->getSwapChain()->height());
 
-		this->simpleRenderSystem = std::make_unique<EngineSimpleRenderSystem>(this->device, this->subRenderer->getRenderPass(), this->renderer->getglobalDescSetLayout()->getDescriptorSetLayout());
-		this->pointLightRenderSystem = std::make_unique<EnginePointLightRenderSystem>(this->device, this->subRenderer->getRenderPass(), this->renderer->getglobalDescSetLayout()->getDescriptorSetLayout());
+		this->simpleRenderSystem = std::make_unique<EngineSimpleRenderSystem>(this->device, this->subRenderer->getRenderPass()->getRenderPass(), this->renderer->getglobalDescSetLayout()->getDescriptorSetLayout());
+		this->pointLightRenderSystem = std::make_unique<EnginePointLightRenderSystem>(this->device, this->subRenderer->getRenderPass()->getRenderPass(), this->renderer->getglobalDescSetLayout()->getDescriptorSetLayout());
 
 		std::vector<std::shared_ptr<EngineGameObject>> texturedGameObjects{};
 		for (auto& obj : this->gameObjects) {
@@ -184,7 +186,7 @@ namespace nugiEngine {
 			}
 		}
 
-		this->textureRenderSystem = std::make_unique<EngineSimpleTextureRenderSystem>(this->device, this->subRenderer->getRenderPass(), this->renderer->getglobalDescSetLayout()->getDescriptorSetLayout());
+		this->textureRenderSystem = std::make_unique<EngineSimpleTextureRenderSystem>(this->device, this->subRenderer->getRenderPass()->getRenderPass(), this->renderer->getglobalDescSetLayout()->getDescriptorSetLayout());
 
 		for (auto& obj : texturedGameObjects) {
 			obj->textureDescSet = this->textureRenderSystem->setupTextureDescriptorSet(*this->renderer->getDescriptorPool(), obj->texture->getDescriptorInfo());

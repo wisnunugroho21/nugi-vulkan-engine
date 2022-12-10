@@ -26,10 +26,10 @@ namespace nugiEngine {
     EngineSwapChain(const EngineSwapChain &) = delete;
     EngineSwapChain& operator=(const EngineSwapChain &) = delete;
 
-    VkImageView getImageView(int index) const { return this->swapChainImages[index]->getImageView(); }
-    size_t imageCount() const { return this->swapChainImages.size(); }
+    std::vector<std::shared_ptr<EngineImage>> getswapChainImages() const { return this->swapChainImages; }
     VkFormat getSwapChainImageFormat() const { return this->swapChainImageFormat; }
     VkExtent2D getSwapChainExtent() { return this->swapChainExtent; }
+    size_t imageCount() const { return this->swapChainImages.size(); }
     uint32_t width() const { return this->swapChainExtent.width; }
     uint32_t height() const { return this->swapChainExtent.height; }
 

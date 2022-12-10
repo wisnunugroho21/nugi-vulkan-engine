@@ -8,6 +8,8 @@
 namespace nugiEngine {
 	EngineRenderer::EngineRenderer(EngineWindow& window, EngineDevice& device) : appDevice{device}, appWindow{window} {
 		this->recreateSwapChain();
+		this->createSyncObjects(this->swapChain->imageCount());
+
 		this->commandBuffers = EngineCommandBuffer::createCommandBuffers(device, EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
 
 		this->createGlobalBuffers(sizeof(GlobalUBO), sizeof(GlobalLight));
@@ -135,7 +137,7 @@ namespace nugiEngine {
 	std::shared_ptr<EngineCommandBuffer> EngineRenderer::beginFrame() {
 		assert(!this->isFrameStarted && "can't call beginframe while frame still in progress");
 
-		auto result = this->swapChain->acquireNextImage(&this->currentImageIndex, &this->inFlightFences[this->currentFrame], this->imageAvailableSemaphores[this->currentFrame]);
+		auto result = this->swapChain->acquireNextImage(&this->currentImageIndex, &this->inFlightFences[this->currentFrameIndex], this->imageAvailableSemaphores[this->currentFrameIndex]);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
 			this->recreateSwapChain();
 			return nullptr;
@@ -159,20 +161,24 @@ namespace nugiEngine {
       vkWaitForFences(this->appDevice.getLogicalDevice(), 1, &this->imagesInFlight[this->currentImageIndex], VK_TRUE, UINT64_MAX);
     }
 
-    imagesInFlight[this->currentImageIndex] = this->inFlightFences[currentFrame];
-    vkResetFences(this->appDevice.getLogicalDevice(), 1, &this->inFlightFences[this->currentFrame]);
+    imagesInFlight[this->currentImageIndex] = this->inFlightFences[this->currentFrameIndex];
+    vkResetFences(this->appDevice.getLogicalDevice(), 1, &this->inFlightFences[this->currentFrameIndex]);
 
-    std::vector<VkSemaphore> waitSemaphores = {this->imageAvailableSemaphores[this->currentFrame]};
-		std::vector<VkSemaphore> signalSemaphores = {this->renderFinishedSemaphores[this->currentFrame]};
+    std::vector<VkSemaphore> waitSemaphores = {this->imageAvailableSemaphores[this->currentFrameIndex]};
+		std::vector<VkSemaphore> signalSemaphores = {this->renderFinishedSemaphores[this->currentFrameIndex]};
     std::vector<VkPipelineStageFlags> waitStages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
-		commandBuffer->submitCommands(this->appDevice.getGraphicsQueue(), waitSemaphores, waitStages, signalSemaphores, this->inFlightFences[currentFrame]);
+		commandBuffer->submitCommands(this->appDevice.getGraphicsQueue(), waitSemaphores, waitStages, signalSemaphores, this->inFlightFences[this->currentFrameIndex]);
 	}
 
 	bool EngineRenderer::presentFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
 		VkCommandBuffer buffer = commandBuffer->getCommandBuffer();
 
-		auto result = this->swapChain->presentRenders(&this->currentImageIndex, &this->renderFinishedSemaphores[this->currentFrame]);
+		auto result = this->swapChain->presentRenders(&this->currentImageIndex, &this->renderFinishedSemaphores[this->currentFrameIndex]);
+
+		this->isFrameStarted = false;
+		this->currentFrameIndex = (this->currentFrameIndex + 1) % EngineSwapChain::MAX_FRAMES_IN_FLIGHT;
+
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || this->appWindow.wasResized()) {
 			this->appWindow.resetResizedFlag();
 			this->recreateSwapChain();
@@ -182,10 +188,6 @@ namespace nugiEngine {
 			throw std::runtime_error("failed to present swap chain image");
 		}
 
-		this->isFrameStarted = false;
-		this->currentFrameIndex = (this->currentFrameIndex + 1) % EngineSwapChain::MAX_FRAMES_IN_FLIGHT;
-
-		this->currentFrame = (this->currentFrame + 1) % EngineSwapChain::MAX_FRAMES_IN_FLIGHT;
 		return true;
 	}
 }

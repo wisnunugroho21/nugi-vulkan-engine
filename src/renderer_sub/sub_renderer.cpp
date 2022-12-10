@@ -4,8 +4,8 @@
 #include <array>
 
 namespace nugiEngine {
-  EngineSubRenderer::EngineSubRenderer(EngineDevice &device, VkFormat swapChainImageFormat, int imageCount, int width, int height) 
-    : device{device}, width{width}, height{height}
+  EngineSubRenderer::EngineSubRenderer(EngineDevice &device, std::vector<std::shared_ptr<EngineImage>> swapChainImages, VkFormat swapChainImageFormat, int imageCount, int width, int height) 
+    : device{device}, swapChainImages{swapChainImages}, width{width}, height{height}
   {
     this->createColorResources(swapChainImageFormat, imageCount);
     this->createDepthResources(imageCount);

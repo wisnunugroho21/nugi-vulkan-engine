@@ -21,10 +21,7 @@ namespace nugiEngine {
 			EngineRenderer(const EngineRenderer&) = delete;
 			EngineRenderer& operator = (const EngineRenderer&) = delete;
 
-			VkFormat getSwapChainImageFormat() const { return this->swapChain->getSwapChainImageFormat(); }
-			VkExtent2D getSwapChainExtent() const { return this->swapChain->getSwapChainExtent(); }
-			float getAspectRatio() const { return this->swapChain->extentAspectRatio(); }
-			int getSwapChainImageCount() const { return this->swapChain->imageCount(); }
+			std::shared_ptr<EngineSwapChain> getSwapChain() const { return this->swapChain; }
 			bool isFrameInProgress() const { return this->isFrameStarted; }
 			
 			std::shared_ptr<EngineDescriptorPool> getDescriptorPool() const { return this->descriptorPool; }
@@ -39,6 +36,11 @@ namespace nugiEngine {
 			int getFrameIndex() {
 				assert(this->isFrameStarted && "cannot get frame index when frame is not in progress");
 				return this->currentFrameIndex;
+			}
+
+			int getImageIndex() {
+				assert(this->isFrameStarted && "cannot get frame index when frame is not in progress");
+				return this->currentImageIndex;
 			}
 
 			void writeUniformBuffer(int frameIndex, void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
@@ -58,7 +60,7 @@ namespace nugiEngine {
 			EngineWindow& appWindow;
 			EngineDevice& appDevice;
 
-			std::unique_ptr<EngineSwapChain> swapChain;
+			std::shared_ptr<EngineSwapChain> swapChain;
 			std::vector<std::shared_ptr<EngineCommandBuffer>> commandBuffers;
 
 			std::shared_ptr<EngineDescriptorPool> descriptorPool{};
@@ -72,7 +74,6 @@ namespace nugiEngine {
 			std::vector<VkSemaphore> renderFinishedSemaphores;
 			std::vector<VkFence> inFlightFences;
 			std::vector<VkFence> imagesInFlight;
-			size_t currentFrame = 0;
 
 			uint32_t currentImageIndex = 0;
 			int currentFrameIndex = 0;

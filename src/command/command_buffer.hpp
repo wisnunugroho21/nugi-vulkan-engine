@@ -3,6 +3,7 @@
 #include "../device/device.hpp"
 
 #include <vector>
+#include <memory>
 
 namespace nugiEngine
 {
