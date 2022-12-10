@@ -14,7 +14,14 @@ namespace nugiEngine {
 		this->createGlobalUboDescriptor();
 	}
 
-	EngineRenderer::~EngineRenderer() {}
+	EngineRenderer::~EngineRenderer() {
+		// cleanup synchronization objects
+    for (size_t i = 0; i < EngineSwapChain::MAX_FRAMES_IN_FLIGHT; i++) {
+      vkDestroySemaphore(this->appDevice.getLogicalDevice(), this->renderFinishedSemaphores[i], nullptr);
+      vkDestroySemaphore(this->appDevice.getLogicalDevice(), this->imageAvailableSemaphores[i], nullptr);
+      vkDestroyFence(this->appDevice.getLogicalDevice(), this->inFlightFences[i], nullptr);
+    }
+	}
 
 	void EngineRenderer::recreateSwapChain() {
 		auto extent = this->appWindow.getExtent();
@@ -32,7 +39,7 @@ namespace nugiEngine {
 			this->swapChain = std::make_unique<EngineSwapChain>(this->appDevice, extent, oldSwapChain);
 
 			if (!oldSwapChain->compareSwapFormat(*this->swapChain.get())) {
-				throw std::runtime_error("Swap chain image or depth has changed");
+				throw std::runtime_error("Swap chain image has changed");
 			}
 		}
 	}
@@ -92,6 +99,29 @@ namespace nugiEngine {
 		}
 	}
 
+	void EngineRenderer::createSyncObjects(int imageCount) {
+    imageAvailableSemaphores.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
+    renderFinishedSemaphores.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
+    inFlightFences.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
+    imagesInFlight.resize(imageCount, VK_NULL_HANDLE);
+
+    VkSemaphoreCreateInfo semaphoreInfo = {};
+    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+    VkFenceCreateInfo fenceInfo = {};
+    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+    for (size_t i = 0; i < EngineSwapChain::MAX_FRAMES_IN_FLIGHT; i++) {
+      if (vkCreateSemaphore(this->appDevice.getLogicalDevice(), &semaphoreInfo, nullptr, &this->imageAvailableSemaphores[i]) != VK_SUCCESS ||
+				vkCreateSemaphore(this->appDevice.getLogicalDevice(), &semaphoreInfo, nullptr, &this->renderFinishedSemaphores[i]) != VK_SUCCESS ||
+				vkCreateFence(this->appDevice.getLogicalDevice(), &fenceInfo, nullptr, &this->inFlightFences[i]) != VK_SUCCESS) 
+      {
+        throw std::runtime_error("failed to create synchronization objects for a frame!");
+      }
+    }
+  }
+
 	void EngineRenderer::writeUniformBuffer(int frameIndex, void* data, VkDeviceSize size, VkDeviceSize offset) {
 		this->globalUniformBuffers[frameIndex]->writeToBuffer(data, size, offset);
 		this->globalUniformBuffers[frameIndex]->flush(size, offset);
@@ -105,7 +135,7 @@ namespace nugiEngine {
 	std::shared_ptr<EngineCommandBuffer> EngineRenderer::beginFrame() {
 		assert(!this->isFrameStarted && "can't call beginframe while frame still in progress");
 
-		auto result = this->swapChain->acquireNextImage(&this->currentImageIndex);
+		auto result = this->swapChain->acquireNextImage(&this->currentImageIndex, &this->inFlightFences[this->currentFrame], this->imageAvailableSemaphores[this->currentFrame]);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
 			this->recreateSwapChain();
 			return nullptr;
@@ -123,59 +153,39 @@ namespace nugiEngine {
 
 	void EngineRenderer::endFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
 		assert(this->isFrameStarted && "can't call endframe if frame is not in progress");
-
 		commandBuffer->endCommands();
+
+		if (this->imagesInFlight[this->currentImageIndex] != VK_NULL_HANDLE) {
+      vkWaitForFences(this->appDevice.getLogicalDevice(), 1, &this->imagesInFlight[this->currentImageIndex], VK_TRUE, UINT64_MAX);
+    }
+
+    imagesInFlight[this->currentImageIndex] = this->inFlightFences[currentFrame];
+    vkResetFences(this->appDevice.getLogicalDevice(), 1, &this->inFlightFences[this->currentFrame]);
+
+    std::vector<VkSemaphore> waitSemaphores = {this->imageAvailableSemaphores[this->currentFrame]};
+		std::vector<VkSemaphore> signalSemaphores = {this->renderFinishedSemaphores[this->currentFrame]};
+    std::vector<VkPipelineStageFlags> waitStages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+
+		commandBuffer->submitCommands(this->appDevice.getGraphicsQueue(), waitSemaphores, waitStages, signalSemaphores, this->inFlightFences[currentFrame]);
+	}
+
+	bool EngineRenderer::presentFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
 		VkCommandBuffer buffer = commandBuffer->getCommandBuffer();
 
-		auto result = this->swapChain->executeAndPresentRenders(&buffer, &this->currentImageIndex);
+		auto result = this->swapChain->presentRenders(&this->currentImageIndex, &this->renderFinishedSemaphores[this->currentFrame]);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || this->appWindow.wasResized()) {
 			this->appWindow.resetResizedFlag();
 			this->recreateSwapChain();
+
+			return false;
 		} else if (result != VK_SUCCESS) {
 			throw std::runtime_error("failed to present swap chain image");
 		}
 
 		this->isFrameStarted = false;
 		this->currentFrameIndex = (this->currentFrameIndex + 1) % EngineSwapChain::MAX_FRAMES_IN_FLIGHT;
-	}
 
-	void EngineRenderer::beginSwapChainRenderPass(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
-		assert(this->isFrameStarted && "Can't call beginSwapChainRenderPass if frame is not in progress");
-		assert(commandBuffer->getCommandBuffer() == this->getCommandBuffer() && "Can't begin render pass on command buffer from different frame");
-
-		VkRenderPassBeginInfo renderBeginInfo{};
-		renderBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderBeginInfo.renderPass = this->swapChain->getRenderPass();
-		renderBeginInfo.framebuffer = this->swapChain->getFrameBuffer(this->currentImageIndex);
-
-		renderBeginInfo.renderArea.offset = {0, 0};
-		renderBeginInfo.renderArea.extent = this->swapChain->getSwapChainExtent();
-
-		std::array<VkClearValue, 2> clearValues{};
-		clearValues[0].color = {0.01f, 0.01f, 0.01f, 1.0f};
-		clearValues[1].depthStencil = {1.0f, 0};
-		renderBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-		renderBeginInfo.pClearValues = clearValues.data();
-
-		vkCmdBeginRenderPass(commandBuffer->getCommandBuffer(), &renderBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-		VkViewport viewport{};
-		viewport.x = 0.0f;
-		viewport.y = 0.0f;
-		viewport.width = static_cast<uint32_t>(this->swapChain->getSwapChainExtent().width);
-		viewport.height = static_cast<uint32_t>(this->swapChain->getSwapChainExtent().height);
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-
-		VkRect2D scissor{{0, 0}, this->swapChain->getSwapChainExtent()};
-		vkCmdSetViewport(commandBuffer->getCommandBuffer(), 0, 1, &viewport);
-		vkCmdSetScissor(commandBuffer->getCommandBuffer(), 0, 1, &scissor);
-	}
-
-	void EngineRenderer::endSwapChainRenderPass(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
-		assert(this->isFrameStarted && "Can't call endSwapChainRenderPass if frame is not in progress");
-		assert(commandBuffer->getCommandBuffer() == this->getCommandBuffer() && "Can't end render pass on command buffer from different frame");
-
-		vkCmdEndRenderPass(commandBuffer->getCommandBuffer());
+		this->currentFrame = (this->currentFrame + 1) % EngineSwapChain::MAX_FRAMES_IN_FLIGHT;
+		return true;
 	}
 }

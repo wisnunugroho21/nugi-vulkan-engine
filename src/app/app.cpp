@@ -1,6 +1,7 @@
 #include "app.hpp"
 
 #include "../camera/camera.hpp"
+#include "../renderer_sub/sub_renderer.hpp"
 #include "../mouse_controller/mouse_controller.hpp"
 #include "../keyboard_controller/keyboard_controller.hpp"
 #include "../buffer/buffer.hpp"
@@ -20,7 +21,9 @@
 namespace nugiEngine {
 	EngineApp::EngineApp() {
 		this->loadObjects();
-		this->init();
+
+		this->renderer = std::make_unique<EngineRenderer>(this->window, this->device);
+		this->recreateSubRendererAndSubsystem();
 	}
 
 	EngineApp::~EngineApp() {}
@@ -82,14 +85,18 @@ namespace nugiEngine {
 				this->renderer->writeLightBuffer(frameIndex, &lightingObjects);
 
 				// render
-				this->renderer->beginSwapChainRenderPass(commandBuffer);
+				this->subRenderer->beginRenderPass(commandBuffer, frameIndex);
 
 				this->simpleRenderSystem->render(commandBuffer->getCommandBuffer(), *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
 				this->textureRenderSystem->render(commandBuffer->getCommandBuffer(), *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
 				this->pointLightRenderSystem->render(commandBuffer->getCommandBuffer(), *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
 				
-				this->renderer->endSwapChainRenderPass(commandBuffer);
+				this->subRenderer->endRenderPass(commandBuffer);
 				this->renderer->endFrame(commandBuffer);
+
+				if (!this->renderer->presentFrame(commandBuffer)) {
+					this->recreateSubRendererAndSubsystem();
+				}
 			}
 		}
 
@@ -163,11 +170,11 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineApp::init() {
-		this->renderer = std::make_shared<EngineRenderer>(window, device);
+	void EngineApp::recreateSubRendererAndSubsystem() {
+		this->subRenderer = std::make_unique<EngineSubRenderer>(this->device, this->renderer->getSwapChainImageFormat(), this->renderer->getSwapChainImageFormat(), this->renderer->getSwapChainExtent().width, this->renderer->getSwapChainExtent().height);
 
-		this->simpleRenderSystem = std::make_shared<EngineSimpleRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->renderer->getglobalDescSetLayout()->getDescriptorSetLayout());
-		this->pointLightRenderSystem = std::make_shared<EnginePointLightRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->renderer->getglobalDescSetLayout()->getDescriptorSetLayout());
+		this->simpleRenderSystem = std::make_unique<EngineSimpleRenderSystem>(this->device, this->subRenderer->getRenderPass(), this->renderer->getglobalDescSetLayout()->getDescriptorSetLayout());
+		this->pointLightRenderSystem = std::make_unique<EnginePointLightRenderSystem>(this->device, this->subRenderer->getRenderPass(), this->renderer->getglobalDescSetLayout()->getDescriptorSetLayout());
 
 		std::vector<std::shared_ptr<EngineGameObject>> texturedGameObjects{};
 		for (auto& obj : this->gameObjects) {
@@ -177,7 +184,7 @@ namespace nugiEngine {
 			}
 		}
 
-		this->textureRenderSystem = std::make_shared<EngineSimpleTextureRenderSystem>(this->device, this->renderer->getSwapChainRenderPass(), this->renderer->getglobalDescSetLayout()->getDescriptorSetLayout());
+		this->textureRenderSystem = std::make_unique<EngineSimpleTextureRenderSystem>(this->device, this->subRenderer->getRenderPass(), this->renderer->getglobalDescSetLayout()->getDescriptorSetLayout());
 
 		for (auto& obj : texturedGameObjects) {
 			obj->textureDescSet = this->textureRenderSystem->setupTextureDescriptorSet(*this->renderer->getDescriptorPool(), obj->texture->getDescriptorInfo());

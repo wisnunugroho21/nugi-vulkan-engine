@@ -78,26 +78,30 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineCommandBuffer::submitCommands(VkQueue queue, std::vector<VkSemaphore> *waitSemaphores, 
-      std::vector<VkPipelineStageFlags> *waitStages, std::vector<VkSemaphore> *signalSemaphores, VkFence fence) 
+	void EngineCommandBuffer::submitCommands(VkQueue queue, std::vector<VkSemaphore> waitSemaphores, 
+      std::vector<VkPipelineStageFlags> waitStages, std::vector<VkSemaphore> signalSemaphores, VkFence fence) 
 	{
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &this->commandBuffer;
 
-		if (waitSemaphores != nullptr) {
-			submitInfo.waitSemaphoreCount = waitSemaphores->size();
-  		submitInfo.pWaitSemaphores = waitSemaphores->data();
+		submitInfo.waitSemaphoreCount = waitSemaphores.size();
+		if (waitSemaphores.size() == 0) {
+  		submitInfo.pWaitSemaphores = nullptr;
+		} else {
+			submitInfo.pWaitSemaphores = waitSemaphores.data();
 		}
 
-		if (waitStages != nullptr) {
-			submitInfo.pWaitDstStageMask = waitStages->data();
+		if (waitStages.size() > 0) {
+			submitInfo.pWaitDstStageMask = waitStages.data();
 		}
 
-		if (signalSemaphores != nullptr) {
-			submitInfo.signalSemaphoreCount = signalSemaphores->size();
-  		submitInfo.pSignalSemaphores = signalSemaphores->data();
+		submitInfo.signalSemaphoreCount = signalSemaphores.size();
+		if (signalSemaphores.size() == 0) {
+  		submitInfo.pSignalSemaphores = nullptr;
+		} else {
+			submitInfo.pSignalSemaphores = signalSemaphores.data();
 		}
 
 		if (vkQueueSubmit(queue, 1, &submitInfo, fence) != VK_SUCCESS) {

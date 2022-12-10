@@ -31,15 +31,17 @@ namespace nugiEngine {
 
 		private:
 			void loadObjects();
-			void init();
+			void recreateSubRendererAndSubsystem();
 
 			EngineWindow window{WIDTH, HEIGHT, APP_TITLE};
 			EngineDevice device{window};
 			
-			std::shared_ptr<EngineRenderer> renderer{};
-			std::shared_ptr<EngineSimpleRenderSystem> simpleRenderSystem{};
-			std::shared_ptr<EngineSimpleTextureRenderSystem> textureRenderSystem{};
-			std::shared_ptr<EnginePointLightRenderSystem> pointLightRenderSystem{};
+			std::unique_ptr<EngineRenderer> renderer{};
+			std::unique_ptr<EngineSubRenderer> subRenderer{};
+
+			std::unique_ptr<EngineSimpleRenderSystem> simpleRenderSystem{};
+			std::unique_ptr<EngineSimpleTextureRenderSystem> textureRenderSystem{};
+			std::unique_ptr<EnginePointLightRenderSystem> pointLightRenderSystem{};
 
 			std::vector<std::shared_ptr<EngineGameObject>> gameObjects;
 	};

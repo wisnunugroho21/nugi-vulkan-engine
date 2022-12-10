@@ -26,8 +26,6 @@ namespace nugiEngine {
     EngineSwapChain(const EngineSwapChain &) = delete;
     EngineSwapChain& operator=(const EngineSwapChain &) = delete;
 
-    VkFramebuffer getFrameBuffer(int index) const { return this->renderPass->getFramebuffers(index); }
-    VkRenderPass getRenderPass() const { return this->renderPass->getRenderPass(); }
     VkImageView getImageView(int index) const { return this->swapChainImages[index]->getImageView(); }
     size_t imageCount() const { return this->swapChainImages.size(); }
     VkFormat getSwapChainImageFormat() const { return this->swapChainImageFormat; }
@@ -40,47 +38,33 @@ namespace nugiEngine {
     }
     VkFormat findDepthFormat();
 
-    VkResult acquireNextImage(uint32_t *imageIndex);
-    VkResult executeAndPresentRenders(const VkCommandBuffer *buffers, uint32_t *imageIndex);
+    VkResult acquireNextImage(uint32_t *imageIndex, VkFence *inFlightFence, VkSemaphore imageAvailableSemaphore);
+    VkResult presentRenders(uint32_t *imageIndex, VkSemaphore* signalSemaphores);
 
     bool compareSwapFormat(const EngineSwapChain& swapChain) {
-      return swapChain.swapChainDepthFormat == this->swapChainDepthFormat 
-        && swapChain.swapChainImageFormat == this->swapChainImageFormat;
+      return swapChain.swapChainImageFormat == this->swapChainImageFormat;
     }
 
   private:
     void init();
     void createSwapChain();
-    void createColorResources();
-    void createDepthResources();
-    void createRenderPass();
-    void createSyncObjects();
 
     // Helper functions
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats);
     VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes);
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
 
+    VkSwapchainKHR swapChain;
+    std::shared_ptr<EngineSwapChain> oldSwapChain;
+
     VkFormat swapChainImageFormat;
-    VkFormat swapChainDepthFormat;
     VkExtent2D swapChainExtent;
 
-    std::shared_ptr<EngineRenderPass> renderPass;
-
-    std::vector<std::shared_ptr<EngineImage>> colorImages;
-    std::vector<std::shared_ptr<EngineImage>> depthImages;
     std::vector<std::shared_ptr<EngineImage>> swapChainImages;
 
     EngineDevice &device;
     VkExtent2D windowExtent;
 
-    VkSwapchainKHR swapChain;
-    std::shared_ptr<EngineSwapChain> oldSwapChain;
-
-    std::vector<VkSemaphore> imageAvailableSemaphores;
-    std::vector<VkSemaphore> renderFinishedSemaphores;
-    std::vector<VkFence> inFlightFences;
-    std::vector<VkFence> imagesInFlight;
     size_t currentFrame = 0;
   };
 }

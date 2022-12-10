@@ -21,9 +21,11 @@ namespace nugiEngine {
 			EngineRenderer(const EngineRenderer&) = delete;
 			EngineRenderer& operator = (const EngineRenderer&) = delete;
 
-			bool isFrameInProgress() const { return this->isFrameStarted; }
+			VkFormat getSwapChainImageFormat() const { return this->swapChain->getSwapChainImageFormat(); }
+			VkExtent2D getSwapChainExtent() const { return this->swapChain->getSwapChainExtent(); }
 			float getAspectRatio() const { return this->swapChain->extentAspectRatio(); }
-			VkRenderPass getSwapChainRenderPass() const { return this->swapChain->getRenderPass(); }
+			int getSwapChainImageCount() const { return this->swapChain->imageCount(); }
+			bool isFrameInProgress() const { return this->isFrameStarted; }
 			
 			std::shared_ptr<EngineDescriptorPool> getDescriptorPool() const { return this->descriptorPool; }
 			std::shared_ptr<EngineDescriptorSetLayout> getglobalDescSetLayout() const { return this->globalDescSetLayout; }
@@ -43,14 +45,15 @@ namespace nugiEngine {
 			void writeLightBuffer(int frameIndex, void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
 
 			std::shared_ptr<EngineCommandBuffer> beginFrame();
-			void endFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer);
-			void beginSwapChainRenderPass(std::shared_ptr<EngineCommandBuffer> commandBuffer);
-			void endSwapChainRenderPass(std::shared_ptr<EngineCommandBuffer> commandBuffer);
+			void EngineRenderer::endFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer);
+
+			bool presentFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer);
 
 		private:
 			void recreateSwapChain();
 			void createGlobalBuffers(unsigned long sizeUBO, unsigned long sizeLightBuffer);
 			void createGlobalUboDescriptor();
+			void createSyncObjects(int imageCount);
 
 			EngineWindow& appWindow;
 			EngineDevice& appDevice;
@@ -64,6 +67,12 @@ namespace nugiEngine {
 
 			std::vector<std::shared_ptr<EngineBuffer>> globalLightBuffers;
 			std::vector<std::shared_ptr<EngineBuffer>> globalUniformBuffers;
+
+			std::vector<VkSemaphore> imageAvailableSemaphores;
+			std::vector<VkSemaphore> renderFinishedSemaphores;
+			std::vector<VkFence> inFlightFences;
+			std::vector<VkFence> imagesInFlight;
+			size_t currentFrame = 0;
 
 			uint32_t currentImageIndex = 0;
 			int currentFrameIndex = 0;

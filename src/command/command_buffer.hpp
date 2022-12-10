@@ -21,8 +21,8 @@ namespace nugiEngine
       void beginSingleTimeCommands();
       void beginReccuringCommands();
       void endCommands();
-      void submitCommands(VkQueue queue, std::vector<VkSemaphore> *waitSemaphores = nullptr, 
-        std::vector<VkPipelineStageFlags> *waitStages = nullptr, std::vector<VkSemaphore> *signalSemaphores = nullptr, 
+      void submitCommands(VkQueue queue, std::vector<VkSemaphore> waitSemaphores = {}, 
+        std::vector<VkPipelineStageFlags> waitStages = {}, std::vector<VkSemaphore> signalSemaphores = {}, 
         VkFence fence = VK_NULL_HANDLE);
 
       VkCommandBuffer getCommandBuffer() const { return this->commandBuffer; }
