@@ -61,7 +61,7 @@ namespace nugiEngine {
     };
   }
 
-  EngineGameObject EngineGameObject::createLight(float intensity = 10.0f, float radius = 1.0f, glm::vec3 color = glm::vec3{1.0f}, int lightType = 0, float cutoff = glm::radians(45), glm::vec3 direction = glm::vec3{0.0f}) {
+  EngineGameObject EngineGameObject::createLight(float intensity, float radius, glm::vec3 color, int lightType, float cutoff, glm::vec3 direction) {
     EngineGameObject gameObject = EngineGameObject::createGameObject();
     gameObject.color =  color;
     gameObject.transform.scale.x = radius;
@@ -75,7 +75,7 @@ namespace nugiEngine {
     return gameObject;
   }
 
-  std::shared_ptr<EngineGameObject> EngineGameObject::createSharedLight(float intensity = 10.0f, float radius = 1.0f, glm::vec3 color = glm::vec3{1.0f}, int lightType = 0, float cutoff = glm::radians(45), glm::vec3 direction = glm::vec3{0.0f}) {
+  std::shared_ptr<EngineGameObject> EngineGameObject::createSharedLight(float intensity, float radius, glm::vec3 color, int lightType, float cutoff, glm::vec3 direction) {
     std::shared_ptr<EngineGameObject> gameObject = EngineGameObject::createSharedGameObject();
     gameObject->color =  color;
     gameObject->transform.scale.x = radius;

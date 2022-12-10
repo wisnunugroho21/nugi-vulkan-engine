@@ -14,14 +14,14 @@ namespace nugiEngine {
 		std::vector<VkVertexInputBindingDescription> bindingDescriptions{};
 		std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
 
-		VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo;
-		VkPipelineRasterizationStateCreateInfo rasterizationInfo;
-		VkPipelineMultisampleStateCreateInfo multisampleInfo;
-		VkPipelineColorBlendAttachmentState colorBlendAttachment;
-		VkPipelineColorBlendStateCreateInfo colorBlendInfo;
-		VkPipelineDepthStencilStateCreateInfo depthStencilInfo;
-		std::vector<VkDynamicState> dynamicStateEnables;
-		VkPipelineDynamicStateCreateInfo dynamicStateInfo;
+		VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{};
+		VkPipelineRasterizationStateCreateInfo rasterizationInfo{};
+		VkPipelineMultisampleStateCreateInfo multisampleInfo{};
+		VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+		VkPipelineColorBlendStateCreateInfo colorBlendInfo{};
+		VkPipelineDepthStencilStateCreateInfo depthStencilInfo{};
+		std::vector<VkDynamicState> dynamicStateEnables{};
+		VkPipelineDynamicStateCreateInfo dynamicStateInfo{};
 	};
 	
 	class EnginePipeline {

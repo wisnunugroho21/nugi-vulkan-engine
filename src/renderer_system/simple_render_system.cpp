@@ -71,7 +71,7 @@ namespace nugiEngine {
 		);
 
 		for (auto& obj : gameObjects) {
-			if (obj->textureDescSet != nullptr || obj->pointLights != nullptr) continue;
+			if (obj->textureDescSet != nullptr || obj->light != nullptr) continue;
 			
 			SimplePushConstantData pushConstant{};
 

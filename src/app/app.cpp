@@ -161,7 +161,7 @@ namespace nugiEngine {
 				{0.f, -1.f, 0.f}
 			);
 
-			auto pointLight = EngineGameObject::createSharedLight(0.5f, 0.05f);
+			auto pointLight = EngineGameObject::createSharedLight(0.5f, 0.05f, glm::vec3{1.0f}, 1, glm::radians(30.0f), glm::vec3{1.0f});
 			pointLight->color = lightColors[i];
 			pointLight->transform.translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
 

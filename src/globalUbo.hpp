@@ -11,9 +11,9 @@ namespace nugiEngine {
   struct pointLight {
     glm::vec4 position{};
     glm::vec4 color{};
-    glm::vec3 direction{};
-    float cutoff = 0;
-    int type = 0;
+    alignas(16) glm::vec3 direction{};
+    alignas(4) float cutoff = 0;
+    alignas(4) int type = 0;
   };
 
   struct GlobalUBO {
