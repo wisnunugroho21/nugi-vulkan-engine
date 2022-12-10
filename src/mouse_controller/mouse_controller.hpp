@@ -17,9 +17,8 @@ namespace nugiEngine {
     KeyMappings keymaps{};
     float lookSpeed{2.0f};
 
-    bool isDragged = false;
-    double firstDragged_x = 0;
-    double firstDragged_y = 0;
+    double lastDragged_x = 0;
+    double lastDragged_y = 0;
   };
   
 } // namespace nugiEngine
