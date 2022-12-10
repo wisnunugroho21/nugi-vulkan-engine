@@ -48,7 +48,9 @@ namespace nugiEngine {
 					std::unique_ptr<EnginePipeline> build();
 
 				private:
+					std::vector<VkDynamicState> dynamicStates;
 					PipelineConfigInfo configInfo;
+					
 					EngineDevice& appDevice;
 					const std::string& vertFilePath;
 					const std::string& fragFilePath;

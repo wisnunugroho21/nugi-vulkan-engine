@@ -72,10 +72,11 @@ namespace nugiEngine {
 		this->configInfo.depthStencilInfo.front = {};  // Optional
 		this->configInfo.depthStencilInfo.back = {};   // Optional
 
-		this->configInfo.dynamicStateEnables = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+		this->dynamicStates = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+
 		this->configInfo.dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-		this->configInfo.dynamicStateInfo.pDynamicStates = this->configInfo.dynamicStateEnables.data();
-		this->configInfo.dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(this->configInfo.dynamicStateEnables.size());
+		this->configInfo.dynamicStateInfo.pDynamicStates = this->dynamicStates.data();
+		this->configInfo.dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(this->dynamicStates.size());
 		this->configInfo.dynamicStateInfo.flags = 0;
 
 		this->configInfo.bindingDescriptions = Vertex::getVertexBindingDescriptions();
