@@ -22,15 +22,19 @@ namespace nugiEngine {
 		VkPipelineDepthStencilStateCreateInfo depthStencilInfo{};
 		std::vector<VkDynamicState> dynamicStateEnables{};
 		VkPipelineDynamicStateCreateInfo dynamicStateInfo{};
+		std::vector<VkPipelineShaderStageCreateInfo> shaderStagesInfo{};
 	};
 	
 	class EnginePipeline {
 		public:
 			class Builder {
 				public:
-					Builder(EngineDevice& appDevice, const std::string& vertFilePath, const std::string& fragFilePath, VkPipelineLayout pipelineLayout, VkRenderPass renderPass);
+					Builder(EngineDevice& appDevice, VkPipelineLayout pipelineLayout, VkRenderPass renderPass);
 
-					Builder setDefault();
+					std::vector<VkDynamicState> getDynamicStates() const { return this->dynamicStates; }
+					std::vector<VkPipelineShaderStageCreateInfo> getShaderStagesInfo() const { return this->shaderStagesInfo; }
+
+					Builder setDefault(const std::string& vertFilePath, const std::string& fragFilePath);
 
 					Builder setSubpass(uint32_t subpass);
 					Builder setBindingDescriptions(std::vector<VkVertexInputBindingDescription> bindingDescriptions);
@@ -44,24 +48,19 @@ namespace nugiEngine {
 					Builder setDepthStencilInfo(VkPipelineDepthStencilStateCreateInfo depthStencilInfo);
 					Builder setDynamicStateEnables(std::vector<VkDynamicState> dynamicStateEnables);
 					Builder setDynamicStateInfo(VkPipelineDynamicStateCreateInfo dynamicStateInfo);
+					Builder setShaderStagesInfo(std::vector<VkPipelineShaderStageCreateInfo> shaderStagesInfo);
 
 					std::unique_ptr<EnginePipeline> build();
 
 				private:
-					std::vector<VkDynamicState> dynamicStates;
-					PipelineConfigInfo configInfo;
+					std::vector<VkDynamicState> dynamicStates{};
+					std::vector<VkPipelineShaderStageCreateInfo> shaderStagesInfo{};
+					PipelineConfigInfo configInfo{};
 					
 					EngineDevice& appDevice;
-					const std::string& vertFilePath;
-					const std::string& fragFilePath;
 			};
 
-			EnginePipeline(
-				EngineDevice& device, 
-				const std::string& vertFilePath, 
-				const std::string& fragFilePath, 
-				const PipelineConfigInfo& configInfo
-			);
+			EnginePipeline(EngineDevice& device, const PipelineConfigInfo& configInfo);
 			~EnginePipeline();
 
 			EnginePipeline(const EnginePipeline&) = delete;
@@ -76,11 +75,7 @@ namespace nugiEngine {
 			VkShaderModule fragShaderModule;
 			
 			static std::vector<char> readFile(const std::string& filepath);
-			void createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule);
-			void createGraphicPipeline(
-				const std::string& vertFilePath, 
-				const std::string& fragFilePath, 
-				const PipelineConfigInfo& configInfo
-			);
+			static void createShaderModule(EngineDevice& appDevice, const std::vector<char>& code, VkShaderModule* shaderModule);
+			void createGraphicPipeline(const PipelineConfigInfo& configInfo);
 	};
 }
