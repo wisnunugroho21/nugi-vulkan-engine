@@ -134,27 +134,32 @@ namespace nugiEngine {
 		this->globalLightBuffers[frameIndex]->flush(size, offset);
 	}
 
-	std::shared_ptr<EngineCommandBuffer> EngineRenderer::beginFrame() {
-		assert(!this->isFrameStarted && "can't call beginframe while frame still in progress");
+	bool EngineRenderer::acquireFrame() {
+		assert(!this->isFrameStarted && "can't acquire frame while frame still in progress");
 
 		auto result = this->swapChain->acquireNextImage(&this->currentImageIndex, &this->inFlightFences[this->currentFrameIndex], this->imageAvailableSemaphores[this->currentFrameIndex]);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
 			this->recreateSwapChain();
-			return nullptr;
+			return false;
 		}
 
 		if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 			throw std::runtime_error("failed to acquire swap chain image");
 		}
 
+		return true;
+	}
+
+	std::shared_ptr<EngineCommandBuffer> EngineRenderer::beginCommand() {
+		assert(!this->isFrameStarted && "can't start command while frame still in progress");
 		this->isFrameStarted = true;
 
 		this->commandBuffers[this->currentFrameIndex]->beginReccuringCommands();
 		return this->commandBuffers[this->currentFrameIndex];
 	}
 
-	void EngineRenderer::endFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
-		assert(this->isFrameStarted && "can't call endframe if frame is not in progress");
+	void EngineRenderer::submitCommand(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
+		assert(this->isFrameStarted && "can't submit command if frame is not in progress");
 		commandBuffer->endCommands();
 
 		if (this->imagesInFlight[this->currentImageIndex] != VK_NULL_HANDLE) {
@@ -172,12 +177,13 @@ namespace nugiEngine {
 	}
 
 	bool EngineRenderer::presentFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
+		assert(this->isFrameStarted && "can't present frame if frame is not in progress");
 		VkCommandBuffer buffer = commandBuffer->getCommandBuffer();
 
 		auto result = this->swapChain->presentRenders(&this->currentImageIndex, &this->renderFinishedSemaphores[this->currentFrameIndex]);
 
-		this->isFrameStarted = false;
 		this->currentFrameIndex = (this->currentFrameIndex + 1) % EngineSwapChain::MAX_FRAMES_IN_FLIGHT;
+		this->isFrameStarted = false;
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || this->appWindow.wasResized()) {
 			this->appWindow.resetResizedFlag();
