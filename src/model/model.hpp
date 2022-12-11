@@ -2,6 +2,7 @@
 
 #include "../device/device.hpp"
 #include "../buffer/buffer.hpp"
+#include "../command/command_buffer.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -46,8 +47,8 @@ namespace nugiEngine
 
 		static std::unique_ptr<EngineModel> createModelFromFile(EngineDevice &device, const std::string &filePath);
 
-		void bind(VkCommandBuffer commandBuffer);
-		void draw(VkCommandBuffer commandBuffer);
+		void bind(std::shared_ptr<EngineCommandBuffer> commandBuffer);
+		void draw(std::shared_ptr<EngineCommandBuffer> commandBuffer);
 		
 	private:
 		EngineDevice &engineDevice;

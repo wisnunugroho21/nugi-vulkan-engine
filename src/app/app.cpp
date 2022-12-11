@@ -90,9 +90,9 @@ namespace nugiEngine {
 				// render
 				this->swapChainSubRenderer->beginRenderPass(commandBuffer, imageIndex);
 
-				this->simpleRenderSystem->render(commandBuffer->getCommandBuffer(), *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
-				this->textureRenderSystem->render(commandBuffer->getCommandBuffer(), *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
-				this->pointLightRenderSystem->render(commandBuffer->getCommandBuffer(), *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
+				this->simpleRenderSystem->render(commandBuffer, *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
+				this->textureRenderSystem->render(commandBuffer, *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
+				this->pointLightRenderSystem->render(commandBuffer, *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
 				
 				this->swapChainSubRenderer->endRenderPass(commandBuffer);
 				this->renderer->submitCommand(commandBuffer);
@@ -150,12 +150,12 @@ namespace nugiEngine {
 		this->gameObjects.push_back(std::move(floor));
 
 		std::vector<glm::vec3> lightColors{
-       {1.f, .1f, .1f},
-       {.1f, .1f, 1.f},
-       {.1f, 1.f, .1f},
-       {1.f, 1.f, .1f},
-       {.1f, 1.f, 1.f},
-       {1.f, 1.f, 1.f}  //
+			{1.f, .1f, .1f},
+			{.1f, .1f, 1.f},
+			{.1f, 1.f, .1f},
+			{1.f, 1.f, .1f},
+			{.1f, 1.f, 1.f},
+			{1.f, 1.f, 1.f}  //
    	};
 
    	for (int i = 0; i < lightColors.size(); i++) {
