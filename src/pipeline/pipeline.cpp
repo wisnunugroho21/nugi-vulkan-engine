@@ -80,8 +80,6 @@ namespace nugiEngine {
 		this->configInfo.bindingDescriptions = Vertex::getVertexBindingDescriptions();
 		this->configInfo.attributeDescriptions = Vertex::getVertexAttributeDescriptions();
 
-		VkPipelineShaderStageCreateInfo shaderStagesInfos[2];
-
 		VkShaderModule vertShaderModule;
 		VkShaderModule fragShaderModule;
 
@@ -91,23 +89,25 @@ namespace nugiEngine {
 		EnginePipeline::createShaderModule(this->appDevice, vertCode, &vertShaderModule);
 		EnginePipeline::createShaderModule(this->appDevice, fragCode, &fragShaderModule);
 
-		shaderStagesInfos[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		shaderStagesInfos[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-		shaderStagesInfos[0].module = vertShaderModule;
-		shaderStagesInfos[0].pName = "main";
-		shaderStagesInfos[0].flags = 0;
-		shaderStagesInfos[0].pNext = nullptr;
-		shaderStagesInfos[0].pSpecializationInfo = nullptr;
+		VkPipelineShaderStageCreateInfo vertexShaderStageInfo{};
+		vertexShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		vertexShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+		vertexShaderStageInfo.module = vertShaderModule;
+		vertexShaderStageInfo.pName = "main";
+		vertexShaderStageInfo.flags = 0;
+		vertexShaderStageInfo.pNext = nullptr;
+		vertexShaderStageInfo.pSpecializationInfo = nullptr;
 
-		shaderStagesInfos[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		shaderStagesInfos[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-		shaderStagesInfos[1].module = fragShaderModule;
-		shaderStagesInfos[1].pName = "main";
-		shaderStagesInfos[1].flags = 0;
-		shaderStagesInfos[1].pNext = nullptr;
-		shaderStagesInfos[1].pSpecializationInfo = nullptr;
+		VkPipelineShaderStageCreateInfo fragmentShaderStageInfo{};
+		fragmentShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		fragmentShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+		fragmentShaderStageInfo.module = fragShaderModule;
+		fragmentShaderStageInfo.pName = "main";
+		fragmentShaderStageInfo.flags = 0;
+		fragmentShaderStageInfo.pNext = nullptr;
+		fragmentShaderStageInfo.pSpecializationInfo = nullptr;
 
-		this->shaderStagesInfo = { shaderStagesInfo[0], shaderStagesInfo[1] };
+		this->shaderStagesInfo = { vertexShaderStageInfo, fragmentShaderStageInfo };
 		this->configInfo.shaderStagesInfo = shaderStagesInfo;
 
 		return *this;
@@ -158,11 +158,6 @@ namespace nugiEngine {
 		return *this;
 	}
 
-	EnginePipeline::Builder EnginePipeline::Builder::setDynamicStateEnables(std::vector<VkDynamicState> dynamicStateEnables) {
-		this->configInfo.dynamicStateEnables = dynamicStateEnables;
-		return *this;
-	}
-
 	EnginePipeline::Builder EnginePipeline::Builder::setDynamicStateInfo(VkPipelineDynamicStateCreateInfo dynamicStateInfo) {
 		this->configInfo.dynamicStateInfo = dynamicStateInfo;
 		return *this;
@@ -185,8 +180,10 @@ namespace nugiEngine {
 	}
 
 	EnginePipeline::~EnginePipeline() {
-		vkDestroyShaderModule(this->engineDevice.getLogicalDevice(), this->vertShaderModule, nullptr);
-		vkDestroyShaderModule(this->engineDevice.getLogicalDevice(), this->fragShaderModule, nullptr);
+		for (auto& shaderModule : this->shaderModules) {
+			vkDestroyShaderModule(this->engineDevice.getLogicalDevice(), shaderModule, nullptr);
+		}
+
 		vkDestroyPipeline(this->engineDevice.getLogicalDevice(), this->graphicPipeline, nullptr);
 	}
 
@@ -247,6 +244,11 @@ namespace nugiEngine {
 
 		if (vkCreateGraphicsPipelines(this->engineDevice.getLogicalDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &this->graphicPipeline) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create graphic pipelines");
+		}
+		
+		this->shaderModules.clear();
+		for (auto& shaderStage : configInfo.shaderStagesInfo) {
+			this->shaderModules.push_back(shaderStage.module);
 		}
 	}
 

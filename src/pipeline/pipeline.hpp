@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "../device/device.hpp"
 
@@ -20,7 +21,6 @@ namespace nugiEngine {
 		VkPipelineColorBlendAttachmentState colorBlendAttachment{};
 		VkPipelineColorBlendStateCreateInfo colorBlendInfo{};
 		VkPipelineDepthStencilStateCreateInfo depthStencilInfo{};
-		std::vector<VkDynamicState> dynamicStateEnables{};
 		VkPipelineDynamicStateCreateInfo dynamicStateInfo{};
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStagesInfo{};
 	};
@@ -46,7 +46,6 @@ namespace nugiEngine {
 					Builder setColorBlendAttachment(VkPipelineColorBlendAttachmentState colorBlendAttachment);
 					Builder setColorBlendInfo(VkPipelineColorBlendStateCreateInfo colorBlendInfo);
 					Builder setDepthStencilInfo(VkPipelineDepthStencilStateCreateInfo depthStencilInfo);
-					Builder setDynamicStateEnables(std::vector<VkDynamicState> dynamicStateEnables);
 					Builder setDynamicStateInfo(VkPipelineDynamicStateCreateInfo dynamicStateInfo);
 					Builder setShaderStagesInfo(std::vector<VkPipelineShaderStageCreateInfo> shaderStagesInfo);
 
@@ -71,8 +70,7 @@ namespace nugiEngine {
 		private:
 			EngineDevice& engineDevice;
 			VkPipeline graphicPipeline;
-			VkShaderModule vertShaderModule;
-			VkShaderModule fragShaderModule;
+			std::vector<VkShaderModule> shaderModules{};
 			
 			static std::vector<char> readFile(const std::string& filepath);
 			static void createShaderModule(EngineDevice& appDevice, const std::vector<char>& code, VkShaderModule* shaderModule);
