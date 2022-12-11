@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../command/command_buffer.hpp"
 #include "../camera/camera.hpp"
 #include "../device/device.hpp"
 #include "../pipeline/pipeline.hpp"
@@ -22,7 +23,7 @@ namespace nugiEngine {
 			EnginePointLightRenderSystem& operator = (const EnginePointLightRenderSystem&) = delete;
 
 			void update(FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &pointLightObjects, GlobalLight &globalLight);
-			void render(VkCommandBuffer commandBuffer, VkDescriptorSet UBODescSet, FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &pointLightObjects);
+			void render(std::shared_ptr<EngineCommandBuffer> commandBuffer, VkDescriptorSet &UBODescSet, FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &pointLightObjects);
 
 		private:
 			void createPipelineLayout(VkDescriptorSetLayout globalDescSetLayout);

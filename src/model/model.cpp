@@ -99,21 +99,21 @@ namespace nugiEngine {
 		this->indexBuffer->copyBuffer(stagingBuffer.getBuffer(), bufferSize);
 	}
 
-	void EngineModel::bind(VkCommandBuffer commandBuffer) {
+	void EngineModel::bind(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
 		VkBuffer buffers[] = {this->vertexBuffer->getBuffer()};
 		VkDeviceSize offsets[] = {0};
-		vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
+		vkCmdBindVertexBuffers(commandBuffer->getCommandBuffer(), 0, 1, buffers, offsets);
 
 		if (this->hasIndexBuffer) {
-			vkCmdBindIndexBuffer(commandBuffer, this->indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
+			vkCmdBindIndexBuffer(commandBuffer->getCommandBuffer(), this->indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
 		}
 	}
 
-	void EngineModel::draw(VkCommandBuffer commandBuffer) {
+	void EngineModel::draw(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
 		if (this->hasIndexBuffer) {
-			vkCmdDrawIndexed(commandBuffer, this->indexCount, 1, 0, 0, 0);
+			vkCmdDrawIndexed(commandBuffer->getCommandBuffer(), this->indexCount, 1, 0, 0, 0);
 		} else {
-			vkCmdDraw(commandBuffer, this->vertextCount, 1, 0, 0);
+			vkCmdDraw(commandBuffer->getCommandBuffer(), this->vertextCount, 1, 0, 0);
 		}
 	}
 

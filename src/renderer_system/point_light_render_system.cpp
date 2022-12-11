@@ -77,11 +77,11 @@ namespace nugiEngine {
 		globalLight.numLights = lightIndex;
 	}
 
-	void EnginePointLightRenderSystem::render(VkCommandBuffer commandBuffer, VkDescriptorSet UBODescSet, FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &pointLightObjects) {
-		this->pipeline->bind(commandBuffer);
+	void EnginePointLightRenderSystem::render(std::shared_ptr<EngineCommandBuffer> commandBuffer, VkDescriptorSet &UBODescSet, FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &pointLightObjects) {
+		this->pipeline->bind(commandBuffer->getCommandBuffer());
 
 		vkCmdBindDescriptorSets(
-			commandBuffer,
+			commandBuffer->getCommandBuffer(),
 			VK_PIPELINE_BIND_POINT_GRAPHICS,
 			this->pipelineLayout,
 			0,
@@ -100,7 +100,7 @@ namespace nugiEngine {
 			pushConstant.radius = plo->transform.scale.x;
 
 			vkCmdPushConstants(
-				commandBuffer,
+				commandBuffer->getCommandBuffer(),
 				this->pipelineLayout,
 				VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 				0,
@@ -108,11 +108,7 @@ namespace nugiEngine {
 				&pushConstant
 			);
 
-			vkCmdDraw(commandBuffer, 6, 1, 0, 0);
+			vkCmdDraw(commandBuffer->getCommandBuffer(), 6, 1, 0, 0);
 		}
-
-
-
-		
 	}
 }
