@@ -176,9 +176,8 @@ namespace nugiEngine {
 		commandBuffer->submitCommands(this->appDevice.getGraphicsQueue(), waitSemaphores, waitStages, signalSemaphores, this->inFlightFences[this->currentFrameIndex]);
 	}
 
-	bool EngineRenderer::presentFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
+	bool EngineRenderer::presentFrame() {
 		assert(this->isFrameStarted && "can't present frame if frame is not in progress");
-		VkCommandBuffer buffer = commandBuffer->getCommandBuffer();
 
 		auto result = this->swapChain->presentRenders(&this->currentImageIndex, &this->renderFinishedSemaphores[this->currentFrameIndex]);
 

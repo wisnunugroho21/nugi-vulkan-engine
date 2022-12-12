@@ -50,7 +50,7 @@ namespace nugiEngine {
 			void submitCommand(std::shared_ptr<EngineCommandBuffer> commandBuffer);
 
 			bool acquireFrame();
-			bool presentFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer);
+			bool presentFrame();
 
 		private:
 			void recreateSwapChain();

@@ -97,7 +97,7 @@ namespace nugiEngine {
 				this->swapChainSubRenderer->endRenderPass(commandBuffer);
 				this->renderer->submitCommand(commandBuffer);
 
-				if (!this->renderer->presentFrame(commandBuffer)) {
+				if (!this->renderer->presentFrame()) {
 					this->recreateSubRendererAndSubsystem();
 				}
 			}
