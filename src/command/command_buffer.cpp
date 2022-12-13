@@ -114,8 +114,8 @@ namespace nugiEngine {
 	}
 
 	void EngineCommandBuffer::submitCommands(std::vector<std::shared_ptr<EngineCommandBuffer>> commandBuffers, VkQueue queue, 
-		std::vector<VkSemaphore> waitSemaphores = {}, std::vector<VkPipelineStageFlags> waitStages = {}, 
-		std::vector<VkSemaphore> signalSemaphores = {}, VkFence fence = VK_NULL_HANDLE) 
+		std::vector<VkSemaphore> waitSemaphores, std::vector<VkPipelineStageFlags> waitStages, 
+		std::vector<VkSemaphore> signalSemaphores, VkFence fence) 
 	{
 		std::vector<VkCommandBuffer> buffers{};
 		for (auto& commandBuffer : commandBuffers) {

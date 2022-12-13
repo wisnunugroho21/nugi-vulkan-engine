@@ -95,10 +95,10 @@ namespace nugiEngine {
 
 		for (int i = 0; i < EngineSwapChain::MAX_FRAMES_IN_FLIGHT; i++) {
 			for (int j = 0; j < threadAmount; j++) {
-				this->globalDescriptorSets[i] = std::make_shared<VkDescriptorSet>();
+				this->globalDescriptorSets[i * threadAmount + j] = std::make_shared<VkDescriptorSet>();
 
 				auto globalBufferInfo = this->globalUniformBuffers[i]->descriptorInfo();
-				auto lightBufferInfo = this->globalLightBuffers[j]->descriptorInfo();
+				auto lightBufferInfo = this->globalLightBuffers[i * threadAmount + j]->descriptorInfo();
 
 				EngineDescriptorWriter(*this->globalDescSetLayout, *this->descriptorPool)
 					.writeBuffer(0, &globalBufferInfo)
