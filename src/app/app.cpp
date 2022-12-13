@@ -21,7 +21,13 @@ namespace nugiEngine {
 	EngineApp::EngineApp() {
 		this->loadObjects();
 
-		this->renderer = std::make_unique<EngineRenderer>(this->window, this->device);
+		for (auto& gameObject : this->gameObjects) {
+			if (gameObject->pointLights != nullptr) {
+				this->lightObjects.push_back(gameObject);
+			}
+		}
+
+		this->renderer = std::make_unique<EngineRenderer>(this->window, this->device, this->lightObjects.size());
 		this->recreateSubRendererAndSubsystem();
 	}
 
@@ -102,9 +108,9 @@ namespace nugiEngine {
 					auto commandBuffer = this->renderer->beginCommand(i);
 					this->swapChainSubRenderer->beginRenderPass(commandBuffer, imageIndex);
 
-					this->simpleRenderSystem->render(commandBuffer, *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
-					this->textureRenderSystem->render(commandBuffer, *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
-					this->pointLightRenderSystem->render(commandBuffer, *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
+					this->simpleRenderSystem->render(commandBuffer, *this->renderer->getGlobalDescriptorSets(frameIndex * lightObjects.size() + i), frameInfo, this->gameObjects);
+					this->textureRenderSystem->render(commandBuffer, *this->renderer->getGlobalDescriptorSets(frameIndex * lightObjects.size() + i), frameInfo, this->gameObjects);
+					this->pointLightRenderSystem->render(commandBuffer, *this->renderer->getGlobalDescriptorSets(frameIndex * lightObjects.size() + i), frameInfo, this->gameObjects);
 					
 					this->swapChainSubRenderer->endRenderPass(commandBuffer);
 					this->renderer->endCommand(commandBuffer);
