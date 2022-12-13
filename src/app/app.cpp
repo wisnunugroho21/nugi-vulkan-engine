@@ -70,14 +70,9 @@ namespace nugiEngine {
 			auto aspect = this->renderer->getSwapChain()->extentAspectRatio();
 			camera.setPerspectiveProjection(glm::radians(50.0f), aspect, 0.1f, 10.0f);
 
-			std::vector<std::shared_ptr<EngineGameObject>> lightObjects;
-			for (auto& gameObject : this->gameObjects) {
-				if (gameObject->pointLights != nullptr) {
-					auto rotateLight = glm::rotate(glm::mat4(1.f), 0.5f * frameTime, {0.f, -1.f, 0.f});
-					gameObject->transform.translation = glm::vec3(rotateLight * glm::vec4(gameObject->transform.translation, 1.f));
-
-					lightObjects.push_back(gameObject);
-				}
+			for (auto& lightObject : this->lightObjects) {
+				auto rotateLight = glm::rotate(glm::mat4(1.f), 0.5f * frameTime, {0.f, -1.f, 0.f});
+				lightObject->transform.translation = glm::vec3(rotateLight * glm::vec4(lightObject->transform.translation, 1.f));
 			}
 
 			if (this->renderer->acquireFrame()) {
