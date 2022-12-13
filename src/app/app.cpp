@@ -85,16 +85,16 @@ namespace nugiEngine {
 					camera
 				};
 
+				// update
+				GlobalUBO ubo{};
+				ubo.projection = camera.getProjectionMatrix();
+				ubo.view = camera.getViewMatrix();
+				ubo.inverseView = camera.getInverseViewMatrix();
+				this->renderer->writeUniformBuffer(frameIndex, &ubo);
+
 				std::vector<std::shared_ptr<EngineCommandBuffer>> renderCommands{};
 
 				for (int i = 0; i < lightObjects.size(); i++) {
-					// update
-					GlobalUBO ubo{};
-					ubo.projection = camera.getProjectionMatrix();
-					ubo.view = camera.getViewMatrix();
-					ubo.inverseView = camera.getInverseViewMatrix();
-					this->renderer->writeUniformBuffer(frameIndex, i, &ubo);
-
 					GlobalLight lightingObjects{};
 					this->pointLightRenderSystem->update(frameInfo, lightObjects[i], lightingObjects);
 					this->renderer->writeLightBuffer(frameIndex, i, &lightingObjects);

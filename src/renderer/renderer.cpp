@@ -49,7 +49,7 @@ namespace nugiEngine {
 	}
 
 	void EngineRenderer::createGlobalBuffers(unsigned long sizeUBO, unsigned long sizeLightBuffer, int threadAmount) {
-		this->globalUniformBuffers.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT * threadAmount);
+		this->globalUniformBuffers.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
 		this->globalLightBuffers.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT * threadAmount);
 
 		for (int i = 0; i < this->globalUniformBuffers.size(); i++) {
@@ -61,6 +61,10 @@ namespace nugiEngine {
 				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
 			);
 
+			this->globalUniformBuffers[i]->map();
+		}
+
+		for (int i = 0; i < this->globalLightBuffers.size(); i++) {
 			this->globalLightBuffers[i] = std::make_unique<EngineBuffer>(
 				this->appDevice,
 				sizeLightBuffer,
@@ -69,7 +73,6 @@ namespace nugiEngine {
 				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
 			);
 
-			this->globalUniformBuffers[i]->map();
 			this->globalLightBuffers[i]->map();
 		}
 	}
@@ -77,7 +80,7 @@ namespace nugiEngine {
 	void EngineRenderer::createGlobalUboDescriptor(int threadAmount) {
 		this->descriptorPool = 
 			EngineDescriptorPool::Builder(this->appDevice)
-				.setMaxSets(100 * EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
+				.setMaxSets(100 * EngineSwapChain::MAX_FRAMES_IN_FLIGHT * threadAmount)
 				.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, EngineSwapChain::MAX_FRAMES_IN_FLIGHT * threadAmount)
 				.addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 100)
 				.build();
@@ -88,18 +91,20 @@ namespace nugiEngine {
 				.addBinding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
 				.build();
 
-		this->globalDescriptorSets.resize(this->globalUniformBuffers.size());
-		
-		for (int i = 0; i < this->globalUniformBuffers.size(); i++) {
-			this->globalDescriptorSets[i] = std::make_shared<VkDescriptorSet>();
+		this->globalDescriptorSets.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT * threadAmount);
 
-			auto globalBufferInfo = this->globalUniformBuffers[i]->descriptorInfo();
-			auto lightBufferInfo = this->globalLightBuffers[i]->descriptorInfo();
+		for (int i = 0; i < EngineSwapChain::MAX_FRAMES_IN_FLIGHT; i++) {
+			for (int j = 0; j < threadAmount; j++) {
+				this->globalDescriptorSets[i] = std::make_shared<VkDescriptorSet>();
 
-			EngineDescriptorWriter(*this->globalDescSetLayout, *this->descriptorPool)
-				.writeBuffer(0, &globalBufferInfo)
-				.writeBuffer(1, &lightBufferInfo)
-				.build(this->globalDescriptorSets[i].get());
+				auto globalBufferInfo = this->globalUniformBuffers[i]->descriptorInfo();
+				auto lightBufferInfo = this->globalLightBuffers[j]->descriptorInfo();
+
+				EngineDescriptorWriter(*this->globalDescSetLayout, *this->descriptorPool)
+					.writeBuffer(0, &globalBufferInfo)
+					.writeBuffer(1, &lightBufferInfo)
+					.build(this->globalDescriptorSets[i * threadAmount + j].get());
+			}
 		}
 	}
 
@@ -125,9 +130,9 @@ namespace nugiEngine {
     }
   }
 
-	void EngineRenderer::writeUniformBuffer(int frameIndex, int threadIndex, void* data, VkDeviceSize size, VkDeviceSize offset) {
-		this->globalUniformBuffers[frameIndex * this->threadAmount + threadIndex]->writeToBuffer(data, size, offset);
-		this->globalUniformBuffers[frameIndex * this->threadAmount + threadIndex]->flush(size, offset);
+	void EngineRenderer::writeUniformBuffer(int frameIndex, void* data, VkDeviceSize size, VkDeviceSize offset) {
+		this->globalUniformBuffers[frameIndex]->writeToBuffer(data, size, offset);
+		this->globalUniformBuffers[frameIndex]->flush(size, offset);
 	}
 
 	void EngineRenderer::writeLightBuffer(int frameIndex, int threadIndex, void* data, VkDeviceSize size, VkDeviceSize offset) {
