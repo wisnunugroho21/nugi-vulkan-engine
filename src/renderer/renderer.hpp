@@ -15,7 +15,7 @@ namespace nugiEngine {
 	class EngineRenderer
 	{
 		public:
-			EngineRenderer(EngineWindow& window, EngineDevice& device);
+			EngineRenderer(EngineWindow& window, EngineDevice& device, int threadAmount);
 			~EngineRenderer();
 
 			EngineRenderer(const EngineRenderer&) = delete;
@@ -43,10 +43,12 @@ namespace nugiEngine {
 				return this->currentImageIndex;
 			}
 
-			void writeUniformBuffer(int frameIndex, void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
-			void writeLightBuffer(int frameIndex, void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+			void writeUniformBuffer(int frameIndex, int threadIndex, void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+			void writeLightBuffer(int frameIndex, int threadIndex, void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
 
-			std::shared_ptr<EngineCommandBuffer> beginCommand();
+			std::shared_ptr<EngineCommandBuffer> beginCommand(int threadIndex);
+			void endCommand(std::shared_ptr<EngineCommandBuffer>);
+			void submitCommands(std::vector<std::shared_ptr<EngineCommandBuffer>> commandBuffer);
 			void submitCommand(std::shared_ptr<EngineCommandBuffer> commandBuffer);
 
 			bool acquireFrame();
@@ -54,8 +56,8 @@ namespace nugiEngine {
 
 		private:
 			void recreateSwapChain();
-			void createGlobalBuffers(unsigned long sizeUBO, unsigned long sizeLightBuffer);
-			void createGlobalUboDescriptor();
+			void createGlobalBuffers(unsigned long sizeUBO, unsigned long sizeLightBuffer, int threadAmount);
+			void createGlobalUboDescriptor(int threadAmount);
 			void createSyncObjects(int imageCount);
 
 			EngineWindow& appWindow;
@@ -74,10 +76,12 @@ namespace nugiEngine {
 			std::vector<VkSemaphore> imageAvailableSemaphores;
 			std::vector<VkSemaphore> renderFinishedSemaphores;
 			std::vector<VkFence> inFlightFences;
-			std::vector<VkFence> imagesInFlight;
 
 			uint32_t currentImageIndex = 0;
 			int currentFrameIndex = 0;
+			int threadAmount = 0;
+
+			bool isRenderStarted = false;
 			bool isFrameStarted = false;
 	};
 }

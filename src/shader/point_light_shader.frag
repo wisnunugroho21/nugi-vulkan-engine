@@ -16,8 +16,7 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
 
 layout(set = 0, binding = 1) uniform GlobalLight {
     vec4 ambientLightColor;
-    PointLight pointLights[10];
-    int numLights;
+    PointLight pointLights;
 } globalLight;
 
 layout(push_constant) uniform Push {

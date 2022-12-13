@@ -53,7 +53,7 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineCommandBuffer::beginSingleTimeCommands() {
+	void EngineCommandBuffer::beginSingleTimeCommand() {
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -63,7 +63,7 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineCommandBuffer::beginReccuringCommands() {
+	void EngineCommandBuffer::beginReccuringCommand() {
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -72,19 +72,60 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineCommandBuffer::endCommands() {
+	void EngineCommandBuffer::endCommand() {
 		if (vkEndCommandBuffer(this->commandBuffer) != VK_SUCCESS) {
 			std::cerr << "Failed to end recording command buffer" << '\n';
 		}
 	}
 
-	void EngineCommandBuffer::submitCommands(VkQueue queue, std::vector<VkSemaphore> waitSemaphores, 
+	void EngineCommandBuffer::submitCommand(VkQueue queue, std::vector<VkSemaphore> waitSemaphores, 
       std::vector<VkPipelineStageFlags> waitStages, std::vector<VkSemaphore> signalSemaphores, VkFence fence) 
 	{
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &this->commandBuffer;
+
+		submitInfo.waitSemaphoreCount = waitSemaphores.size();
+		if (waitSemaphores.size() == 0) {
+  		submitInfo.pWaitSemaphores = nullptr;
+		} else {
+			submitInfo.pWaitSemaphores = waitSemaphores.data();
+		}
+
+		if (waitStages.size() > 0) {
+			submitInfo.pWaitDstStageMask = waitStages.data();
+		}
+
+		submitInfo.signalSemaphoreCount = signalSemaphores.size();
+		if (signalSemaphores.size() == 0) {
+  		submitInfo.pSignalSemaphores = nullptr;
+		} else {
+			submitInfo.pSignalSemaphores = signalSemaphores.data();
+		}
+
+		if (vkQueueSubmit(queue, 1, &submitInfo, fence) != VK_SUCCESS) {
+			std::cerr << "Failed to submitting command buffer" << '\n';
+		}
+
+		if (vkQueueWaitIdle(queue) != VK_SUCCESS) {
+			std::cerr << "Failed to waiting queue" << '\n';
+		}
+	}
+
+	void EngineCommandBuffer::submitCommands(std::vector<std::shared_ptr<EngineCommandBuffer>> commandBuffers, VkQueue queue, 
+		std::vector<VkSemaphore> waitSemaphores = {}, std::vector<VkPipelineStageFlags> waitStages = {}, 
+		std::vector<VkSemaphore> signalSemaphores = {}, VkFence fence = VK_NULL_HANDLE) 
+	{
+		std::vector<VkCommandBuffer> buffers{};
+		for (auto& commandBuffer : commandBuffers) {
+			buffers.push_back(commandBuffer->getCommandBuffer());
+		}
+
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = static_cast<uint32_t>(buffers.size());
+		submitInfo.pCommandBuffers = buffers.data();
 
 		submitInfo.waitSemaphoreCount = waitSemaphores.size();
 		if (waitSemaphores.size() == 0) {

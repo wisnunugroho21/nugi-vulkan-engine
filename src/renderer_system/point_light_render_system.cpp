@@ -57,24 +57,9 @@ namespace nugiEngine {
 			.build();
 	}
 
-	void EnginePointLightRenderSystem::update(FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &pointLightObjects, GlobalLight &globalLight) {
-		auto rotateLight = glm::rotate(glm::mat4(1.f), 0.5f * frameInfo.frameTime, {0.f, -1.f, 0.f});
-		int lightIndex = 0;
-
-		for (auto& plo : pointLightObjects) {
-			if (plo->pointLights == nullptr) continue;
-
-			// update light position
-     	plo->transform.translation = glm::vec3(rotateLight * glm::vec4(plo->transform.translation, 1.f));
-
-			// copy light to ubo
-			globalLight.pointLights[lightIndex].position = glm::vec4{ plo->transform.translation, 1.0f };
-			globalLight.pointLights[lightIndex].color = glm::vec4{ plo->color, plo->pointLights->lightIntensity };
-
-			lightIndex++;
-		}
-
-		globalLight.numLights = lightIndex;
+	void EnginePointLightRenderSystem::update(FrameInfo &frameInfo, std::shared_ptr<EngineGameObject> &pointLightObject, GlobalLight &globalLight) {
+		globalLight.pointLights.position = glm::vec4{ pointLightObject->transform.translation, 1.0f };
+		globalLight.pointLights.color = glm::vec4{ pointLightObject->color, pointLightObject->pointLights->lightIntensity };
 	}
 
 	void EnginePointLightRenderSystem::render(std::shared_ptr<EngineCommandBuffer> commandBuffer, VkDescriptorSet &UBODescSet, FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &pointLightObjects) {

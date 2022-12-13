@@ -21,7 +21,6 @@ namespace nugiEngine {
 
   struct GlobalLight {
     glm::vec4 ambientLightColor{1.0f, 1.0f, 1.0f, 0.02f};
-    pointLight pointLights[MAX_LIGHTS];
-    int numLights;
+    pointLight pointLights;
   };
 }

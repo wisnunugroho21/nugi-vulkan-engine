@@ -88,7 +88,7 @@ namespace nugiEngine {
 
   void EngineImage::transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout) {
     EngineCommandBuffer commandBuffer{this->appDevice};
-    commandBuffer.beginSingleTimeCommands();
+    commandBuffer.beginSingleTimeCommand();
 
     VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -135,8 +135,8 @@ namespace nugiEngine {
       &barrier
     );
 
-    commandBuffer.endCommands();
-    commandBuffer.submitCommands(this->appDevice.getGraphicsQueue());
+    commandBuffer.endCommand();
+    commandBuffer.submitCommand(this->appDevice.getGraphicsQueue());
   }
 
   void EngineImage::generateMipMap() {
@@ -153,7 +153,7 @@ namespace nugiEngine {
     }
 
     EngineCommandBuffer commandBuffer{this->appDevice};
-    commandBuffer.beginSingleTimeCommands();
+    commandBuffer.beginSingleTimeCommand();
 
     VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -243,8 +243,8 @@ namespace nugiEngine {
       0, nullptr,
       1, &barrier);
 
-    commandBuffer.endCommands();
-    commandBuffer.submitCommands(this->appDevice.getGraphicsQueue());
+    commandBuffer.endCommand();
+    commandBuffer.submitCommand(this->appDevice.getGraphicsQueue());
   }
   
 } // namespace nugiEngine

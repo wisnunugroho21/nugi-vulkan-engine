@@ -6,14 +6,16 @@
 #include <string>
 
 namespace nugiEngine {
-	EngineRenderer::EngineRenderer(EngineWindow& window, EngineDevice& device) : appDevice{device}, appWindow{window} {
+	EngineRenderer::EngineRenderer(EngineWindow& window, EngineDevice& device, int threadAmount) 
+		: appDevice{device}, appWindow{window}, threadAmount{threadAmount} 
+	{
 		this->recreateSwapChain();
 		this->createSyncObjects(this->swapChain->imageCount());
 
-		this->commandBuffers = EngineCommandBuffer::createCommandBuffers(device, EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
+		this->commandBuffers = EngineCommandBuffer::createCommandBuffers(device, EngineSwapChain::MAX_FRAMES_IN_FLIGHT * this->threadAmount);
 
-		this->createGlobalBuffers(sizeof(GlobalUBO), sizeof(GlobalLight));
-		this->createGlobalUboDescriptor();
+		this->createGlobalBuffers(sizeof(GlobalUBO), sizeof(GlobalLight), this->threadAmount);
+		this->createGlobalUboDescriptor(this->threadAmount);
 	}
 
 	EngineRenderer::~EngineRenderer() {
@@ -46,9 +48,9 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineRenderer::createGlobalBuffers(unsigned long sizeUBO, unsigned long sizeLightBuffer) {
-		this->globalUniformBuffers.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
-		this->globalLightBuffers.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
+	void EngineRenderer::createGlobalBuffers(unsigned long sizeUBO, unsigned long sizeLightBuffer, int threadAmount) {
+		this->globalUniformBuffers.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT * threadAmount);
+		this->globalLightBuffers.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT * threadAmount);
 
 		for (int i = 0; i < this->globalUniformBuffers.size(); i++) {
 			this->globalUniformBuffers[i] = std::make_unique<EngineBuffer>(
@@ -72,11 +74,11 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineRenderer::createGlobalUboDescriptor() {
+	void EngineRenderer::createGlobalUboDescriptor(int threadAmount) {
 		this->descriptorPool = 
 			EngineDescriptorPool::Builder(this->appDevice)
 				.setMaxSets(100 * EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
-				.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
+				.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, EngineSwapChain::MAX_FRAMES_IN_FLIGHT * threadAmount)
 				.addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 100)
 				.build();
 
@@ -105,7 +107,6 @@ namespace nugiEngine {
     imageAvailableSemaphores.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
     renderFinishedSemaphores.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
     inFlightFences.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
-    imagesInFlight.resize(imageCount, VK_NULL_HANDLE);
 
     VkSemaphoreCreateInfo semaphoreInfo = {};
     semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -124,18 +125,18 @@ namespace nugiEngine {
     }
   }
 
-	void EngineRenderer::writeUniformBuffer(int frameIndex, void* data, VkDeviceSize size, VkDeviceSize offset) {
-		this->globalUniformBuffers[frameIndex]->writeToBuffer(data, size, offset);
-		this->globalUniformBuffers[frameIndex]->flush(size, offset);
+	void EngineRenderer::writeUniformBuffer(int frameIndex, int threadIndex, void* data, VkDeviceSize size, VkDeviceSize offset) {
+		this->globalUniformBuffers[frameIndex * this->threadAmount + threadIndex]->writeToBuffer(data, size, offset);
+		this->globalUniformBuffers[frameIndex * this->threadAmount + threadIndex]->flush(size, offset);
 	}
 
-	void EngineRenderer::writeLightBuffer(int frameIndex, void* data, VkDeviceSize size, VkDeviceSize offset) {
-		this->globalLightBuffers[frameIndex]->writeToBuffer(data, size, offset);
-		this->globalLightBuffers[frameIndex]->flush(size, offset);
+	void EngineRenderer::writeLightBuffer(int frameIndex, int threadIndex, void* data, VkDeviceSize size, VkDeviceSize offset) {
+		this->globalLightBuffers[frameIndex * this->threadAmount + threadIndex]->writeToBuffer(data, size, offset);
+		this->globalLightBuffers[frameIndex * this->threadAmount + threadIndex]->flush(size, offset);
 	}
 
 	bool EngineRenderer::acquireFrame() {
-		assert(!this->isFrameStarted && "can't acquire frame while frame still in progress");
+		assert(!this->isFrameStarted && "can't acquire frame while frame has acquired");
 
 		auto result = this->swapChain->acquireNextImage(&this->currentImageIndex, &this->inFlightFences[this->currentFrameIndex], this->imageAvailableSemaphores[this->currentFrameIndex]);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
@@ -147,33 +148,52 @@ namespace nugiEngine {
 			throw std::runtime_error("failed to acquire swap chain image");
 		}
 
+		this->isFrameStarted = true;
 		return true;
 	}
 
-	std::shared_ptr<EngineCommandBuffer> EngineRenderer::beginCommand() {
-		assert(!this->isFrameStarted && "can't start command while frame still in progress");
-		this->isFrameStarted = true;
+	std::shared_ptr<EngineCommandBuffer> EngineRenderer::beginCommand(int threadIndex) {
+		assert(this->isFrameStarted && "can't start command while frame has not acquired");
+		assert(!this->isRenderStarted && "can't start command while render still in progress");
+		
+		this->isRenderStarted = true;
 
-		this->commandBuffers[this->currentFrameIndex]->beginReccuringCommands();
-		return this->commandBuffers[this->currentFrameIndex];
+		this->commandBuffers[this->currentFrameIndex * this->threadAmount + threadIndex]->beginReccuringCommand();
+		return this->commandBuffers[this->currentFrameIndex * this->threadAmount + threadIndex];
+	}
+
+	void EngineRenderer::endCommand(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
+		assert(this->isFrameStarted && "can't start command while frame still in progress");
+		assert(this->isRenderStarted && "can't start command while render is not in progress");
+
+		this->isRenderStarted = false;
+		commandBuffer->endCommand();
 	}
 
 	void EngineRenderer::submitCommand(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
 		assert(this->isFrameStarted && "can't submit command if frame is not in progress");
-		commandBuffer->endCommands();
 
-		if (this->imagesInFlight[this->currentImageIndex] != VK_NULL_HANDLE) {
-      vkWaitForFences(this->appDevice.getLogicalDevice(), 1, &this->imagesInFlight[this->currentImageIndex], VK_TRUE, UINT64_MAX);
-    }
-
-    imagesInFlight[this->currentImageIndex] = this->inFlightFences[this->currentFrameIndex];
+		vkWaitForFences(this->appDevice.getLogicalDevice(), 1, &this->inFlightFences[this->currentFrameIndex], VK_TRUE, UINT64_MAX);
     vkResetFences(this->appDevice.getLogicalDevice(), 1, &this->inFlightFences[this->currentFrameIndex]);
 
     std::vector<VkSemaphore> waitSemaphores = {this->imageAvailableSemaphores[this->currentFrameIndex]};
 		std::vector<VkSemaphore> signalSemaphores = {this->renderFinishedSemaphores[this->currentFrameIndex]};
     std::vector<VkPipelineStageFlags> waitStages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
-		commandBuffer->submitCommands(this->appDevice.getGraphicsQueue(), waitSemaphores, waitStages, signalSemaphores, this->inFlightFences[this->currentFrameIndex]);
+		commandBuffer->submitCommand(this->appDevice.getGraphicsQueue(), waitSemaphores, waitStages, signalSemaphores, this->inFlightFences[this->currentFrameIndex]);
+	}
+
+	void EngineRenderer::submitCommands(std::vector<std::shared_ptr<EngineCommandBuffer>> commandBuffers) {
+		assert(this->isFrameStarted && "can't submit command if frame is not in progress");
+
+		vkWaitForFences(this->appDevice.getLogicalDevice(), 1, &this->inFlightFences[this->currentFrameIndex], VK_TRUE, UINT64_MAX);
+    vkResetFences(this->appDevice.getLogicalDevice(), 1, &this->inFlightFences[this->currentFrameIndex]);
+
+    std::vector<VkSemaphore> waitSemaphores = {this->imageAvailableSemaphores[this->currentFrameIndex]};
+		std::vector<VkSemaphore> signalSemaphores = {this->renderFinishedSemaphores[this->currentFrameIndex]};
+    std::vector<VkPipelineStageFlags> waitStages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+
+		EngineCommandBuffer::submitCommands(commandBuffers, this->appDevice.getGraphicsQueue(), waitSemaphores, waitStages, signalSemaphores, this->inFlightFences[this->currentFrameIndex]);
 	}
 
 	bool EngineRenderer::presentFrame() {

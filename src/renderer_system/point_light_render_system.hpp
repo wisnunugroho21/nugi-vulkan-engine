@@ -22,7 +22,7 @@ namespace nugiEngine {
 			EnginePointLightRenderSystem(const EnginePointLightRenderSystem&) = delete;
 			EnginePointLightRenderSystem& operator = (const EnginePointLightRenderSystem&) = delete;
 
-			void update(FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &pointLightObjects, GlobalLight &globalLight);
+			void update(FrameInfo &frameInfo, std::shared_ptr<EngineGameObject> &pointLightObject, GlobalLight &globalLight);
 			void render(std::shared_ptr<EngineCommandBuffer> commandBuffer, VkDescriptorSet &UBODescSet, FrameInfo &frameInfo, std::vector<std::shared_ptr<EngineGameObject>> &pointLightObjects);
 
 		private:

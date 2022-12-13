@@ -64,6 +64,16 @@ namespace nugiEngine {
 			auto aspect = this->renderer->getSwapChain()->extentAspectRatio();
 			camera.setPerspectiveProjection(glm::radians(50.0f), aspect, 0.1f, 10.0f);
 
+			std::vector<std::shared_ptr<EngineGameObject>> lightObjects;
+			for (auto& gameObject : this->gameObjects) {
+				if (gameObject->pointLights != nullptr) {
+					auto rotateLight = glm::rotate(glm::mat4(1.f), 0.5f * frameTime, {0.f, -1.f, 0.f});
+					gameObject->transform.translation = glm::vec3(rotateLight * glm::vec4(gameObject->transform.translation, 1.f));
+
+					lightObjects.push_back(gameObject);
+				}
+			}
+
 			if (this->renderer->acquireFrame()) {
 				int imageIndex = this->renderer->getImageIndex();
 				int frameIndex = this->renderer->getFrameIndex();
@@ -74,28 +84,35 @@ namespace nugiEngine {
 					camera
 				};
 
-				// update
-				GlobalUBO ubo{};
-				ubo.projection = camera.getProjectionMatrix();
-				ubo.view = camera.getViewMatrix();
-				ubo.inverseView = camera.getInverseViewMatrix();
-				this->renderer->writeUniformBuffer(frameIndex, &ubo);
+				std::vector<std::shared_ptr<EngineCommandBuffer>> renderCommands{};
 
-				GlobalLight lightingObjects{};
-				this->pointLightRenderSystem->update(frameInfo, this->gameObjects, lightingObjects);
-				this->renderer->writeLightBuffer(frameIndex, &lightingObjects);
+				for (int i = 0; i < lightObjects.size(); i++) {
+					// update
+					GlobalUBO ubo{};
+					ubo.projection = camera.getProjectionMatrix();
+					ubo.view = camera.getViewMatrix();
+					ubo.inverseView = camera.getInverseViewMatrix();
+					this->renderer->writeUniformBuffer(frameIndex, i, &ubo);
 
-				auto commandBuffer = this->renderer->beginCommand();
+					GlobalLight lightingObjects{};
+					this->pointLightRenderSystem->update(frameInfo, lightObjects[i], lightingObjects);
+					this->renderer->writeLightBuffer(frameIndex, i, &lightingObjects);
 
-				// render
-				this->swapChainSubRenderer->beginRenderPass(commandBuffer, imageIndex);
+					// render
+					auto commandBuffer = this->renderer->beginCommand(i);
+					this->swapChainSubRenderer->beginRenderPass(commandBuffer, imageIndex);
 
-				this->simpleRenderSystem->render(commandBuffer, *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
-				this->textureRenderSystem->render(commandBuffer, *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
-				this->pointLightRenderSystem->render(commandBuffer, *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
+					this->simpleRenderSystem->render(commandBuffer, *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
+					this->textureRenderSystem->render(commandBuffer, *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
+					this->pointLightRenderSystem->render(commandBuffer, *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
+					
+					this->swapChainSubRenderer->endRenderPass(commandBuffer);
+					this->renderer->endCommand(commandBuffer);
+
+					renderCommands.push_back(commandBuffer);
+				}
 				
-				this->swapChainSubRenderer->endRenderPass(commandBuffer);
-				this->renderer->submitCommand(commandBuffer);
+				this->renderer->submitCommands(renderCommands);
 
 				if (!this->renderer->presentFrame()) {
 					this->recreateSubRendererAndSubsystem();
