@@ -65,8 +65,6 @@ namespace nugiEngine {
 			camera.setPerspectiveProjection(glm::radians(50.0f), aspect, 0.1f, 10.0f);
 
 			if (this->renderer->acquireFrame()) {
-				auto commandBuffer = this->renderer->beginCommand();
-
 				int imageIndex = this->renderer->getImageIndex();
 				int frameIndex = this->renderer->getFrameIndex();
 
@@ -87,6 +85,8 @@ namespace nugiEngine {
 				this->pointLightRenderSystem->update(frameInfo, this->gameObjects, lightingObjects);
 				this->renderer->writeLightBuffer(frameIndex, &lightingObjects);
 
+				auto commandBuffer = this->renderer->beginCommand();
+
 				// render
 				this->swapChainSubRenderer->beginRenderPass(commandBuffer, imageIndex);
 
@@ -97,7 +97,7 @@ namespace nugiEngine {
 				this->swapChainSubRenderer->endRenderPass(commandBuffer);
 				this->renderer->submitCommand(commandBuffer);
 
-				if (!this->renderer->presentFrame(commandBuffer)) {
+				if (!this->renderer->presentFrame()) {
 					this->recreateSubRendererAndSubsystem();
 				}
 			}
