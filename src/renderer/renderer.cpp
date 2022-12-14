@@ -147,22 +147,43 @@ namespace nugiEngine {
 			throw std::runtime_error("failed to acquire swap chain image");
 		}
 
+		this->isFrameStarted = true;
 		return true;
 	}
 
 	std::shared_ptr<EngineCommandBuffer> EngineRenderer::beginCommand() {
-		assert(!this->isFrameStarted && "can't start command while frame still in progress");
-		this->isFrameStarted = true;
+		assert(this->isFrameStarted && "can't start command while frame still in progress");
 
-		this->commandBuffers[this->currentFrameIndex]->beginReccuringCommands();
+		this->commandBuffers[this->currentFrameIndex]->beginReccuringCommand();
 		return this->commandBuffers[this->currentFrameIndex];
+	}
+
+	void EngineRenderer::endCommand(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
+		assert(this->isFrameStarted && "can't start command while frame still in progress");
+		commandBuffer->endCommand();
+	}
+
+	void EngineRenderer::submitCommands(std::vector<std::shared_ptr<EngineCommandBuffer>> commandBuffers) {
+		assert(this->isFrameStarted && "can't submit command if frame is not in progress");
+
+		if (this->imagesInFlight[this->currentImageIndex] != VK_NULL_HANDLE) {
+      vkWaitForFences(this->appDevice.getLogicalDevice(), 1, &this->imagesInFlight[this->currentImageIndex], VK_TRUE, UINT64_MAX);
+    }
+
+    imagesInFlight[this->currentImageIndex] = this->inFlightFences[this->currentFrameIndex];
+    vkResetFences(this->appDevice.getLogicalDevice(), 1, &this->inFlightFences[this->currentFrameIndex]);
+
+    std::vector<VkSemaphore> waitSemaphores = {this->imageAvailableSemaphores[this->currentFrameIndex]};
+		std::vector<VkSemaphore> signalSemaphores = {this->renderFinishedSemaphores[this->currentFrameIndex]};
+    std::vector<VkPipelineStageFlags> waitStages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+
+		EngineCommandBuffer::submitCommands(commandBuffers, this->appDevice.getGraphicsQueue(), waitSemaphores, waitStages, signalSemaphores, this->inFlightFences[this->currentFrameIndex]);
 	}
 
 	void EngineRenderer::submitCommand(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
 		assert(this->isFrameStarted && "can't submit command if frame is not in progress");
-		commandBuffer->endCommands();
 
-		if (this->imagesInFlight[this->currentImageIndex] != VK_NULL_HANDLE) {
+    if (this->imagesInFlight[this->currentImageIndex] != VK_NULL_HANDLE) {
       vkWaitForFences(this->appDevice.getLogicalDevice(), 1, &this->imagesInFlight[this->currentImageIndex], VK_TRUE, UINT64_MAX);
     }
 

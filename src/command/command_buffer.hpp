@@ -19,9 +19,9 @@ namespace nugiEngine
 
       static std::vector<std::shared_ptr<EngineCommandBuffer>> createCommandBuffers(EngineDevice &appDevice, uint32_t size);
 
-      void beginSingleTimeCommands();
-      void beginReccuringCommands();
-      void endCommands();
+      void beginSingleTimeCommand();
+      void beginReccuringCommand();
+      void endCommand();
       void submitCommand(VkQueue queue, std::vector<VkSemaphore> waitSemaphores = {}, 
         std::vector<VkPipelineStageFlags> waitStages = {}, std::vector<VkSemaphore> signalSemaphores = {}, 
         VkFence fence = VK_NULL_HANDLE);

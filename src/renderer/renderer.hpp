@@ -47,6 +47,9 @@ namespace nugiEngine {
 			void writeLightBuffer(int frameIndex, void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
 
 			std::shared_ptr<EngineCommandBuffer> beginCommand();
+			void endCommand(std::shared_ptr<EngineCommandBuffer>);
+
+			void submitCommands(std::vector<std::shared_ptr<EngineCommandBuffer>> commandBuffer);
 			void submitCommand(std::shared_ptr<EngineCommandBuffer> commandBuffer);
 
 			bool acquireFrame();

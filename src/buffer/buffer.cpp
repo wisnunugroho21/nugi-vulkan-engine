@@ -231,7 +231,7 @@ namespace nugiEngine {
 
   void EngineBuffer::copyBuffer(VkBuffer srcBuffer, VkDeviceSize size) {
     EngineCommandBuffer commandBuffer{this->engineDevice};
-    commandBuffer.beginSingleTimeCommands();
+    commandBuffer.beginSingleTimeCommand();
 
     VkBufferCopy copyRegion{};
     copyRegion.srcOffset = 0;  // Optional
@@ -239,13 +239,13 @@ namespace nugiEngine {
     copyRegion.size = size;
     vkCmdCopyBuffer(commandBuffer.getCommandBuffer(), srcBuffer, this->buffer, 1, &copyRegion);
 
-    commandBuffer.endCommands();
+    commandBuffer.endCommand();
     commandBuffer.submitCommand(this->engineDevice.getGraphicsQueue());
   }
 
   void EngineBuffer::copyBufferToImage(VkImage image, uint32_t width, uint32_t height, uint32_t layerCount) {
     EngineCommandBuffer commandBuffer{this->engineDevice};
-    commandBuffer.beginSingleTimeCommands();
+    commandBuffer.beginSingleTimeCommand();
 
     VkBufferImageCopy region{};
     region.bufferOffset = 0;
@@ -269,7 +269,7 @@ namespace nugiEngine {
       &region
     );
 
-    commandBuffer.endCommands();
+    commandBuffer.endCommand();
     commandBuffer.submitCommand(this->engineDevice.getGraphicsQueue());
   }
   
