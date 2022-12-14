@@ -240,7 +240,7 @@ namespace nugiEngine {
     vkCmdCopyBuffer(commandBuffer.getCommandBuffer(), srcBuffer, this->buffer, 1, &copyRegion);
 
     commandBuffer.endCommands();
-    commandBuffer.submitCommands(this->engineDevice.getGraphicsQueue());
+    commandBuffer.submitCommand(this->engineDevice.getGraphicsQueue());
   }
 
   void EngineBuffer::copyBufferToImage(VkImage image, uint32_t width, uint32_t height, uint32_t layerCount) {
@@ -270,7 +270,7 @@ namespace nugiEngine {
     );
 
     commandBuffer.endCommands();
-    commandBuffer.submitCommands(this->engineDevice.getGraphicsQueue());
+    commandBuffer.submitCommand(this->engineDevice.getGraphicsQueue());
   }
   
  

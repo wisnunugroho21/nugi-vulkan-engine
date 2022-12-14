@@ -148,7 +148,7 @@ namespace nugiEngine {
     );
 
     commandBuffer.endCommands();
-    commandBuffer.submitCommands(this->appDevice.getGraphicsQueue());
+    commandBuffer.submitCommand(this->appDevice.getGraphicsQueue());
   }
 
   void EngineImage::generateMipMap() {
@@ -256,7 +256,7 @@ namespace nugiEngine {
       1, &barrier);
 
     commandBuffer.endCommands();
-    commandBuffer.submitCommands(this->appDevice.getGraphicsQueue());
+    commandBuffer.submitCommand(this->appDevice.getGraphicsQueue());
   }
   
 } // namespace nugiEngine
