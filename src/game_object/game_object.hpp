@@ -21,6 +21,7 @@ namespace nugiEngine {
 		float cutoff = glm::radians(45.0f);
 		int type = 0;
 		glm::vec3 direction{0.0f};
+		glm::mat4 viewProjection{1.0f};
 	};
 	
 

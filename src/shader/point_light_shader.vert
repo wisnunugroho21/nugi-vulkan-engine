@@ -17,18 +17,19 @@ struct PointLight {
   vec3 direction;
 	float cutoff;
   int type;
+  mat4 viewProjection;
 };
 
 layout(set = 0, binding = 0) uniform GlobalUbo {
-    mat4 projection;
-    mat4 view;
-    mat4 inverseView;
+  mat4 projection;
+  mat4 view;
+  mat4 inverseView;
 } ubo;
 
 layout(set = 0, binding = 1) uniform GlobalLight {
-    vec4 ambientLightColor;
-    PointLight pointLights[10];
-    int numLights;
+  vec4 ambientLightColor;
+  PointLight pointLights[10];
+  int numLights;
 } globalLight;
 
 layout(push_constant) uniform Push {

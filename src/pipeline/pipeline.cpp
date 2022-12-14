@@ -80,36 +80,43 @@ namespace nugiEngine {
 		this->configInfo.bindingDescriptions = Vertex::getVertexBindingDescriptions();
 		this->configInfo.attributeDescriptions = Vertex::getVertexAttributeDescriptions();
 
-		VkShaderModule vertShaderModule;
-		VkShaderModule fragShaderModule;
+		if (vertFilePath != "") {
+			VkShaderModule vertShaderModule;
 
-		auto vertCode = EnginePipeline::readFile(vertFilePath);
-		auto fragCode = EnginePipeline::readFile(fragFilePath);
+			auto vertCode = EnginePipeline::readFile(vertFilePath);
+			EnginePipeline::createShaderModule(this->appDevice, vertCode, &vertShaderModule);
 
-		EnginePipeline::createShaderModule(this->appDevice, vertCode, &vertShaderModule);
-		EnginePipeline::createShaderModule(this->appDevice, fragCode, &fragShaderModule);
+			VkPipelineShaderStageCreateInfo vertexShaderStageInfo{};
+			vertexShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			vertexShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+			vertexShaderStageInfo.module = vertShaderModule;
+			vertexShaderStageInfo.pName = "main";
+			vertexShaderStageInfo.flags = 0;
+			vertexShaderStageInfo.pNext = nullptr;
+			vertexShaderStageInfo.pSpecializationInfo = nullptr;
 
-		VkPipelineShaderStageCreateInfo vertexShaderStageInfo{};
-		vertexShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		vertexShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-		vertexShaderStageInfo.module = vertShaderModule;
-		vertexShaderStageInfo.pName = "main";
-		vertexShaderStageInfo.flags = 0;
-		vertexShaderStageInfo.pNext = nullptr;
-		vertexShaderStageInfo.pSpecializationInfo = nullptr;
+			this->shaderStagesInfo.push_back(vertexShaderStageInfo);
+		}
 
-		VkPipelineShaderStageCreateInfo fragmentShaderStageInfo{};
-		fragmentShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		fragmentShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-		fragmentShaderStageInfo.module = fragShaderModule;
-		fragmentShaderStageInfo.pName = "main";
-		fragmentShaderStageInfo.flags = 0;
-		fragmentShaderStageInfo.pNext = nullptr;
-		fragmentShaderStageInfo.pSpecializationInfo = nullptr;
+		if (fragFilePath != "") {
+			VkShaderModule fragShaderModule;
 
-		this->shaderStagesInfo = { vertexShaderStageInfo, fragmentShaderStageInfo };
+			auto fragCode = EnginePipeline::readFile(fragFilePath);
+			EnginePipeline::createShaderModule(this->appDevice, fragCode, &fragShaderModule);
+
+			VkPipelineShaderStageCreateInfo fragmentShaderStageInfo{};
+			fragmentShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			fragmentShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+			fragmentShaderStageInfo.module = fragShaderModule;
+			fragmentShaderStageInfo.pName = "main";
+			fragmentShaderStageInfo.flags = 0;
+			fragmentShaderStageInfo.pNext = nullptr;
+			fragmentShaderStageInfo.pSpecializationInfo = nullptr;
+
+			this->shaderStagesInfo.push_back(fragmentShaderStageInfo);
+		}
+
 		this->configInfo.shaderStagesInfo = shaderStagesInfo;
-
 		return *this;
 	}
 

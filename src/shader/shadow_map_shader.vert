@@ -1,7 +1,6 @@
 #version 450
 
-layout (location = 0) in vec2 fragOffset;
-layout (location = 0) out vec4 outColor;
+layout(location = 0) in vec3 position;
 
 struct PointLight {
   vec4 position;
@@ -25,16 +24,10 @@ layout(set = 0, binding = 1) uniform GlobalLight {
 } globalLight;
 
 layout(push_constant) uniform Push {
-  vec4 position;
-  vec4 color;
-  float radius;
+  mat4 modelMatrix;
 } push;
 
 void main() {
-  float dis = sqrt(dot(fragOffset, fragOffset));
-  if (dis >= 1) {
-    discard;
-  }
-  
-  outColor = vec4(push.color.xyz, 1.0);
+  vec4 positionWorld = push.modelMatrix * vec4(position, 1.0);
+  gl_Position = ubo.projection * ubo.view * positionWorld;
 }

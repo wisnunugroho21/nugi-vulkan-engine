@@ -29,6 +29,7 @@ namespace nugiEngine {
 
 	void EngineApp::run() {
 		EngineCamera camera{};
+		EngineCamera lightPerspective{};
 
 		auto viewObject = EngineGameObject::createGameObject();
 		viewObject.transform.translation.z = -2.5f;
@@ -63,25 +64,50 @@ namespace nugiEngine {
 
 			auto aspect = this->renderer->getSwapChain()->extentAspectRatio();
 			camera.setPerspectiveProjection(glm::radians(50.0f), aspect, 0.1f, 10.0f);
+			lightPerspective.setPerspectiveProjection(glm::radians(50.0f), aspect, 0.1f, 10.0f);
 
 			if (this->renderer->acquireFrame()) {
 				int imageIndex = this->renderer->getImageIndex();
 				int frameIndex = this->renderer->getFrameIndex();
 
+				GlobalUBO shadowMapUbo{};
 				FrameInfo frameInfo {
 					frameIndex,
 					frameTime,
+					aspect,
 					camera
 				};
 
-				// update
+				for (auto& obj : this->gameObjects) {
+					if (obj->light != nullptr) {
+						lightPerspective.setViewYXZ(obj->transform.translation, obj->transform.rotation);
+
+						shadowMapUbo.projection = lightPerspective.getProjectionMatrix();
+						shadowMapUbo.view = lightPerspective.getViewMatrix();
+						obj->light->viewProjection = lightPerspective.getProjectionMatrix() * lightPerspective.getViewMatrix();
+
+						this->renderer->writeUniformBuffer(frameIndex, &shadowMapUbo);
+
+						auto commandBuffer = this->renderer->beginCommand();
+						this->shadowMapSubRenderer->beginRenderPass(commandBuffer, imageIndex);
+
+						this->shadowMapRenderSystem->render(commandBuffer, *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
+						
+						this->shadowMapSubRenderer->endRenderPass(commandBuffer);
+						this->renderer->endCommand(commandBuffer);
+
+						this->renderer->submitCommand(commandBuffer);
+					}
+				}
+
+				/* // update
 				GlobalUBO ubo{};
 				ubo.projection = camera.getProjectionMatrix();
 				ubo.view = camera.getViewMatrix();
 				ubo.inverseView = camera.getInverseViewMatrix();
 				this->renderer->writeUniformBuffer(frameIndex, &ubo);
 
-				GlobalLight lightingObjects{};
+				GlobalLight lightingObjects{};x
 				this->pointLightRenderSystem->update(frameInfo, this->gameObjects, lightingObjects);
 				this->renderer->writeLightBuffer(frameIndex, &lightingObjects);
 
@@ -96,7 +122,7 @@ namespace nugiEngine {
 				this->swapChainSubRenderer->endRenderPass(commandBuffer);
 				this->renderer->endCommand(commandBuffer);
 
-				this->renderer->submitCommand(commandBuffer);
+				this->renderer->submitCommand(commandBuffer); */
 
 				if (!this->renderer->presentFrame()) {
 					this->recreateSubRendererAndSubsystem();
@@ -151,11 +177,11 @@ namespace nugiEngine {
 		this->gameObjects.push_back(std::move(floor));
 
 		std::vector<glm::vec3> lightColors{
-			{1.f, .1f, .1f},
-			{.1f, .1f, 1.f},
-			{.1f, 1.f, .1f},
-			{1.f, 1.f, .1f},
-			{.1f, 1.f, 1.f},
+			// {1.f, .1f, .1f},
+			// {.1f, .1f, 1.f},
+			// {.1f, 1.f, .1f},
+			// {1.f, 1.f, .1f},
+			// {.1f, 1.f, 1.f},
 			{1.f, 1.f, 1.f}  //
    	};
 

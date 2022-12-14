@@ -13,6 +13,7 @@ struct PointLight {
   vec3 direction;
 	float cutoff;
   int type;
+  mat4 viewProjection;
 };
 
 layout(set = 0, binding = 0) uniform GlobalUbo {
@@ -35,46 +36,46 @@ layout(push_constant) uniform Push {
 } push;
 
 void main() {
-    vec3 diffuseLight = globalLight.ambientLightColor.xyz * globalLight.ambientLightColor.w;
-    vec3 surfaceNormal = normalize(fragNormalWorld);
-    vec3 specularLight = vec3(0.0);
+  vec3 diffuseLight = globalLight.ambientLightColor.xyz * globalLight.ambientLightColor.w;
+  vec3 surfaceNormal = normalize(fragNormalWorld);
+  vec3 specularLight = vec3(0.0);
 
-    vec3 cameraPosWorld = ubo.inverseView[3].xyz;
-    vec3 viewDirection = normalize(cameraPosWorld - fragPosWorld);
+  vec3 cameraPosWorld = ubo.inverseView[3].xyz;
+  vec3 viewDirection = normalize(cameraPosWorld - fragPosWorld);
 
-    for (int i = 0; i < globalLight.numLights; i++) {
-        PointLight light = globalLight.pointLights[i];
+  for (int i = 0; i < globalLight.numLights; i++) {
+    PointLight light = globalLight.pointLights[i];
 
-        vec3 directionToLight = light.position.xyz - fragPosWorld;
-        float attenuation = 1.0 / dot(directionToLight, directionToLight);
-        directionToLight = normalize(directionToLight);
+    vec3 directionToLight = light.position.xyz - fragPosWorld;
+    float attenuation = 1.0 / dot(directionToLight, directionToLight);
+    directionToLight = normalize(directionToLight);
 
-				// spotlight
-				if (light.type == 1) {
-					vec3 directionFromLight = -1.0 * directionToLight;
-					vec3 spotlightDirection = normalize(light.direction);
-					float cosAngLightDirection = dot(directionFromLight, spotlightDirection);
+    // spotlight
+    if (light.type == 1) {
+      vec3 directionFromLight = -1.0 * directionToLight;
+      vec3 spotlightDirection = normalize(light.direction);
+      float cosAngLightDirection = dot(directionFromLight, spotlightDirection);
 
-					if (cosAngLightDirection <= light.cutoff) {
-						continue;
-					}
-				}
-        
-        float cosAngIncidence = max(dot(surfaceNormal, directionToLight), 0);
-        vec3 intensity = light.color.xyz * light.color.w * attenuation;
-
-				// diffuse light
-        diffuseLight += intensity * cosAngIncidence;
-
-        // specular light
-        vec3 halAngle = normalize(directionToLight + viewDirection);
-        float blinnTerm = dot(surfaceNormal, halAngle);
-        blinnTerm = clamp(blinnTerm, 0, 1);
-        blinnTerm = pow(blinnTerm, 256.0); // higher value -> sharper light
-        specularLight += intensity * blinnTerm;
+      if (cosAngLightDirection <= light.cutoff) {
+        continue;
+      }
     }
+    
+    float cosAngIncidence = max(dot(surfaceNormal, directionToLight), 0);
+    vec3 intensity = light.color.xyz * light.color.w * attenuation;
 
-    vec4 finalLightColor = vec4(diffuseLight * fragColor + specularLight * fragColor, 1.0);
+    // diffuse light
+    diffuseLight += intensity * cosAngIncidence;
 
-    outColor = finalLightColor * texture(texSampler, fragTexCoord);
+    // specular light
+    vec3 halAngle = normalize(directionToLight + viewDirection);
+    float blinnTerm = dot(surfaceNormal, halAngle);
+    blinnTerm = clamp(blinnTerm, 0, 1);
+    blinnTerm = pow(blinnTerm, 256.0); // higher value -> sharper light
+    specularLight += intensity * blinnTerm;
+  }
+
+  vec4 finalLightColor = vec4(diffuseLight * fragColor + specularLight * fragColor, 1.0);
+
+  outColor = finalLightColor * texture(texSampler, fragTexCoord);
 }

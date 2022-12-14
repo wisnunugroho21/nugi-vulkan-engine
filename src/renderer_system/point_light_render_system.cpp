@@ -73,6 +73,7 @@ namespace nugiEngine {
 			globalLight.pointLights[lightIndex].type = plo->light->type;
 			globalLight.pointLights[lightIndex].direction = plo->light->direction;
 			globalLight.pointLights[lightIndex].cutoff = plo->light->cutoff;
+			globalLight.pointLights[lightIndex].viewProjection = plo->light->viewProjection;
 
 			lightIndex++;
 		}

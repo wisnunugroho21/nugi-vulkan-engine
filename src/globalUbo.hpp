@@ -14,6 +14,7 @@ namespace nugiEngine {
     alignas(16) glm::vec3 direction{};
     alignas(4) float cutoff = 0;
     alignas(4) int type = 0;
+    glm::mat4 viewProjection;
   };
 
   struct GlobalUBO {
@@ -25,6 +26,6 @@ namespace nugiEngine {
   struct GlobalLight {
     glm::vec4 ambientLightColor{1.0f, 1.0f, 1.0f, 0.02f};
     pointLight pointLights[MAX_LIGHTS];
-    int numLights;
+    alignas(4) int numLights;
   };
 }
