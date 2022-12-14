@@ -53,7 +53,7 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineCommandBuffer::beginSingleTimeCommands() {
+	void EngineCommandBuffer::beginSingleTimeCommand() {
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -63,7 +63,7 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineCommandBuffer::beginReccuringCommands() {
+	void EngineCommandBuffer::beginReccuringCommand() {
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -72,7 +72,7 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineCommandBuffer::endCommands() {
+	void EngineCommandBuffer::endCommand() {
 		if (vkEndCommandBuffer(this->commandBuffer) != VK_SUCCESS) {
 			std::cerr << "Failed to end recording command buffer" << '\n';
 		}

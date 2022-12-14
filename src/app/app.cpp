@@ -85,9 +85,8 @@ namespace nugiEngine {
 				this->pointLightRenderSystem->update(frameInfo, this->gameObjects, lightingObjects);
 				this->renderer->writeLightBuffer(frameIndex, &lightingObjects);
 
-				auto commandBuffer = this->renderer->beginCommand();
-
 				// render
+				auto commandBuffer = this->renderer->beginCommand();
 				this->swapChainSubRenderer->beginRenderPass(commandBuffer, imageIndex);
 
 				this->simpleRenderSystem->render(commandBuffer, *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
@@ -95,6 +94,8 @@ namespace nugiEngine {
 				this->pointLightRenderSystem->render(commandBuffer, *this->renderer->getGlobalDescriptorSets(frameIndex), frameInfo, this->gameObjects);
 				
 				this->swapChainSubRenderer->endRenderPass(commandBuffer);
+				this->renderer->endCommand(commandBuffer);
+
 				this->renderer->submitCommand(commandBuffer);
 
 				if (!this->renderer->presentFrame()) {
