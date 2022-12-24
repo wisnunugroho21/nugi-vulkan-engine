@@ -86,10 +86,7 @@ namespace nugiEngine {
     }
   }
 
-  void EngineImage::transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout) {
-    EngineCommandBuffer commandBuffer{this->appDevice};
-    commandBuffer.beginSingleTimeCommand();
-
+  void EngineImage::transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout, std::shared_ptr<EngineCommandBuffer> commandBuffer) {
     VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
     barrier.oldLayout = oldLayout;
@@ -132,12 +129,17 @@ namespace nugiEngine {
       sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
       destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
       
+    } else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_GENERAL) {
+      barrier.srcAccessMask = 0;
+      sourceStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+      destinationStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+      
     } else {
       throw std::invalid_argument("unsupported layout transition!");
     }
 
     vkCmdPipelineBarrier(
-      commandBuffer.getCommandBuffer(), 
+      commandBuffer->getCommandBuffer(), 
       sourceStage, 
       destinationStage,
       0,
@@ -146,9 +148,16 @@ namespace nugiEngine {
       1, 
       &barrier
     );
+  }
 
-    commandBuffer.endCommand();
-    commandBuffer.submitCommand(this->appDevice.getGraphicsQueue());
+  void EngineImage::transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout) {
+    auto commandBuffer = std::make_shared<EngineCommandBuffer>(this->appDevice);
+    commandBuffer->beginSingleTimeCommand();
+
+    this->transitionImageLayout(oldLayout, newLayout, commandBuffer);
+
+    commandBuffer->endCommand();
+    commandBuffer->submitCommand(this->appDevice.getGraphicsQueue());
   }
 
   void EngineImage::generateMipMap() {
@@ -257,6 +266,28 @@ namespace nugiEngine {
 
     commandBuffer.endCommand();
     commandBuffer.submitCommand(this->appDevice.getGraphicsQueue());
+  }
+
+  void EngineImage::copy(std::shared_ptr<EngineImage> srcImage) {
+    auto commandBuffer = std::make_shared<EngineCommandBuffer>(this->appDevice);
+    commandBuffer->beginSingleTimeCommand();
+
+    this->copy(srcImage, commandBuffer);
+
+    commandBuffer->endCommand();
+    commandBuffer->submitCommand(this->appDevice.getGraphicsQueue());
+  }
+
+  void EngineImage::copy(std::shared_ptr<EngineImage> srcImage, std::shared_ptr<EngineCommandBuffer> commandBuffer) {
+    VkImageCopy copy_region{};
+		copy_region.srcSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
+		copy_region.srcOffset      = {0, 0, 0};
+		copy_region.dstSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
+		copy_region.dstOffset      = {0, 0, 0};
+		copy_region.extent         = {this->width, this->height, 1};
+    
+		vkCmdCopyImage(commandBuffer->getCommandBuffer(), srcImage->getImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+		  this->image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy_region);
   }
   
 } // namespace nugiEngine

@@ -78,6 +78,8 @@ namespace nugiEngine {
 				.setMaxSets(100 * EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
 				.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
 				.addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 100)
+				.addPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 10)
+				.addPoolSize(VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, 100)
 				.build();
 
 		this->globalDescSetLayout = 

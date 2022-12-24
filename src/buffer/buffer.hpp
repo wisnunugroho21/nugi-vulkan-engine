@@ -43,15 +43,18 @@ class EngineBuffer {
   VkBufferUsageFlags getUsageFlags() const { return usageFlags; }
   VkMemoryPropertyFlags getMemoryPropertyFlags() const { return memoryPropertyFlags; }
   VkDeviceSize getBufferSize() const { return bufferSize; }
+  VkDeviceAddress getDeviceAddress() const { return this->deviceAddress; }
  
  private:
   static VkDeviceSize getAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment);
  
   EngineDevice& engineDevice;
 
-  void* mapped = nullptr;
   VkBuffer buffer = VK_NULL_HANDLE;
   VkDeviceMemory memory = VK_NULL_HANDLE;
+  VkDeviceAddress deviceAddress;
+
+  void* mapped = nullptr;
  
   VkDeviceSize bufferSize;
   uint32_t instanceCount;

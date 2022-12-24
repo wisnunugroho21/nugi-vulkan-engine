@@ -26,6 +26,7 @@ namespace nugiEngine {
 	EngineModel::EngineModel(EngineDevice &device, const ModelData &datas) : engineDevice{device} {
 		this->createVertexBuffers(datas.vertices);
 		this->createIndexBuffer(datas.indices);
+		this->createAABBBuffer(datas.maxAABB, datas.minAABB);
 	}
 
 	EngineModel::~EngineModel() {}
@@ -54,12 +55,13 @@ namespace nugiEngine {
 
 		stagingBuffer.map();
 		stagingBuffer.writeToBuffer((void *) vertices.data());
+		stagingBuffer.unmap();
 
-		this->vertexBuffer = std::make_unique<EngineBuffer>(
+		this->vertexBuffer = std::make_shared<EngineBuffer>(
 			this->engineDevice,
 			vertexSize,
 			this->vertextCount,
-			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 		);
 
@@ -87,16 +89,54 @@ namespace nugiEngine {
 
 		stagingBuffer.map();
 		stagingBuffer.writeToBuffer((void *) indices.data());
+		stagingBuffer.unmap();
 
-		this->indexBuffer = std::make_unique<EngineBuffer>(
+		this->indexBuffer = std::make_shared<EngineBuffer>(
 			this->engineDevice,
 			indexSize,
 			this->indexCount,
-			VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 		);
 
 		this->indexBuffer->copyBuffer(stagingBuffer.getBuffer(), bufferSize);
+	}
+
+	void EngineModel::createAABBBuffer(glm::vec3 maxPos, glm::vec3 minPos) {
+		VkAabbPositionsKHR aabb{};
+		aabb.maxX = maxPos.x;
+		aabb.maxY = maxPos.y;
+		aabb.maxZ = maxPos.z;
+		aabb.minX = minPos.x;
+		aabb.minY = minPos.y;
+		aabb.minZ = minPos.z;
+
+		uint32_t aabbCount = 1;
+
+		VkDeviceSize bufferSize = sizeof(VkAabbPositionsKHR) * aabbCount;
+		uint32_t aabbSize = sizeof(glm::vec3);
+
+		EngineBuffer stagingBuffer {
+			this->engineDevice,
+			aabbSize,
+			aabbCount,
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+		};
+
+		stagingBuffer.map();
+		stagingBuffer.writeToBuffer((void *) &aabb);
+		stagingBuffer.unmap();
+
+		this->aabbBuffer = std::make_shared<EngineBuffer>(
+			this->engineDevice,
+			aabbSize,
+			aabbCount,
+			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+		);
+
+		this->aabbBuffer->copyBuffer(stagingBuffer.getBuffer(), bufferSize);
 	}
 
 	void EngineModel::bind(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
@@ -204,7 +244,59 @@ namespace nugiEngine {
 				this->indices.push_back(uniqueVertices[vertex]);
 			}
 		}
+
+		this->maxAABB = this->findMaximumNumber(vertices);
+		this->minAABB = this->findMinimumNumber(vertices);
 	}
-    
+
+	glm::vec3 ModelData::findMaximumNumber(std::vector<Vertex> vertices) {
+		float maxX = 0;
+		for (auto &&vectex : vertices) {
+			if (vectex.position.x > maxX) {
+				maxX = vectex.position.x;
+			}
+		}
+
+		float maxY = 0;
+		for (auto &&vectex : vertices) {
+			if (vectex.position.y > maxY) {
+				maxY = vectex.position.y;
+			}
+		}
+
+		float maxZ = 0;
+		for (auto &&vectex : vertices) {
+			if (vectex.position.z > maxZ) {
+				maxZ = vectex.position.z;
+			}
+		}
+
+		return glm::vec3 { maxX, maxY, maxZ };
+	}
+
+	glm::vec3 ModelData::findMinimumNumber(std::vector<Vertex> vertices) {
+		float minX = 99;
+		for (auto &&vectex : vertices) {
+			if (vectex.position.x < minX) {
+				minX = vectex.position.x;
+			}
+		}
+
+		float minY = 99;
+		for (auto &&vectex : vertices) {
+			if (vectex.position.y < minY) {
+				minY = vectex.position.y;
+			}
+		}
+
+		float minZ = 99;
+		for (auto &&vectex : vertices) {
+			if (vectex.position.z < minZ) {
+				minZ = vectex.position.z;
+			}
+		}
+
+		return glm::vec3 { minX, minY, minZ };
+	}
 } // namespace nugiEngine
 

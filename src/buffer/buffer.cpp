@@ -226,7 +226,14 @@ namespace nugiEngine {
       throw std::runtime_error("failed to allocate vertex buffer memory!");
     }
 
-    vkBindBufferMemory(this->engineDevice.getLogicalDevice(), this->buffer, this->memory, 0);
+    if (vkBindBufferMemory(this->engineDevice.getLogicalDevice(), this->buffer, this->memory, 0) != VK_SUCCESS) {
+      throw std::runtime_error("failed to bind buffer memory!");
+    }
+
+    VkBufferDeviceAddressInfo bufferDeviceAddressInfo{};
+    bufferDeviceAddressInfo.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
+    bufferDeviceAddressInfo.buffer = this->buffer;
+    this->deviceAddress = vkGetBufferDeviceAddress(this->engineDevice.getLogicalDevice(), &bufferDeviceAddressInfo);
   }
 
   void EngineBuffer::copyBuffer(VkBuffer srcBuffer, VkDeviceSize size) {

@@ -90,6 +90,7 @@ class EngineDescriptorWriter {
  
   EngineDescriptorWriter &writeBuffer(uint32_t binding, VkDescriptorBufferInfo *bufferInfo);
   EngineDescriptorWriter &writeImage(uint32_t binding, VkDescriptorImageInfo *imageInfo);
+  EngineDescriptorWriter &writeAccelStruct(uint32_t binding, std::vector<VkAccelerationStructureKHR> accelStructs);
  
   bool build(VkDescriptorSet *set);
   void overwrite(VkDescriptorSet *set);

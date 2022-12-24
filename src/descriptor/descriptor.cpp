@@ -173,6 +173,41 @@ namespace nugiEngine {
     writes.push_back(write);
     return *this;
   }
+
+  EngineDescriptorWriter &EngineDescriptorWriter::writeAccelStruct(uint32_t binding, std::vector<VkAccelerationStructureKHR> accelStructs) {
+    assert(setLayout.bindings.count(binding) == 1 && "Layout does not contain specified binding");
+
+    // Setup the descriptor for binding our top level acceleration structure to the ray tracing shaders
+    VkWriteDescriptorSetAccelerationStructureKHR descriptorAccelStructInfo{};
+    descriptorAccelStructInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+    descriptorAccelStructInfo.accelerationStructureCount = static_cast<uint32_t>(accelStructs.size());
+    descriptorAccelStructInfo.pAccelerationStructures = accelStructs.data();
+  
+    auto &bindingDescription = setLayout.bindings[binding];
+  
+    assert(bindingDescription.descriptorCount == 1 &&
+      "Binding single descriptor info, but binding expects multiple");
+  
+    VkWriteDescriptorSet write{};
+    write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write.descriptorType = bindingDescription.descriptorType;
+    write.dstBinding = binding;
+    write.descriptorCount = 1;
+    write.pNext = &descriptorAccelStructInfo;
+  
+    writes.push_back(write);
+    return *this;
+  }
+  
+  bool EngineDescriptorWriter::build(VkDescriptorSet *set) {
+    bool success = this->pool.allocateDescriptor(this->setLayout.getDescriptorSetLayout(), set);
+    if (!success) {
+      return false;
+    }
+
+    this->overwrite(set);
+    return true;
+  }
   
   bool EngineDescriptorWriter::build(VkDescriptorSet *set) {
     bool success = this->pool.allocateDescriptor(this->setLayout.getDescriptorSetLayout(), set);

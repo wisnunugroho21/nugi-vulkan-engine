@@ -33,7 +33,14 @@ namespace nugiEngine
 		std::vector<Vertex> vertices{};
 		std::vector<uint32_t> indices{};
 
+		glm::vec3 minAABB{0.f};
+		glm::vec3 maxAABB{0.f};
+
 		void loadModel(const std::string &filePath);
+
+		private:
+			glm::vec3 findMaximumNumber(std::vector<Vertex> vertices);
+			glm::vec3 findMinimumNumber(std::vector<Vertex> vertices);
 	};
 
 	class EngineModel
@@ -45,6 +52,12 @@ namespace nugiEngine
 		EngineModel(const EngineModel&) = delete;
 		EngineModel& operator = (const EngineModel&) = delete;
 
+		std::shared_ptr<EngineBuffer> getVertexBuffer() const { return this->vertexBuffer; }
+		std::shared_ptr<EngineBuffer> getIndexBuffer() const { return this->indexBuffer; }
+		std::shared_ptr<EngineBuffer> getAABBBuffer() const { return this->aabbBuffer; }
+		uint32_t getVertextCount() const { return this->vertextCount; }
+		uint32_t getIndexCount() const { return this->indexCount; }
+
 		static std::unique_ptr<EngineModel> createModelFromFile(EngineDevice &device, const std::string &filePath);
 
 		void bind(std::shared_ptr<EngineCommandBuffer> commandBuffer);
@@ -53,15 +66,19 @@ namespace nugiEngine
 	private:
 		EngineDevice &engineDevice;
 		
-		std::unique_ptr<EngineBuffer> vertexBuffer;
+		std::shared_ptr<EngineBuffer> vertexBuffer;
 		uint32_t vertextCount;
 
-		std::unique_ptr<EngineBuffer> indexBuffer;
+		std::shared_ptr<EngineBuffer> indexBuffer;
 		uint32_t indexCount;
 
+		std::shared_ptr<EngineBuffer> aabbBuffer;
+
 		bool hasIndexBuffer = false;
+		uint64_t deviceAddress = 0;
 
 		void createVertexBuffers(const std::vector<Vertex> &vertices);
 		void createIndexBuffer(const std::vector<uint32_t> &indices);
+		void createAABBBuffer(glm::vec3 maxPos, glm::vec3 minPos);
 	};
 } // namespace nugiEngine

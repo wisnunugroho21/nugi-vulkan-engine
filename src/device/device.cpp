@@ -56,6 +56,7 @@ namespace nugiEngine {
     this->pickPhysicalDevice();
     this->msaaSamples = this->getMaxUsableFlagsCount();
     this->createLogicalDevice();
+    this->initRayTracing();
     this->createCommandPool();
   }
 
@@ -136,6 +137,8 @@ namespace nugiEngine {
 
     vkGetPhysicalDeviceProperties(this->physicalDevice, &this->properties);
     std::cout << "physical device: " << this->properties.deviceName << std::endl;
+
+    this->rayTracingProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR;
   }
 
   void EngineDevice::createLogicalDevice() {
@@ -154,9 +157,20 @@ namespace nugiEngine {
       queueCreateInfos.push_back(queueCreateInfo);
     }
 
-    VkPhysicalDeviceFeatures deviceFeatures = {};
+    VkPhysicalDeviceFeatures deviceFeatures{};
     deviceFeatures.samplerAnisotropy = VK_TRUE;
     deviceFeatures.sampleRateShading = VK_TRUE;
+
+    VkPhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddres{};
+    bufferDeviceAddres.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
+
+    VkPhysicalDeviceAccelerationStructureFeaturesKHR accelFeatures{};
+    accelFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
+    accelFeatures.pNext = &bufferDeviceAddres;
+
+    VkPhysicalDeviceRayTracingPipelineFeaturesKHR rayTracingPipelineFeature{};
+    rayTracingPipelineFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
+    rayTracingPipelineFeature.pNext = &accelFeatures;
 
     VkDeviceCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -167,6 +181,8 @@ namespace nugiEngine {
     createInfo.pEnabledFeatures = &deviceFeatures;
     createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
     createInfo.ppEnabledExtensionNames = deviceExtensions.data();
+    
+    createInfo.pNext = &rayTracingPipelineFeature;
 
     // might not really be necessary anymore because device specific validation layers
     // have been deprecated
@@ -201,6 +217,12 @@ namespace nugiEngine {
 
   void EngineDevice::createSurface() { 
     this->window.createWindowSurface(this->instance, &this->surface); 
+  }
+
+  void EngineDevice::initRayTracing() {
+    VkPhysicalDeviceProperties2 prop2{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2};
+    prop2.pNext = &this->rayTracingProperties;
+    vkGetPhysicalDeviceProperties2(this->physicalDevice, &prop2);
   }
 
   bool EngineDevice::isDeviceSuitable(VkPhysicalDevice device) {

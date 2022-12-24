@@ -7,6 +7,7 @@
 namespace nugiEngine {
   struct FrameInfo {
     int frameIndex;
+    int imageIndex;
     float frameTime;
     EngineCamera &camera;
   };
