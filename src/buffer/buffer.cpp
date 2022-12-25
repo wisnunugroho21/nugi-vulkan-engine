@@ -217,10 +217,15 @@ namespace nugiEngine {
     VkMemoryRequirements memRequirements;
     vkGetBufferMemoryRequirements(this->engineDevice.getLogicalDevice(), this->buffer, &memRequirements);
 
+    VkMemoryAllocateFlagsInfo allocateFlagInfo{};
+    allocateFlagInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
+    allocateFlagInfo.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT;
+
     VkMemoryAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize = memRequirements.size;
     allocInfo.memoryTypeIndex = this->engineDevice.findMemoryType(memRequirements.memoryTypeBits, properties);
+    allocInfo.pNext = &allocateFlagInfo;
 
     if (vkAllocateMemory(this->engineDevice.getLogicalDevice(), &allocInfo, nullptr, &this->memory) != VK_SUCCESS) {
       throw std::runtime_error("failed to allocate vertex buffer memory!");
