@@ -9,7 +9,7 @@ namespace nugiEngine {
   class EngineTopLevelAccelerationStructure
   {
     public:
-      EngineTopLevelAccelerationStructure(EngineDevice& appDevice, EngineDeviceProcedures& deviceProcedure, std::vector<EngineBottomLevelAccelerationStructure> bottomLevelAccelStructs);
+      EngineTopLevelAccelerationStructure(EngineDevice& appDevice, EngineDeviceProcedures& deviceProcedure, EngineBottomLevelAccelerationStructure bottomLevelAccelStruct);
 
       VkAccelerationStructureKHR getAccelStruct() const { return this->accelStruct; }
       VkDeviceAddress getAddress() const { return this->address; }
@@ -22,7 +22,7 @@ namespace nugiEngine {
       VkDeviceAddress address;
       std::shared_ptr<EngineBuffer> buffer;
 
-      void createTopLevelAccelerationStructure(std::vector<EngineBottomLevelAccelerationStructure> bottomLevelAccelStructs);
+      void createTopLevelAccelerationStructure(EngineBottomLevelAccelerationStructure bottomLevelAccelStruct);
   };
   
 } // namespace nugiEngine

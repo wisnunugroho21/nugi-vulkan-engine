@@ -116,7 +116,7 @@ namespace nugiEngine {
 		uint32_t aabbCount = 1;
 
 		VkDeviceSize bufferSize = sizeof(VkAabbPositionsKHR) * aabbCount;
-		uint32_t aabbSize = sizeof(glm::vec3);
+		uint32_t aabbSize = sizeof(VkAabbPositionsKHR);
 
 		EngineBuffer stagingBuffer {
 			this->engineDevice,

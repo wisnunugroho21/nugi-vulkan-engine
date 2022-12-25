@@ -168,10 +168,12 @@ namespace nugiEngine {
     VkPhysicalDeviceAccelerationStructureFeaturesKHR accelFeatures{};
     accelFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
     accelFeatures.pNext = &bufferDeviceAddres;
+    accelFeatures.accelerationStructure = VK_TRUE;
 
     VkPhysicalDeviceRayTracingPipelineFeaturesKHR rayTracingPipelineFeature{};
     rayTracingPipelineFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
     rayTracingPipelineFeature.pNext = &accelFeatures;
+    rayTracingPipelineFeature.rayTracingPipeline = VK_TRUE;
 
     VkDeviceCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;

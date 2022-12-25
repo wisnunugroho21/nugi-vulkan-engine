@@ -2,55 +2,49 @@
 
 namespace nugiEngine {
 	EngineTopLevelAccelerationStructure::EngineTopLevelAccelerationStructure(
-		EngineDevice& appDevice, EngineDeviceProcedures& deviceProcedure, std::vector<EngineBottomLevelAccelerationStructure> bottomLevelAccelStructs)
+		EngineDevice& appDevice, EngineDeviceProcedures& deviceProcedure, EngineBottomLevelAccelerationStructure bottomLevelAccelStruct)
 		: appDevice{appDevice}, deviceProcedure{deviceProcedure}
 	{
-		this->createTopLevelAccelerationStructure(bottomLevelAccelStructs);
+		this->createTopLevelAccelerationStructure(bottomLevelAccelStruct);
 	}
 
-  void EngineTopLevelAccelerationStructure::createTopLevelAccelerationStructure(std::vector<EngineBottomLevelAccelerationStructure> bottomLevelAccelStructs) {
-		std::vector<VkAccelerationStructureGeometryKHR> geometries;
+  void EngineTopLevelAccelerationStructure::createTopLevelAccelerationStructure(EngineBottomLevelAccelerationStructure bottomLevelAccelStruct) {
+		VkAccelerationStructureInstanceKHR instance{};
+		instance.transform = {};
+		instance.instanceCustomIndex = 0;
+		instance.mask = 0xFF;
+		instance.instanceShaderBindingTableRecordOffset = 0;
+		instance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
+		instance.accelerationStructureReference = bottomLevelAccelStruct.getAddress();
 
-		for (auto &&bottomStruc : bottomLevelAccelStructs) {
-			VkAccelerationStructureInstanceKHR instance{};
-			instance.transform = {};
-			instance.instanceCustomIndex = 0;
-			instance.mask = 0xFF;
-			instance.instanceShaderBindingTableRecordOffset = 0;
-			instance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
-			instance.accelerationStructureReference = bottomStruc.getAddress();
+		EngineBuffer instancesBuffer{
+			this->appDevice,
+			sizeof(VkAccelerationStructureInstanceKHR),
+			static_cast<uint32_t>(1),
+			VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			1, true
+		};
 
-			EngineBuffer instancesBuffer{
-				this->appDevice,
-				sizeof(VkAccelerationStructureInstanceKHR),
-				static_cast<uint32_t>(1),
-				VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
-				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-				1, true
-			};
+		VkDeviceOrHostAddressConstKHR instanceDataDeviceAddress{};
+		instanceDataDeviceAddress.deviceAddress = instancesBuffer.getDeviceAddress();
 
-			VkDeviceOrHostAddressConstKHR instanceDataDeviceAddress{};
-			instanceDataDeviceAddress.deviceAddress = instancesBuffer.getDeviceAddress();
+		VkAccelerationStructureGeometryKHR accelerationStructureGeometry{};
+		accelerationStructureGeometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
+		accelerationStructureGeometry.geometryType = VK_GEOMETRY_TYPE_INSTANCES_KHR;
+		accelerationStructureGeometry.flags = VK_GEOMETRY_OPAQUE_BIT_KHR;
+		accelerationStructureGeometry.geometry.instances.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR;
+		accelerationStructureGeometry.geometry.instances.arrayOfPointers = VK_FALSE;
+		accelerationStructureGeometry.geometry.instances.data = instanceDataDeviceAddress;
 
-			VkAccelerationStructureGeometryKHR accelerationStructureGeometry{};
-			accelerationStructureGeometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
-			accelerationStructureGeometry.geometryType = VK_GEOMETRY_TYPE_INSTANCES_KHR;
-			accelerationStructureGeometry.flags = VK_GEOMETRY_OPAQUE_BIT_KHR;
-			accelerationStructureGeometry.geometry.instances.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR;
-			accelerationStructureGeometry.geometry.instances.arrayOfPointers = VK_FALSE;
-			accelerationStructureGeometry.geometry.instances.data = instanceDataDeviceAddress;
-
-			geometries.emplace_back(accelerationStructureGeometry);
-		}
-
-    uint32_t primitiveCount = static_cast<uint32_t>(geometries.size());
+    uint32_t primitiveCount = 1;
 
     VkAccelerationStructureBuildGeometryInfoKHR accelerationStructureBuildGeometryInfo{};
 		accelerationStructureBuildGeometryInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
 		accelerationStructureBuildGeometryInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
 		accelerationStructureBuildGeometryInfo.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
-		accelerationStructureBuildGeometryInfo.geometryCount = static_cast<uint32_t>(geometries.size());
-		accelerationStructureBuildGeometryInfo.pGeometries = geometries.data();
+		accelerationStructureBuildGeometryInfo.geometryCount = 1;
+		accelerationStructureBuildGeometryInfo.pGeometries = &accelerationStructureGeometry;
 
     VkAccelerationStructureBuildSizesInfoKHR accelerationStructureBuildSizesInfo{};
 		accelerationStructureBuildSizesInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
@@ -94,8 +88,8 @@ namespace nugiEngine {
 		accelerationBuildGeometryInfo.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
 		accelerationBuildGeometryInfo.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
 		accelerationBuildGeometryInfo.dstAccelerationStructure = this->accelStruct;
-		accelerationBuildGeometryInfo.geometryCount = static_cast<uint32_t>(geometries.size());
-		accelerationBuildGeometryInfo.pGeometries = geometries.data();
+		accelerationBuildGeometryInfo.geometryCount = 1;
+		accelerationBuildGeometryInfo.pGeometries = &accelerationStructureGeometry;
 		accelerationBuildGeometryInfo.scratchData.deviceAddress = stratchBuffer.getDeviceAddress();
 
 		VkAccelerationStructureBuildRangeInfoKHR accelerationStructureBuildRangeInfo{};

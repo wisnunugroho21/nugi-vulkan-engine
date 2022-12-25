@@ -23,15 +23,15 @@ namespace nugiEngine {
 		accelerationStructureGeometry.geometry.triangles.transformData.hostAddress = nullptr;
 		accelerationStructureGeometry.geometry.triangles.transformData = {};
 
-		VkAccelerationStructureGeometryKHR aabbGeometry = {};
+		/* VkAccelerationStructureGeometryKHR aabbGeometry = {};
 		aabbGeometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
 		aabbGeometry.flags = VK_GEOMETRY_OPAQUE_BIT_KHR;
 		aabbGeometry.geometryType = VK_GEOMETRY_TYPE_AABBS_KHR;
 		aabbGeometry.geometry.aabbs.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_AABBS_DATA_KHR;
 		aabbGeometry.geometry.aabbs.data.deviceAddress = model->getAABBBuffer()->getDeviceAddress();
-		aabbGeometry.geometry.aabbs.stride = sizeof(VkAabbPositionsKHR);
+		aabbGeometry.geometry.aabbs.stride = sizeof(VkAabbPositionsKHR); */
 
-		std::vector<VkAccelerationStructureGeometryKHR> geometries{ accelerationStructureGeometry, aabbGeometry };
+		std::vector<VkAccelerationStructureGeometryKHR> geometries{ accelerationStructureGeometry };
     uint32_t primitiveCount = static_cast<uint32_t>(geometries.size());
 
     // Get size info
