@@ -195,7 +195,8 @@ namespace nugiEngine {
 			handleSizeAligned,
 			group_count,
 			VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			1, true
     );
 
     this->missgenSBTBuffer = std::make_shared<EngineBuffer>(
@@ -203,7 +204,8 @@ namespace nugiEngine {
 			handleSizeAligned,
 			group_count,
 			VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			1, true
     );
     
     this->hitgenSBTBuffer = std::make_shared<EngineBuffer>(
@@ -211,7 +213,8 @@ namespace nugiEngine {
 			handleSizeAligned,
 			group_count,
 			VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			1, true
     );
 
     // Copy the pipeline's shader handles into a host buffer

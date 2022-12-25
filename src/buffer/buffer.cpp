@@ -35,7 +35,8 @@ namespace nugiEngine {
       uint32_t instanceCount,
       VkBufferUsageFlags usageFlags,
       VkMemoryPropertyFlags memoryPropertyFlags,
-      VkDeviceSize minOffsetAlignment
+      VkDeviceSize minOffsetAlignment,
+      bool isGetAddress
     )
       : engineDevice{device},
         instanceSize{instanceSize},
@@ -47,6 +48,10 @@ namespace nugiEngine {
     this->bufferSize = alignmentSize * instanceCount;
 
     this->createBuffer(bufferSize, usageFlags, memoryPropertyFlags);
+
+    if (isGetAddress) {
+      this->getAddress();
+    }
   }
   
   EngineBuffer::~EngineBuffer() {
@@ -234,7 +239,9 @@ namespace nugiEngine {
     if (vkBindBufferMemory(this->engineDevice.getLogicalDevice(), this->buffer, this->memory, 0) != VK_SUCCESS) {
       throw std::runtime_error("failed to bind buffer memory!");
     }
+  }
 
+  void EngineBuffer::getAddress() {
     VkBufferDeviceAddressInfo bufferDeviceAddressInfo{};
     bufferDeviceAddressInfo.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
     bufferDeviceAddressInfo.buffer = this->buffer;

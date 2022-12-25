@@ -25,7 +25,8 @@ namespace nugiEngine {
 				sizeof(VkAccelerationStructureInstanceKHR),
 				static_cast<uint32_t>(1),
 				VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
-				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+				1, true
 			};
 
 			VkDeviceOrHostAddressConstKHR instanceDataDeviceAddress{};
@@ -66,7 +67,8 @@ namespace nugiEngine {
 			accelerationStructureBuildSizesInfo.accelerationStructureSize,
 			static_cast<uint32_t>(1),
 			VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			1, true
     );
 
     VkAccelerationStructureCreateInfoKHR accelerationStructureCreateInfo{};
@@ -82,7 +84,8 @@ namespace nugiEngine {
 			accelerationStructureBuildSizesInfo.buildScratchSize,
 			static_cast<uint32_t>(1),
 			VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			1, true
 		};
 
 		VkAccelerationStructureBuildGeometryInfoKHR accelerationBuildGeometryInfo{};

@@ -12,13 +12,16 @@ class EngineBuffer {
       uint32_t instanceCount,
       VkBufferUsageFlags usageFlags,
       VkMemoryPropertyFlags memoryPropertyFlags,
-      VkDeviceSize minOffsetAlignment = 1);
+      VkDeviceSize minOffsetAlignment = 1,
+      bool isGetAddress = false);
   ~EngineBuffer();
  
   EngineBuffer(const EngineBuffer&) = delete;
   EngineBuffer& operator=(const EngineBuffer&) = delete;
 
   void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
+  void getAddress();
+  
   void copyBuffer(VkBuffer srcBuffer, VkDeviceSize size);
   void copyBufferToImage(VkImage image, uint32_t width, uint32_t height, uint32_t layerCount);
  
