@@ -12,9 +12,9 @@
 #include <string>
 
 namespace nugiEngine {
-	EngineRayTracingRenderSystem::EngineRayTracingRenderSystem(EngineDevice& device, EngineDescriptorPool &descriptorPool, 
-		VkDescriptorSetLayout globalDescSetLayout, std::vector<VkAccelerationStructureKHR> topLevelAccelStructs, int imageCount, int width, int height) 
-		: appDevice{device}, width{width}, height{height}
+	EngineRayTracingRenderSystem::EngineRayTracingRenderSystem(EngineDevice& device, EngineDeviceProcedures &deviceProcedure, EngineDescriptorPool &descriptorPool, 
+		VkDescriptorSetLayout globalDescSetLayout, std::vector<EngineTopLevelAccelerationStructure> topLevelAccelStructs, size_t imageCount, uint32_t width, uint32_t height) 
+		: appDevice{device}, deviceProcedure{deviceProcedure}, width{width}, height{height}
 	{
 		this->createStorageImage(imageCount);
 		this->createDescriptor(descriptorPool, imageCount, topLevelAccelStructs);
@@ -26,7 +26,7 @@ namespace nugiEngine {
 		vkDestroyPipelineLayout(this->appDevice.getLogicalDevice(), this->pipelineLayout, nullptr);
 	}
 
-  void EngineRayTracingRenderSystem::createStorageImage(int imageCount) {
+  void EngineRayTracingRenderSystem::createStorageImage(size_t imageCount) {
     this->storageImages.resize(imageCount);
     for (auto &&image : this->storageImages) {
       image = std::make_shared<EngineImage>(this->appDevice, this->width, this->height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, 
@@ -37,12 +37,17 @@ namespace nugiEngine {
     }
   }
 
-  void EngineRayTracingRenderSystem::createDescriptor(EngineDescriptorPool &descriptorPool, int imageCount, std::vector<VkAccelerationStructureKHR> topLevelAccelStructs) {
+  void EngineRayTracingRenderSystem::createDescriptor(EngineDescriptorPool &descriptorPool, size_t imageCount, std::vector<EngineTopLevelAccelerationStructure> topLevelAccelStructs) {
     this->rayTracingDescSetLayout = 
 			EngineDescriptorSetLayout::Builder(this->appDevice)
 				.addBinding(0, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, VK_SHADER_STAGE_RAYGEN_BIT_KHR)
         .addBinding(1, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_RAYGEN_BIT_KHR)
 				.build();
+
+		std::vector<VkAccelerationStructureKHR> accelStructs;
+		for (auto &&topStruct : topLevelAccelStructs) {
+			accelStructs.emplace_back(topStruct.getAccelStruct());
+		}
 
     this->rayTracingDescSet.resize(imageCount);
 		for (int i = 0; i < imageCount; i++) {
@@ -53,7 +58,7 @@ namespace nugiEngine {
       imageDescriptorInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
 			EngineDescriptorWriter(*this->rayTracingDescSetLayout, descriptorPool)
-				.writeAccelStruct(0, topLevelAccelStructs)
+				.writeAccelStruct(0, accelStructs)
 				.writeImage(1, &imageDescriptorInfo)
 				.build(this->rayTracingDescSet[i].get());
 		}
@@ -75,7 +80,7 @@ namespace nugiEngine {
 	void EngineRayTracingRenderSystem::createPipeline() {
 		assert(this->pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
-		this->pipeline = EngineRayTracingPipeline::Builder(this->appDevice, this->pipelineLayout)
+		this->pipeline = EngineRayTracingPipeline::Builder(this->appDevice, this->deviceProcedure, this->pipelineLayout)
 			.setDefault("shader/simple_raytrace_shader.rgen.spv", "shader/simple_raytrace_shader.rmiss.spv", "shader/simple_raytrace_shader.rchit.spv")
 			.build();
 	}
@@ -115,7 +120,7 @@ namespace nugiEngine {
 
 		VkStridedDeviceAddressRegionKHR callableSbtEntry{};
 
-		vkCmdTraceRaysKHR(
+		this->deviceProcedure.vkCmdTraceRaysKHR(
 			commandBuffer->getCommandBuffer(),
 			&raygenSBTEntry,
 			&missSbtEntry,

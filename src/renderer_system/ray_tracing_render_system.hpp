@@ -8,6 +8,8 @@
 #include "../frame_info.hpp"
 #include "../buffer/buffer.hpp"
 #include "../descriptor/descriptor.hpp"
+#include "../acceleration_structure/top_level_acceleration_structure.hpp"
+#include "../device/device_procedures.hpp"
 #include "../globalUbo.hpp"
 
 #include <memory>
@@ -16,8 +18,8 @@
 namespace nugiEngine {
 	class EngineRayTracingRenderSystem {
 		public:
-			EngineRayTracingRenderSystem(EngineDevice& device, EngineDescriptorPool &descriptorPool, VkDescriptorSetLayout globalDescSetLayout, 
-				std::vector<VkAccelerationStructureKHR> topLevelAccelStructs, int imageCount, int width, int height);
+			EngineRayTracingRenderSystem(EngineDevice& device, EngineDeviceProcedures &deviceProcedure, EngineDescriptorPool &descriptorPool, VkDescriptorSetLayout globalDescSetLayout, 
+				std::vector<EngineTopLevelAccelerationStructure> topLevelAccelStructs, size_t imageCount, uint32_t width, uint32_t height);
 			~EngineRayTracingRenderSystem();
 
 			EngineRayTracingRenderSystem(const EngineRayTracingRenderSystem&) = delete;
@@ -27,13 +29,15 @@ namespace nugiEngine {
 				FrameInfo &frameInfo, std::shared_ptr<EngineImage> swapChainImage);
 
 		private:
-      void createStorageImage(int imageCount);
-      void createDescriptor(EngineDescriptorPool &descriptorPool, int imageCount, std::vector<VkAccelerationStructureKHR> topLevelAccelStructs);
+      void createStorageImage(size_t imageCount);
+      void createDescriptor(EngineDescriptorPool &descriptorPool, size_t imageCount, std::vector<EngineTopLevelAccelerationStructure> topLevelAccelStructs);
 			void createPipelineLayout(VkDescriptorSetLayout globalDescSetLayouts);
 			void createPipeline();
 
 			EngineDevice& appDevice;
-			int width, height;
+			EngineDeviceProcedures &deviceProcedure;
+			
+			uint32_t width, height;
 			
 			VkPipelineLayout pipelineLayout;
 			std::unique_ptr<EngineRayTracingPipeline> pipeline;

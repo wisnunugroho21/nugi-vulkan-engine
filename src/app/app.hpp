@@ -8,6 +8,7 @@
 #include "../acceleration_structure/bottom_level_acceleration_structure.hpp"
 #include "../acceleration_structure/top_level_acceleration_structure.hpp"
 #include "../renderer_system/ray_tracing_render_system.hpp"
+#include "../device/device_procedures.hpp"
 
 #include <memory>
 #include <vector>
@@ -35,6 +36,7 @@ namespace nugiEngine {
 
 			EngineWindow window{WIDTH, HEIGHT, APP_TITLE};
 			EngineDevice device{window};
+			EngineDeviceProcedures deviceProcedure{device};
 			
 			std::unique_ptr<EngineRenderer> renderer{};
 			std::unique_ptr<EngineRayTracingRenderSystem> rayTracingRenderSystem{};

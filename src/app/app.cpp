@@ -125,16 +125,16 @@ namespace nugiEngine {
 	void EngineApp::recreateSubRendererAndSubsystem() {
 		std::vector<EngineBottomLevelAccelerationStructure> bottomAccelStructs;
 		for (auto &&obj : this->gameObjects) {
-			EngineBottomLevelAccelerationStructure bottomStruct{this->device, obj->model};
+			EngineBottomLevelAccelerationStructure bottomStruct{this->device, deviceProcedure, obj->model};
 			bottomAccelStructs.emplace_back(bottomStruct);
 		}
 
-		EngineTopLevelAccelerationStructure topStruct{this->device, bottomAccelStructs};
+		EngineTopLevelAccelerationStructure topStruct{this->device, deviceProcedure, bottomAccelStructs};
 		std::vector<EngineTopLevelAccelerationStructure> topAccelStructs { topStruct };
 
 		this->rayTracingRenderSystem = std::make_unique<EngineRayTracingRenderSystem>(
-			this->device, *this->renderer->getDescriptorPool(), this->renderer->getglobalDescSetLayout()->getDescriptorSetLayout(),
-			topStruct, this->renderer->getSwapChain()->imageCount(), this->renderer->getSwapChain()->width(), this->renderer->getSwapChain()->height()
+			this->device, this->deviceProcedure, *this->renderer->getDescriptorPool(), this->renderer->getglobalDescSetLayout()->getDescriptorSetLayout(),
+			topAccelStructs, this->renderer->getSwapChain()->imageCount(), this->renderer->getSwapChain()->width(), this->renderer->getSwapChain()->height()
 		);
 	}
 }

@@ -209,16 +209,6 @@ namespace nugiEngine {
     return true;
   }
   
-  bool EngineDescriptorWriter::build(VkDescriptorSet *set) {
-    bool success = this->pool.allocateDescriptor(this->setLayout.getDescriptorSetLayout(), set);
-    if (!success) {
-      return false;
-    }
-
-    this->overwrite(set);
-    return true;
-  }
-  
   void EngineDescriptorWriter::overwrite(VkDescriptorSet *set) {
     for (auto &write : this->writes) {
       write.dstSet = *set;

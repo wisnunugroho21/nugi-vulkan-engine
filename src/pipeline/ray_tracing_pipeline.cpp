@@ -7,7 +7,9 @@
 #include <stdexcept>
 
 namespace nugiEngine {
-	EngineRayTracingPipeline::Builder::Builder(EngineDevice& appDevice, VkPipelineLayout pipelineLayout) : appDevice{appDevice} {
+	EngineRayTracingPipeline::Builder::Builder(EngineDevice& appDevice, EngineDeviceProcedures &deviceProcedure, VkPipelineLayout pipelineLayout) 
+		: appDevice{appDevice}, deviceProcedure{deviceProcedure} 
+	{
 		this->configInfo.pipelineLayout = pipelineLayout;
 	}
 
@@ -111,11 +113,14 @@ namespace nugiEngine {
 	std::unique_ptr<EngineRayTracingPipeline> EngineRayTracingPipeline::Builder::build() {
 		return std::make_unique<EngineRayTracingPipeline>(
 			this->appDevice,
+			this->deviceProcedure,
 			this->configInfo
 		);
 	}
 
-	EngineRayTracingPipeline::EngineRayTracingPipeline(EngineDevice& device, const PipelineConfigInfo& configInfo) : engineDevice{device} {
+	EngineRayTracingPipeline::EngineRayTracingPipeline(EngineDevice& device, EngineDeviceProcedures &deviceProcedure, const PipelineConfigInfo& configInfo) 
+		: engineDevice{device}, deviceProcedure{deviceProcedure} 
+	{
 		this->createGraphicPipeline(configInfo);
 	}
 
@@ -160,7 +165,7 @@ namespace nugiEngine {
 		pipelineInfo.pDynamicState = &configInfo.dynamicStateInfo;
 		pipelineInfo.layout = configInfo.pipelineLayout;
 
-		if (vkCreateRayTracingPipelinesKHR(this->engineDevice.getLogicalDevice(), 
+		if (this->deviceProcedure.vkCreateRayTracingPipelinesKHR(this->engineDevice.getLogicalDevice(), 
 			VK_NULL_HANDLE, VK_NULL_HANDLE, 1, 
 			&pipelineInfo, 
 			nullptr, 
@@ -212,7 +217,7 @@ namespace nugiEngine {
     // Copy the pipeline's shader handles into a host buffer
     std::vector<uint8_t> shaderHandleStorage(sbt_size);
 
-    if (vkGetRayTracingShaderGroupHandlesKHR(
+    if (this->deviceProcedure.vkGetRayTracingShaderGroupHandlesKHR(
 			this->engineDevice.getLogicalDevice(), 
 			this->graphicPipeline, 
 			0, group_count, sbt_size, 

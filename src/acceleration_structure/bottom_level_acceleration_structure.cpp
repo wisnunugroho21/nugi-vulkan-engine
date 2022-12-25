@@ -1,7 +1,9 @@
 #include "bottom_level_acceleration_structure.hpp"
 
 namespace nugiEngine {
-	EngineBottomLevelAccelerationStructure::EngineBottomLevelAccelerationStructure(EngineDevice& appDevice, std::shared_ptr<EngineModel> model) : appDevice{appDevice} {
+	EngineBottomLevelAccelerationStructure::EngineBottomLevelAccelerationStructure(EngineDevice& appDevice, EngineDeviceProcedures& deviceProcedure, std::shared_ptr<EngineModel> model) 
+		: appDevice{appDevice}, deviceProcedure{deviceProcedure} 
+	{
 		this->createBottomLevelAccelerationStructure(model);
 	}
 
@@ -42,7 +44,7 @@ namespace nugiEngine {
 
     VkAccelerationStructureBuildSizesInfoKHR accelerationStructureBuildSizesInfo{};
 		accelerationStructureBuildSizesInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
-		vkGetAccelerationStructureBuildSizesKHR(
+		this->deviceProcedure.vkGetAccelerationStructureBuildSizesKHR(
 			this->appDevice.getLogicalDevice(),
 			VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
 			&accelerationStructureBuildGeometryInfo,
@@ -63,7 +65,7 @@ namespace nugiEngine {
 		accelerationStructureCreateInfo.buffer = this->buffer->getBuffer();
 		accelerationStructureCreateInfo.size = accelerationStructureBuildSizesInfo.accelerationStructureSize;
 		accelerationStructureCreateInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
-		vkCreateAccelerationStructureKHR(this->appDevice.getLogicalDevice(), &accelerationStructureCreateInfo, nullptr, &this->accelStruct);
+		this->deviceProcedure.vkCreateAccelerationStructureKHR(this->appDevice.getLogicalDevice(), &accelerationStructureCreateInfo, nullptr, &this->accelStruct);
 
 		EngineBuffer stratchBuffer{
 			this->appDevice,
@@ -93,7 +95,7 @@ namespace nugiEngine {
 		EngineCommandBuffer commandBuffer{this->appDevice};
 		commandBuffer.beginSingleTimeCommand();
 
-		vkCmdBuildAccelerationStructuresKHR(
+		this->deviceProcedure.vkCmdBuildAccelerationStructuresKHR(
 			commandBuffer.getCommandBuffer(),
 			1,
 			&accelerationBuildGeometryInfo,
@@ -106,7 +108,7 @@ namespace nugiEngine {
 		VkAccelerationStructureDeviceAddressInfoKHR accelerationDeviceAddressInfo{};
 		accelerationDeviceAddressInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR;
 		accelerationDeviceAddressInfo.accelerationStructure = this->accelStruct;
-		this->address = vkGetAccelerationStructureDeviceAddressKHR(this->appDevice.getLogicalDevice(), &accelerationDeviceAddressInfo);
+		this->address = this->deviceProcedure.vkGetAccelerationStructureDeviceAddressKHR(this->appDevice.getLogicalDevice(), &accelerationDeviceAddressInfo);
   }
   
 } // namespace nugiEngin 

@@ -5,6 +5,8 @@
 #include <memory>
 
 #include "../device/device.hpp"
+#include "../buffer/buffer.hpp"
+#include "../device/device_procedures.hpp"
 
 namespace nugiEngine {
 	struct PipelineConfigInfo {
@@ -19,7 +21,7 @@ namespace nugiEngine {
 		public:
 			class Builder {
 				public:
-					Builder(EngineDevice& appDevice, VkPipelineLayout pipelineLayout);
+					Builder(EngineDevice& appDevice, EngineDeviceProcedures &deviceProcedure, VkPipelineLayout pipelineLayout);
 
 					std::vector<VkDynamicState> getDynamicStates() const { return this->dynamicStates; }
 					std::vector<VkPipelineShaderStageCreateInfo> getShaderStagesInfo() const { return this->shaderStagesInfo; }
@@ -38,10 +40,12 @@ namespace nugiEngine {
 					std::vector<VkRayTracingShaderGroupCreateInfoKHR> shaderGroupsInfo{};
 
 					PipelineConfigInfo configInfo{};
+
 					EngineDevice& appDevice;
+					EngineDeviceProcedures& deviceProcedure;
 			};
 
-			EngineRayTracingPipeline(EngineDevice& device, const PipelineConfigInfo& configInfo);
+			EngineRayTracingPipeline(EngineDevice& device, EngineDeviceProcedures &deviceProcedure, const PipelineConfigInfo& configInfo);
 			~EngineRayTracingPipeline();
 
 			EngineRayTracingPipeline(const EngineRayTracingPipeline&) = delete;
@@ -56,6 +60,8 @@ namespace nugiEngine {
 
 		private:
 			EngineDevice& engineDevice;
+			EngineDeviceProcedures& deviceProcedure;
+
 			VkPipeline graphicPipeline;
 			std::vector<VkShaderModule> shaderModules{};
 

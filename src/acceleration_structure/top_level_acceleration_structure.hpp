@@ -9,10 +9,14 @@ namespace nugiEngine {
   class EngineTopLevelAccelerationStructure
   {
     public:
-      EngineTopLevelAccelerationStructure(EngineDevice& appDevice, std::vector<EngineBottomLevelAccelerationStructure> bottomLevelAccelStructs);
+      EngineTopLevelAccelerationStructure(EngineDevice& appDevice, EngineDeviceProcedures& deviceProcedure, std::vector<EngineBottomLevelAccelerationStructure> bottomLevelAccelStructs);
+
+      VkAccelerationStructureKHR getAccelStruct() const { return this->accelStruct; }
+      VkDeviceAddress getAddress() const { return this->address; }
 
     private:
       EngineDevice& appDevice;
+      EngineDeviceProcedures& deviceProcedure;
 
       VkAccelerationStructureKHR accelStruct{};
       VkDeviceAddress address;
