@@ -26,7 +26,7 @@ namespace nugiEngine {
 			
 			std::shared_ptr<EngineDescriptorPool> getDescriptorPool() const { return this->descriptorPool; }
 			std::shared_ptr<EngineDescriptorSetLayout> getglobalDescSetLayout() const { return this->globalDescSetLayout; }
-			std::shared_ptr<VkDescriptorSet> getGlobalDescriptorSets() const { return this->globalDescriptorSets; }
+			std::shared_ptr<VkDescriptorSet> getGlobalDescriptorSets(uint32_t index) const { return this->globalDescriptorSets[index]; }
 
 			VkCommandBuffer getCommandBuffer() const { 
 				assert(this->isFrameStarted && "cannot get command buffer when frame is not in progress");
@@ -50,12 +50,14 @@ namespace nugiEngine {
 			void submitCommand(std::shared_ptr<EngineCommandBuffer> commandBuffer);
 
 			bool acquireFrame();
-			bool copyFrameToSwapChain(std::shared_ptr<EngineCommandBuffer> commandBuffer);
+			bool prepareFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer);
+			bool finishFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer);
 			bool presentFrame();
 
 		private:
 			void recreateSwapChain();
-			void createStorageImage();
+			void recreateDescriptor();
+
 			void createGlobalDescriptor();
 			void createSyncObjects(int imageCount);
 
@@ -67,9 +69,7 @@ namespace nugiEngine {
 
 			std::shared_ptr<EngineDescriptorPool> descriptorPool;
 			std::shared_ptr<EngineDescriptorSetLayout> globalDescSetLayout;
-			std::shared_ptr<VkDescriptorSet> globalDescriptorSets;
-
-			std::shared_ptr<EngineImage> storageImage;
+			std::vector<std::shared_ptr<VkDescriptorSet>> globalDescriptorSets;
 
 			std::vector<VkSemaphore> imageAvailableSemaphores;
 			std::vector<VkSemaphore> renderFinishedSemaphores;

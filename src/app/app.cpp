@@ -53,12 +53,12 @@ namespace nugiEngine {
 				int frameIndex = this->renderer->getFrameIndex();
 
 				auto commandBuffer = this->renderer->beginCommand();
+				this->renderer->prepareFrame(commandBuffer);
 
-				auto globalDescSet = this->renderer->getGlobalDescriptorSets();
+				auto globalDescSet = this->renderer->getGlobalDescriptorSets(imageIndex);
 				this->computeRender->render(commandBuffer, *globalDescSet);
 
-				this->renderer->copyFrameToSwapChain(commandBuffer);
-
+				this->renderer->finishFrame(commandBuffer);
 				this->renderer->endCommand(commandBuffer);
 				this->renderer->submitCommand(commandBuffer);
 

@@ -12,8 +12,8 @@ namespace nugiEngine {
 
 		this->commandBuffers = EngineCommandBuffer::createCommandBuffers(device, EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
 
-		this->createStorageImage();
 		this->createGlobalDescriptor();
+		this->recreateDescriptor();
 	}
 
 	EngineRayTraceRenderer::~EngineRayTraceRenderer() {
@@ -46,16 +46,6 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineRayTraceRenderer::createStorageImage() {
-		this->storageImage = std::make_unique<EngineImage>(this->appDevice, this->swapChain->getSwapChainExtent().width, this->swapChain->getSwapChainExtent().height, 
-			1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_B8G8R8A8_UNORM, 
-      VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_STORAGE_BIT, 
-      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_COLOR_BIT);
-
-		this->storageImage->transitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 
-			VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-	}
-
 	void EngineRayTraceRenderer::createGlobalDescriptor() {
 		this->descriptorPool = 
 			EngineDescriptorPool::Builder(this->appDevice)
@@ -67,14 +57,22 @@ namespace nugiEngine {
 			EngineDescriptorSetLayout::Builder(this->appDevice)
 				.addBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT)
 				.build();
+	}
 
-		VkDescriptorImageInfo imageInfo{};
-    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    imageInfo.imageView = this->storageImage->getImageView();
+	void EngineRayTraceRenderer::recreateDescriptor() {
+		for (auto &&swapChainImage : this->swapChain->getswapChainImages()) {
+			auto descSet = std::make_shared<VkDescriptorSet>();
 
-		EngineDescriptorWriter(*this->globalDescSetLayout, *this->descriptorPool)
-			.writeImage(0, &imageInfo)
-			.build(this->globalDescriptorSets.get());
+			VkDescriptorImageInfo imageInfo{};
+			imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+			imageInfo.imageView = swapChainImage->getImageView();
+
+			EngineDescriptorWriter(*this->globalDescSetLayout, *this->descriptorPool)
+				.writeImage(0, &imageInfo)
+				.build(descSet.get());
+
+			this->globalDescriptorSets.emplace_back(descSet);
+		}
 	}
 
 	void EngineRayTraceRenderer::createSyncObjects(int imageCount) {
@@ -114,6 +112,16 @@ namespace nugiEngine {
 		}
 
 		this->isFrameStarted = true;
+		return true;
+	}
+
+	bool EngineRayTraceRenderer::prepareFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
+		auto imageIndex = this->getImageIndex();
+		auto swapChainImage = this->swapChain->getswapChainImages()[imageIndex];
+
+		swapChainImage->transitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 
+			VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, commandBuffer);
+
 		return true;
 	}
 
@@ -163,6 +171,14 @@ namespace nugiEngine {
 		commandBuffer->submitCommand(this->appDevice.getComputeQueue(), waitSemaphores, waitStages, signalSemaphores, this->inFlightFences[this->currentFrameIndex]);
 	}
 
+	bool EngineRayTraceRenderer::finishFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
+		auto imageIndex = this->getImageIndex();
+		auto swapChainImage = this->swapChain->getswapChainImages()[imageIndex];
+
+		swapChainImage->transitionImageLayout(VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 
+			VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, commandBuffer);
+	}
+
 	bool EngineRayTraceRenderer::presentFrame() {
 		assert(this->isFrameStarted && "can't present frame if frame is not in progress");
 
@@ -174,6 +190,7 @@ namespace nugiEngine {
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || this->appWindow.wasResized()) {
 			this->appWindow.resetResizedFlag();
 			this->recreateSwapChain();
+			this->recreateDescriptor();
 
 			return false;
 		} else if (result != VK_SUCCESS) {
@@ -181,22 +198,5 @@ namespace nugiEngine {
 		}
 
 		return true;
-	}
-
-	bool EngineRayTraceRenderer::copyFrameToSwapChain(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
-		this->storageImage->transitionImageLayout(VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, 
-			VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, commandBuffer);
-
-		this->swapChain->getswapChainImages()[this->getImageIndex()]->transitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
-			VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, commandBuffer);
-
-		this->swapChain->getswapChainImages()[this->getImageIndex()]->copyImageFromOther(this->storageImage, 
-			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, commandBuffer);
-
-		this->storageImage->transitionImageLayout(VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL, 
-			VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, commandBuffer);
-
-		this->swapChain->getswapChainImages()[this->getImageIndex()]->transitionImageLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 
-			VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, commandBuffer);
 	}
 }
