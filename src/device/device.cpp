@@ -183,6 +183,7 @@ namespace nugiEngine {
 
     vkGetDeviceQueue(this->device, indices.graphicsFamily, 0, &this->graphicsQueue);
     vkGetDeviceQueue(this->device, indices.presentFamily, 0, &this->presentQueue);
+    vkGetDeviceQueue(this->device, indices.computeFamily, 0, &this->computeQueue);
   }
 
   void EngineDevice::createCommandPool() {

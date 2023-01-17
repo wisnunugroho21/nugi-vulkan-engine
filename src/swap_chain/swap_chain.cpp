@@ -93,7 +93,7 @@ namespace nugiEngine {
     createInfo.imageColorSpace = surfaceFormat.colorSpace;
     createInfo.imageExtent = extent;
     createInfo.imageArrayLayers = 1;
-    createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
     QueueFamilyIndices indices = this->device.findPhysicalQueueFamilies();
     uint32_t queueFamilyIndices[] = {indices.graphicsFamily, indices.presentFamily};
@@ -130,7 +130,7 @@ namespace nugiEngine {
 
     this->swapChainImages.clear();
     for (uint32_t i = 0; i < imageCount; i++) {
-      auto swapChainImage = std::make_shared<EngineImage>(this->device, tempSwapChainImages[i], 1, this->swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+      auto swapChainImage = std::make_shared<EngineImage>(this->device, extent.width, extent.height, tempSwapChainImages[i], 1, this->swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
       this->swapChainImages.push_back(swapChainImage);
     }
   }

@@ -12,7 +12,7 @@ namespace nugiEngine {
     this->isImageCreatedByUs = true;
   }
 
-  EngineImage::EngineImage(EngineDevice &appDevice, VkImage image, uint32_t mipLevels, VkFormat format, VkImageAspectFlags aspectFlags) : appDevice{appDevice}, mipLevels{mipLevels}, format{format}, aspectFlags{aspectFlags} {
+  EngineImage::EngineImage(EngineDevice &appDevice, uint32_t width, uint32_t height, VkImage image, uint32_t mipLevels, VkFormat format, VkImageAspectFlags aspectFlags) : appDevice{appDevice}, mipLevels{mipLevels}, format{format}, aspectFlags{aspectFlags}, height{ height }, width{ width } {
     this->image = image;
     this->createImageView();
 
@@ -204,6 +204,10 @@ namespace nugiEngine {
       barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
       barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
       
+    } else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_GENERAL) {
+      barrier.srcAccessMask = 0;
+      barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+
     } else {
       throw std::invalid_argument("unsupported layout transition!");
     }
@@ -241,7 +245,7 @@ namespace nugiEngine {
 		copyInfo.srcOffset      = {0, 0, 0};
 		copyInfo.dstSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
 		copyInfo.dstOffset      = {0, 0, 0};
-		copyInfo.extent         = {width, height, 1};
+		copyInfo.extent         = {this->width, this->height, 1};
 
     vkCmdCopyImage(commandBuffer->getCommandBuffer(), srcImage->getImage(), srcLayout, this->image, dstLayout, 1, &copyInfo);
 
@@ -251,7 +255,7 @@ namespace nugiEngine {
     }
   }
 
-  void EngineImage::copyImageToOther(std::shared_ptr<EngineImage> dstImage, VkImageLayout srcLayout, VkImageLayout dstLayout, std::shared_ptr<EngineCommandBuffer> commandBuffer = nullptr) {
+  void EngineImage::copyImageToOther(std::shared_ptr<EngineImage> dstImage, VkImageLayout srcLayout, VkImageLayout dstLayout, std::shared_ptr<EngineCommandBuffer> commandBuffer) {
     bool isCommandBufferCreatedHere = false;
     
     if (commandBuffer == nullptr) {
@@ -267,7 +271,7 @@ namespace nugiEngine {
 		copyInfo.srcOffset      = {0, 0, 0};
 		copyInfo.dstSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
 		copyInfo.dstOffset      = {0, 0, 0};
-		copyInfo.extent         = {width, height, 1};
+		copyInfo.extent         = {this->width, this->height, 1};
 
     vkCmdCopyImage(commandBuffer->getCommandBuffer(), this->image, srcLayout, dstImage->getImage(), dstLayout, 1, &copyInfo);
 

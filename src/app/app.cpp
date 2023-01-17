@@ -77,6 +77,8 @@ namespace nugiEngine {
 
 	void EngineApp::recreateSubRendererAndSubsystem() {
 		this->computeRender = std::make_unique<EngineRayTracingComputeRender>(this->device, 
-			this->renderer->getglobalDescSetLayout()->getDescriptorSetLayout(), *this->renderer->getDescriptorPool());
+			this->renderer->getglobalDescSetLayout()->getDescriptorSetLayout(), *this->renderer->getDescriptorPool(),
+			this->renderer->getSwapChain()->getSwapChainExtent().width, this->renderer->getSwapChain()->getSwapChainExtent().height
+    );
 	}
 }
