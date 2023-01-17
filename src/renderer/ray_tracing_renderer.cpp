@@ -65,6 +65,7 @@ namespace nugiEngine {
 	}
 
 	void EngineRayTraceRenderer::recreateDescriptor() {
+		this->descriptorPool->resetPool();
 		this->globalDescriptorSets.clear();
 
 		uint32_t imageCount = static_cast<uint32_t>(this->swapChain->getswapChainImages().size());
@@ -114,7 +115,7 @@ namespace nugiEngine {
 		uint32_t imageCount = static_cast<uint32_t>(this->swapChain->getswapChainImages().size());
 
 		for (uint32_t i = 0; i < imageCount; i++) {
-			auto uniformBuffer = std::make_unique<EngineBuffer>(
+			auto uniformBuffer = std::make_shared<EngineBuffer>(
 				this->appDevice,
 				sizeUBO,
 				1,
