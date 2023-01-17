@@ -6,6 +6,6 @@ void main() {
   vec2 imageSize = vec2(imageSize(targetImage));
   vec2 uv = (gl_GlobalInvocationID.xy) / imageSize.xy;
   
-  vec3 curColor = vec3(uv, 0.25);
+  vec4 curColor = vec3(uv, 0.25, 1.0);
   imageStore(targetImage, ivec2(gl_GlobalInvocationID.xy), curColor);
 }
