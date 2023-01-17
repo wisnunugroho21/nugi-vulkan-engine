@@ -52,6 +52,8 @@ namespace nugiEngine {
 				int imageIndex = this->renderer->getImageIndex();
 				int frameIndex = this->renderer->getFrameIndex();
 
+				this->renderer->writeGlobalData(imageIndex);
+
 				auto commandBuffer = this->renderer->beginCommand();
 				this->renderer->prepareFrame(commandBuffer);
 
