@@ -117,7 +117,7 @@ namespace nugiEngine {
 
 	bool EngineRayTraceRenderer::prepareFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
 		auto imageIndex = this->getImageIndex();
-		auto& swapChainImage = this->swapChain->getswapChainImages()[imageIndex];
+		auto swapChainImage = this->swapChain->getswapChainImages()[imageIndex];
 
 		swapChainImage->transitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 
 			VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, commandBuffer);
@@ -173,12 +173,12 @@ namespace nugiEngine {
 
 	bool EngineRayTraceRenderer::finishFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
 		auto imageIndex = this->getImageIndex();
-		auto& swapChainImage = this->swapChain->getswapChainImages()[imageIndex];
+		auto swapChainImage = this->swapChain->getswapChainImages()[imageIndex];
 
 		swapChainImage->transitionImageLayout(VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 
 			VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, commandBuffer);
 
-		return true;
+    return true;
 	}
 
 	bool EngineRayTraceRenderer::presentFrame() {
