@@ -47,14 +47,14 @@ namespace nugiEngine {
 	void EngineRayTracingComputeRender::render(std::shared_ptr<EngineCommandBuffer> commandBuffer, VkDescriptorSet &GlobalDescSet) {
 		this->pipeline->bind(commandBuffer->getCommandBuffer());
 
-		VkDescriptorSet descpSet[2] = { GlobalDescSet };
+		VkDescriptorSet descpSet[1] = { GlobalDescSet };
 
 		vkCmdBindDescriptorSets(
 			commandBuffer->getCommandBuffer(),
-			VK_PIPELINE_BIND_POINT_GRAPHICS,
+			VK_PIPELINE_BIND_POINT_COMPUTE,
 			this->pipelineLayout,
 			0,
-			2,
+			1,
 			descpSet,
 			0,
 			nullptr

@@ -60,6 +60,7 @@ namespace nugiEngine {
 	}
 
 	void EngineRayTraceRenderer::recreateDescriptor() {
+		this->globalDescriptorSets.clear();
 		for (auto &&swapChainImage : this->swapChain->getswapChainImages()) {
 			auto descSet = std::make_shared<VkDescriptorSet>();
 
