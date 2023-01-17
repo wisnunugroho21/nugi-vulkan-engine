@@ -86,6 +86,7 @@ namespace nugiEngine {
 		pipelineInfo.layout = configInfo.pipelineLayout;
 		pipelineInfo.basePipelineIndex = configInfo.basePipelineIndex;
 		pipelineInfo.basePipelineHandle = configInfo.basePipelineHandleInfo;
+		pipelineInfo.stage = configInfo.shaderStageInfo;
 
 		if (vkCreateComputePipelines(this->engineDevice.getLogicalDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &this->computePipeline) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create compute pipelines");
@@ -109,7 +110,7 @@ namespace nugiEngine {
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, this->computePipeline);
 	}
 
-	void dispatch(VkCommandBuffer commandBuffer, uint32_t xSize, uint32_t ySize, uint32_t zSize) {
+	void EngineComputePipeline::dispatch(VkCommandBuffer commandBuffer, uint32_t xSize, uint32_t ySize, uint32_t zSize) {
 		vkCmdDispatch(commandBuffer, xSize, ySize, zSize);
 	}
 
