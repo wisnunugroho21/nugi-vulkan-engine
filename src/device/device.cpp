@@ -142,7 +142,7 @@ namespace nugiEngine {
     QueueFamilyIndices indices = this->findQueueFamilies(this->physicalDevice);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily, indices.presentFamily};
+    std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily, indices.presentFamily, indices.computeFamily};
 
     float queuePriority = 1.0f;
     for (uint32_t queueFamily : uniqueQueueFamilies) {
@@ -341,12 +341,19 @@ namespace nugiEngine {
         indices.graphicsFamily = i;
         indices.graphicsFamilyHasValue = true;
       }
+
+      if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT) {
+        indices.computeFamily = i;
+        indices.computeFamilyHasValue = true;
+      }
+
       VkBool32 presentSupport = false;
       vkGetPhysicalDeviceSurfaceSupportKHR(device, i, this->surface, &presentSupport);
       if (queueFamily.queueCount > 0 && presentSupport) {
         indices.presentFamily = i;
         indices.presentFamilyHasValue = true;
       }
+
       if (indices.isComplete()) {
         break;
       }

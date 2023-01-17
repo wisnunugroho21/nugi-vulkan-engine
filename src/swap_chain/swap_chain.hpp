@@ -36,7 +36,6 @@ namespace nugiEngine {
     float extentAspectRatio() {
       return static_cast<float>(this->swapChainExtent.width) / static_cast<float>(this->swapChainExtent.height);
     }
-    VkFormat findDepthFormat();
 
     VkResult acquireNextImage(uint32_t *imageIndex, VkFence *inFlightFence, VkSemaphore imageAvailableSemaphore);
     VkResult presentRenders(uint32_t *imageIndex, VkSemaphore* signalSemaphores);

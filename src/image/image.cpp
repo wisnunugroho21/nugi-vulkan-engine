@@ -151,6 +151,132 @@ namespace nugiEngine {
     commandBuffer.submitCommand(this->appDevice.getGraphicsQueue());
   }
 
+  void EngineImage::transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout, VkPipelineStageFlags srcStage, VkPipelineStageFlags dstStage, std::shared_ptr<EngineCommandBuffer> commandBuffer) {
+    bool isCommandBufferCreatedHere = false;
+    
+    if (commandBuffer == nullptr) {
+      commandBuffer = std::make_shared<EngineCommandBuffer>(this->appDevice);
+      commandBuffer->beginSingleTimeCommand();
+
+      isCommandBufferCreatedHere = true;  
+    }
+
+    VkImageMemoryBarrier barrier{};
+    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.oldLayout = oldLayout;
+    barrier.newLayout = newLayout;
+
+    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+    barrier.image = this->image;
+    barrier.subresourceRange.aspectMask = this->aspectFlags;
+    barrier.subresourceRange.baseMipLevel = 0;
+    barrier.subresourceRange.levelCount = this->mipLevels;
+    barrier.subresourceRange.baseArrayLayer = 0;
+    barrier.subresourceRange.layerCount = 1;
+
+    if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+      barrier.srcAccessMask = 0;
+      barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+    } else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL) {
+      barrier.srcAccessMask = 0;
+      barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+    }  else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+      barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+      barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+      
+    } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+      barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+      barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+      
+    } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) {
+      barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+      barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+      
+    } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_GENERAL) {
+      barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+      barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+      
+    } else if (oldLayout == VK_IMAGE_LAYOUT_GENERAL && newLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL) {
+      barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+      barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+      
+    } else {
+      throw std::invalid_argument("unsupported layout transition!");
+    }
+
+    vkCmdPipelineBarrier(
+      commandBuffer->getCommandBuffer(), 
+      srcStage, 
+      dstStage,
+      0,
+      0, nullptr,
+      0, nullptr,
+      1, 
+      &barrier
+    );
+
+    if (isCommandBufferCreatedHere) {
+      commandBuffer->endCommand();
+      commandBuffer->submitCommand(this->appDevice.getGraphicsQueue());
+    }
+  }
+
+  void EngineImage::copyImageFromOther(std::shared_ptr<EngineImage> srcImage, VkImageLayout srcLayout, VkImageLayout dstLayout, std::shared_ptr<EngineCommandBuffer> commandBuffer) {
+    bool isCommandBufferCreatedHere = false;
+    
+    if (commandBuffer == nullptr) {
+      commandBuffer = std::make_shared<EngineCommandBuffer>(this->appDevice);
+      commandBuffer->beginSingleTimeCommand();
+
+      isCommandBufferCreatedHere = true;  
+    }
+    
+    VkImageCopy copyInfo{};
+
+    copyInfo.srcSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
+		copyInfo.srcOffset      = {0, 0, 0};
+		copyInfo.dstSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
+		copyInfo.dstOffset      = {0, 0, 0};
+		copyInfo.extent         = {width, height, 1};
+
+    vkCmdCopyImage(commandBuffer->getCommandBuffer(), srcImage->getImage(), srcLayout, this->image, dstLayout, 1, &copyInfo);
+
+    if (isCommandBufferCreatedHere) {
+      commandBuffer->endCommand();
+      commandBuffer->submitCommand(this->appDevice.getGraphicsQueue());
+    }
+  }
+
+  void EngineImage::copyImageToOther(std::shared_ptr<EngineImage> dstImage, VkImageLayout srcLayout, VkImageLayout dstLayout, std::shared_ptr<EngineCommandBuffer> commandBuffer = nullptr) {
+    bool isCommandBufferCreatedHere = false;
+    
+    if (commandBuffer == nullptr) {
+      commandBuffer = std::make_shared<EngineCommandBuffer>(this->appDevice);
+      commandBuffer->beginSingleTimeCommand();
+
+      isCommandBufferCreatedHere = true;  
+    }
+    
+    VkImageCopy copyInfo{};
+
+    copyInfo.srcSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
+		copyInfo.srcOffset      = {0, 0, 0};
+		copyInfo.dstSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
+		copyInfo.dstOffset      = {0, 0, 0};
+		copyInfo.extent         = {width, height, 1};
+
+    vkCmdCopyImage(commandBuffer->getCommandBuffer(), this->image, srcLayout, dstImage->getImage(), dstLayout, 1, &copyInfo);
+
+    if (isCommandBufferCreatedHere) {
+      commandBuffer->endCommand();
+      commandBuffer->submitCommand(this->appDevice.getGraphicsQueue());
+    }
+  }
+
   void EngineImage::generateMipMap() {
     if (!this->isImageCreatedByUs) {
       throw std::runtime_error("cannot generate mipmap if the image is not created by this class => image directly assigned to this class via second constructor");

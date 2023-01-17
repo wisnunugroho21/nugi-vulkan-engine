@@ -15,6 +15,7 @@ namespace nugiEngine {
 
       void beginRenderPass(std::shared_ptr<EngineCommandBuffer> commandBuffer, int currentImageIndex);
 			void endRenderPass(std::shared_ptr<EngineCommandBuffer> commandBuffer);
+      
     private:
       int width, height;
       EngineDevice &device;

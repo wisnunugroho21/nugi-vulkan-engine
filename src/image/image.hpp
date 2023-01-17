@@ -22,6 +22,12 @@ namespace nugiEngine
       VkDeviceMemory getImageMemory() const { return this->imageMemory; }
 
       void transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout);
+      void transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout, VkPipelineStageFlags srcStage, VkPipelineStageFlags dstStage, 
+        std::shared_ptr<EngineCommandBuffer> commandBuffer = nullptr);
+
+      void copyImageFromOther(std::shared_ptr<EngineImage> srcImage, VkImageLayout srcLayout, VkImageLayout dstLayout, std::shared_ptr<EngineCommandBuffer> commandBuffer = nullptr);
+      void copyImageToOther(std::shared_ptr<EngineImage> dstImage, VkImageLayout srcLayout, VkImageLayout dstLayout, std::shared_ptr<EngineCommandBuffer> commandBuffer = nullptr);
+
       void generateMipMap();
 
     private:
