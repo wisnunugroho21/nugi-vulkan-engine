@@ -21,6 +21,8 @@ namespace nugiEngine
       VkImageView getImageView() const { return this->imageView; }
       VkDeviceMemory getImageMemory() const { return this->imageMemory; }
 
+      VkDescriptorImageInfo getDescriptorInfo(VkImageLayout desiredImageLayout);
+
       void transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout);
       void transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout, VkPipelineStageFlags srcStage, VkPipelineStageFlags dstStage, 
         std::shared_ptr<EngineCommandBuffer> commandBuffer = nullptr);

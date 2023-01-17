@@ -16,8 +16,8 @@ namespace nugiEngine {
 	class EngineApp
 	{
 		public:
-			static constexpr int WIDTH = 800;
-			static constexpr int HEIGHT = 600;
+			static constexpr int WIDTH = 1080;
+			static constexpr int HEIGHT = 1080;
 
 			EngineApp();
 			~EngineApp();

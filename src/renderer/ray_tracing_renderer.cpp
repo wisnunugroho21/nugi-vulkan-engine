@@ -1,5 +1,5 @@
 #include "ray_tracing_renderer.hpp"
-#include "../globalUbo.hpp"
+#include "../ray_ubo.hpp"
 
 #include <stdexcept>
 #include <array>
@@ -11,7 +11,8 @@ namespace nugiEngine {
 		this->createSyncObjects(this->swapChain->imageCount());
 
 		this->commandBuffers = EngineCommandBuffer::createCommandBuffers(device, EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
-
+		this->createGlobalUniformBuffer(sizeof(RayTraceUbo));
+		
 		this->createGlobalDescriptor();
 		this->recreateDescriptor();
 	}
@@ -47,29 +48,39 @@ namespace nugiEngine {
 	}
 
 	void EngineRayTraceRenderer::createGlobalDescriptor() {
+		uint32_t imageCount = static_cast<uint32_t>(this->swapChain->getswapChainImages().size());
+
 		this->descriptorPool = 
 			EngineDescriptorPool::Builder(this->appDevice)
-				.setMaxSets(1)
-				.addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1)
+				.setMaxSets(imageCount)
+				.addPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, imageCount)
+				.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, imageCount)
 				.build();
 
 		this->globalDescSetLayout = 
 			EngineDescriptorSetLayout::Builder(this->appDevice)
 				.addBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT)
+				.addBinding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT)
 				.build();
 	}
 
 	void EngineRayTraceRenderer::recreateDescriptor() {
 		this->globalDescriptorSets.clear();
-		for (auto &&swapChainImage : this->swapChain->getswapChainImages()) {
+
+		uint32_t imageCount = static_cast<uint32_t>(this->swapChain->getswapChainImages().size());
+
+		for (uint32_t i = 0; i < imageCount; i++) {
 			auto descSet = std::make_shared<VkDescriptorSet>();
 
-			VkDescriptorImageInfo imageInfo{};
-			imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-			imageInfo.imageView = swapChainImage->getImageView();
+			auto swapChainImage = this->swapChain->getswapChainImages()[i];
+			auto uniformBuffer = this->globalUniformBuffers[i];
+
+			auto imageInfo = swapChainImage->getDescriptorInfo(VK_IMAGE_LAYOUT_GENERAL);
+			auto bufferInfo = uniformBuffer->descriptorInfo();
 
 			EngineDescriptorWriter(*this->globalDescSetLayout, *this->descriptorPool)
-				.writeImage(0, &imageInfo)
+				.writeImage(0, &imageInfo) 
+				.writeBuffer(1, &bufferInfo)
 				.build(descSet.get());
 
 			this->globalDescriptorSets.emplace_back(descSet);
@@ -98,6 +109,39 @@ namespace nugiEngine {
       }
     }
   }
+
+	void EngineRayTraceRenderer::createGlobalUniformBuffer(unsigned long sizeUBO) {
+		uint32_t imageCount = static_cast<uint32_t>(this->swapChain->getswapChainImages().size());
+
+		for (uint32_t i = 0; i < imageCount; i++) {
+			auto uniformBuffer = std::make_unique<EngineBuffer>(
+				this->appDevice,
+				sizeUBO,
+				1,
+				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+			);
+
+			uniformBuffer->map();
+			this->globalUniformBuffers.emplace_back(uniformBuffer);
+		}
+	}
+
+	void EngineRayTraceRenderer::writeGlobalData(int imageIndex) {
+		RayTraceUbo ubo;
+
+		auto viewport_height = 2.0f;
+    auto viewport_width = 1.0f * viewport_height;
+    auto focal_length = 1.0f;
+
+		ubo.origin = glm::vec3(0.0f, 0.0f, 0.0f);
+    ubo.horizontal = glm::vec3(viewport_width, 0.0f, 0.0f);
+    ubo.vertical = glm::vec3(0.0f, viewport_height, 0.0f);
+    ubo.lowerLeftCorner = ubo.origin - ubo.horizontal / 2.0f - ubo.vertical / 2.0f - glm::vec3(0.0f, 0.0f, focal_length);
+
+		this->globalUniformBuffers[imageIndex]->writeToBuffer(&ubo);
+		this->globalUniformBuffers[imageIndex]->flush();
+	}
 
 	bool EngineRayTraceRenderer::acquireFrame() {
 		assert(!this->isFrameStarted && "can't acquire frame while frame still in progress");

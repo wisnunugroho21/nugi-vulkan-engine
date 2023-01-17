@@ -29,7 +29,7 @@ namespace nugiEngine {
 
 	void EngineApp::run() {
 		auto currentTime = std::chrono::high_resolution_clock::now();
-		int t = 0;
+		uint32_t t = 0;
 
 		while (!this->window.shouldClose()) {
 			this->window.pollEvents();

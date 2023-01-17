@@ -43,6 +43,8 @@ namespace nugiEngine {
 				return this->currentImageIndex;
 			}
 
+			void writeGlobalData(int imageIndex);
+
 			std::shared_ptr<EngineCommandBuffer> beginCommand();
 			void endCommand(std::shared_ptr<EngineCommandBuffer>);
 
@@ -60,6 +62,7 @@ namespace nugiEngine {
 
 			void createGlobalDescriptor();
 			void createSyncObjects(int imageCount);
+			void createGlobalUniformBuffer(unsigned long sizeUBO);
 
 			EngineWindow& appWindow;
 			EngineDevice& appDevice;
@@ -70,6 +73,8 @@ namespace nugiEngine {
 			std::shared_ptr<EngineDescriptorPool> descriptorPool;
 			std::shared_ptr<EngineDescriptorSetLayout> globalDescSetLayout;
 			std::vector<std::shared_ptr<VkDescriptorSet>> globalDescriptorSets;
+
+			std::vector<std::shared_ptr<EngineBuffer>> globalUniformBuffers;
 
 			std::vector<VkSemaphore> imageAvailableSemaphores;
 			std::vector<VkSemaphore> renderFinishedSemaphores;

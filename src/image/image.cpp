@@ -392,5 +392,12 @@ namespace nugiEngine {
     commandBuffer.endCommand();
     commandBuffer.submitCommand(this->appDevice.getGraphicsQueue());
   }
-  
+
+  VkDescriptorImageInfo EngineImage::getDescriptorInfo(VkImageLayout desiredImageLayout) {
+    VkDescriptorImageInfo imageInfo{};
+    imageInfo.imageLayout = desiredImageLayout;
+    imageInfo.imageView = this->imageView;
+
+    return imageInfo;
+  }
 } // namespace nugiEngine
