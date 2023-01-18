@@ -1,5 +1,7 @@
 #version 460
 
+// ------------- layout ------------- 
+
 layout(local_size_x = 1, local_size_y = 1, local_size_y = 1) in;
 
 layout(set = 0, binding = 0, rgba8) uniform image2D targetImage;
@@ -11,39 +13,87 @@ layout(set = 0, binding = 1) uniform GlobalUbo {
   vec3 lowerLeftCorner;
 } ubo;
 
+// ------------- struct ------------- 
+
 struct Ray {
   vec3 origin;
   vec3 direction;
 };
 
+struct FaceNormal {
+  bool frontFace;
+  vec3 normal;
+};
+
+struct HitRecord {
+  bool isHit;
+  float t;
+  vec3 point;
+  FaceNormal faceNormal;
+};
+
+struct Sphere {
+  vec3 center;
+  float radius;
+};
+
+// ------------- function ------------- 
+
 vec3 rayAt(Ray r, float t) {
   return r.origin + t * r.direction;
 }
 
-float hit_sphere(vec3 center, float radius, Ray r) {
-  vec3 oc = r.origin - center;
+FaceNormal setFaceNormal(Ray r, vec3 outwardNormal) {
+  FaceNormal faceNormal{};
+
+  faceNormal.frontFace = dot(r.direction(), outward_normal) < 0;
+  faceNormal.normal = front_face ? outward_normal :-outward_normal;
+
+  return faceNormal;
+}
+
+HitRecord hitSphere(Sphere obj, Ray r, double tMin, double tMax) {
+  HitRecord rec{};
+
+  vec3 oc = r.origin - obj.center;
   float a = dot(r.direction, r.direction);
   float b = 2.0 * dot(oc, r.direction);
-  float c = dot(oc, oc) - radius * radius;
-  float discriminant = b * b - 4 * a * c;
+  float c = dot(oc, oc) - obj.radius * obj.radius;
+  float discriminant = b * b - 4.0 * a * c;
 
   if (discriminant < 0.0) {
-    return -1.0;
-  } else {
-    return (-b - sqrt(discriminant)) / (2.0 * a);
+    return rec;
   }
+
+  float sqrtd = sqrt(discriminant);
+
+  float root = (-b - sqrtd) / (2.0 * a);
+  if (root < tMin || root > tMax) {
+    root = (-b + sqrtd) / (2.0 * a);
+    if (root < tMin || root > tMax) {
+      return rec;
+    }
+  }
+
+  rec.isHit = true;
+  rec.t = root;
+  rec.point = rayAt(r, rec.t);
+
+  vec3 outwardNormal = (rec.point - obj.center) / obj.radius;
+  rec.faceNormal = setFaceNormal(r, outwardNormal);
+
+  return rec;
 }
 
 vec3 rayColor(Ray r) {
-  float t = hit_sphere(vec3(0.0, 0.0, -1.0), 0.5, r);
+  HitRecord rec = hitSphere(vec3(0.0, 0.0, -1.0), 0.5, r);
 
-  if (t > 0.0) {
-    vec3 N = normalize(rayAt(r, t) - vec3(0.0, 0.0, -1.0));
-    return 0.5 * vec3(N.x + 1, N.y + 1, N.z + 1);
+  if (rec.isHit) {
+    return 0.5 * (rec.normal + vec3(1.0, 1.0, 1.0));
   }
 
   vec3 unit_direction = normalize(r.direction);
-  t = 0.5 * (unit_direction.y + 1.0);
+  float t = 0.5 * (unit_direction.y + 1.0);
   return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
 }
 
