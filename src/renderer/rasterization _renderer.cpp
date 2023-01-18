@@ -1,4 +1,4 @@
-#include "renderer.hpp"
+#include "rasterization_renderer.hpp"
 #include "../globalUbo.hpp"
 
 #include <stdexcept>
@@ -6,7 +6,7 @@
 #include <string>
 
 namespace nugiEngine {
-	EngineRenderer::EngineRenderer(EngineWindow& window, EngineDevice& device) : appDevice{device}, appWindow{window} {
+	EngineRasterRenderer::EngineRasterRenderer(EngineWindow& window, EngineDevice& device) : appDevice{device}, appWindow{window} {
 		this->recreateSwapChain();
 		this->createSyncObjects(this->swapChain->imageCount());
 
@@ -16,7 +16,7 @@ namespace nugiEngine {
 		this->createGlobalUboDescriptor();
 	}
 
-	EngineRenderer::~EngineRenderer() {
+	EngineRasterRenderer::~EngineRasterRenderer() {
 		// cleanup synchronization objects
     for (size_t i = 0; i < EngineSwapChain::MAX_FRAMES_IN_FLIGHT; i++) {
       vkDestroySemaphore(this->appDevice.getLogicalDevice(), this->renderFinishedSemaphores[i], nullptr);
@@ -25,7 +25,7 @@ namespace nugiEngine {
     }
 	}
 
-	void EngineRenderer::recreateSwapChain() {
+	void EngineRasterRenderer::recreateSwapChain() {
 		auto extent = this->appWindow.getExtent();
 		while(extent.width == 0 || extent.height == 0) {
 			extent = this->appWindow.getExtent();
@@ -46,7 +46,7 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineRenderer::createGlobalBuffers(unsigned long sizeUBO, unsigned long sizeLightBuffer) {
+	void EngineRasterRenderer::createGlobalBuffers(unsigned long sizeUBO, unsigned long sizeLightBuffer) {
 		this->globalUniformBuffers.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
 		this->globalLightBuffers.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
 
@@ -72,7 +72,7 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineRenderer::createGlobalUboDescriptor() {
+	void EngineRasterRenderer::createGlobalUboDescriptor() {
 		this->descriptorPool = 
 			EngineDescriptorPool::Builder(this->appDevice)
 				.setMaxSets(100 * EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
@@ -101,7 +101,7 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineRenderer::createSyncObjects(int imageCount) {
+	void EngineRasterRenderer::createSyncObjects(int imageCount) {
     imageAvailableSemaphores.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
     renderFinishedSemaphores.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
     inFlightFences.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -124,17 +124,17 @@ namespace nugiEngine {
     }
   }
 
-	void EngineRenderer::writeUniformBuffer(int frameIndex, void* data, VkDeviceSize size, VkDeviceSize offset) {
+	void EngineRasterRenderer::writeUniformBuffer(int frameIndex, void* data, VkDeviceSize size, VkDeviceSize offset) {
 		this->globalUniformBuffers[frameIndex]->writeToBuffer(data, size, offset);
 		this->globalUniformBuffers[frameIndex]->flush(size, offset);
 	}
 
-	void EngineRenderer::writeLightBuffer(int frameIndex, void* data, VkDeviceSize size, VkDeviceSize offset) {
+	void EngineRasterRenderer::writeLightBuffer(int frameIndex, void* data, VkDeviceSize size, VkDeviceSize offset) {
 		this->globalLightBuffers[frameIndex]->writeToBuffer(data, size, offset);
 		this->globalLightBuffers[frameIndex]->flush(size, offset);
 	}
 
-	bool EngineRenderer::acquireFrame() {
+	bool EngineRasterRenderer::acquireFrame() {
 		assert(!this->isFrameStarted && "can't acquire frame while frame still in progress");
 
 		auto result = this->swapChain->acquireNextImage(&this->currentImageIndex, &this->inFlightFences[this->currentFrameIndex], this->imageAvailableSemaphores[this->currentFrameIndex]);
@@ -151,19 +151,19 @@ namespace nugiEngine {
 		return true;
 	}
 
-	std::shared_ptr<EngineCommandBuffer> EngineRenderer::beginCommand() {
+	std::shared_ptr<EngineCommandBuffer> EngineRasterRenderer::beginCommand() {
 		assert(this->isFrameStarted && "can't start command while frame still in progress");
 
 		this->commandBuffers[this->currentFrameIndex]->beginReccuringCommand();
 		return this->commandBuffers[this->currentFrameIndex];
 	}
 
-	void EngineRenderer::endCommand(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
+	void EngineRasterRenderer::endCommand(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
 		assert(this->isFrameStarted && "can't start command while frame still in progress");
 		commandBuffer->endCommand();
 	}
 
-	void EngineRenderer::submitCommands(std::vector<std::shared_ptr<EngineCommandBuffer>> commandBuffers) {
+	void EngineRasterRenderer::submitCommands(std::vector<std::shared_ptr<EngineCommandBuffer>> commandBuffers) {
 		assert(this->isFrameStarted && "can't submit command if frame is not in progress");
 
 		if (this->imagesInFlight[this->currentImageIndex] != VK_NULL_HANDLE) {
@@ -180,7 +180,7 @@ namespace nugiEngine {
 		EngineCommandBuffer::submitCommands(commandBuffers, this->appDevice.getGraphicsQueue(), waitSemaphores, waitStages, signalSemaphores, this->inFlightFences[this->currentFrameIndex]);
 	}
 
-	void EngineRenderer::submitCommand(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
+	void EngineRasterRenderer::submitCommand(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
 		assert(this->isFrameStarted && "can't submit command if frame is not in progress");
 
     if (this->imagesInFlight[this->currentImageIndex] != VK_NULL_HANDLE) {
@@ -197,7 +197,7 @@ namespace nugiEngine {
 		commandBuffer->submitCommand(this->appDevice.getGraphicsQueue(), waitSemaphores, waitStages, signalSemaphores, this->inFlightFences[this->currentFrameIndex]);
 	}
 
-	bool EngineRenderer::presentFrame() {
+	bool EngineRasterRenderer::presentFrame() {
 		assert(this->isFrameStarted && "can't present frame if frame is not in progress");
 
 		auto result = this->swapChain->presentRenders(&this->currentImageIndex, &this->renderFinishedSemaphores[this->currentFrameIndex]);

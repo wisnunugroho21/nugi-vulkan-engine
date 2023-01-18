@@ -25,7 +25,7 @@ namespace nugiEngine {
 			bool isFrameInProgress() const { return this->isFrameStarted; }
 			
 			std::shared_ptr<EngineDescriptorPool> getDescriptorPool() const { return this->descriptorPool; }
-			std::shared_ptr<EngineDescriptorSetLayout> getglobalDescSetLayout() const { return this->globalDescSetLayout; }
+			std::shared_ptr<EngineDescriptorSetLayout> getGlobalDescSetLayout() const { return this->globalDescSetLayout; }
 			std::shared_ptr<VkDescriptorSet> getGlobalDescriptorSets(uint32_t index) const { return this->globalDescriptorSets[index]; }
 
 			VkCommandBuffer getCommandBuffer() const { 

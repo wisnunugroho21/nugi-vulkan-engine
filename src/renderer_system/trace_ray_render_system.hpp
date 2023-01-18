@@ -14,14 +14,14 @@
 #include <vector>
 
 namespace nugiEngine {
-	class EngineRayTracingComputeRender {
+	class EngineTraceRayRenderSystem {
 		public:
-			EngineRayTracingComputeRender(EngineDevice& device, VkDescriptorSetLayout globalDescSetLayout, 
+			EngineTraceRayRenderSystem(EngineDevice& device, VkDescriptorSetLayout globalDescSetLayout, 
 				EngineDescriptorPool &descriptorPool, uint32_t width, uint32_t height);
-			~EngineRayTracingComputeRender();
+			~EngineTraceRayRenderSystem();
 
-			EngineRayTracingComputeRender(const EngineRayTracingComputeRender&) = delete;
-			EngineRayTracingComputeRender& operator = (const EngineRayTracingComputeRender&) = delete;
+			EngineTraceRayRenderSystem(const EngineTraceRayRenderSystem&) = delete;
+			EngineTraceRayRenderSystem& operator = (const EngineTraceRayRenderSystem&) = delete;
 
 			void render(std::shared_ptr<EngineCommandBuffer> commandBuffer, VkDescriptorSet &GlobalDescSet);
 

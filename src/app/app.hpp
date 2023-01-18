@@ -5,7 +5,7 @@
 #include "../game_object/game_object.hpp"
 #include "../descriptor/descriptor.hpp"
 #include "../renderer/ray_tracing_renderer.hpp"
-#include "../renderer_system/compute_render_system.hpp"
+#include "../renderer_system/trace_ray_render_system.hpp"
 
 #include <memory>
 #include <vector>
@@ -35,6 +35,6 @@ namespace nugiEngine {
 			EngineDevice device{window};
 			
 			std::unique_ptr<EngineRayTraceRenderer> renderer{};
-			std::unique_ptr<EngineRayTracingComputeRender> computeRender{};
+			std::unique_ptr<EngineTraceRayRenderSystem> computeRender{};
 	};
 }

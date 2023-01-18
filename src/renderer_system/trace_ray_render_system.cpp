@@ -1,4 +1,4 @@
-#include "compute_render_system.hpp"
+#include "trace_ray_render_system.hpp"
 
 #include "../swap_chain/swap_chain.hpp"
 
@@ -12,18 +12,18 @@
 #include <string>
 
 namespace nugiEngine {
-	EngineRayTracingComputeRender::EngineRayTracingComputeRender(EngineDevice& device, VkDescriptorSetLayout globalDescSetLayout, 
+	EngineTraceRayRenderSystem::EngineTraceRayRenderSystem(EngineDevice& device, VkDescriptorSetLayout globalDescSetLayout, 
 		EngineDescriptorPool &descriptorPool, uint32_t width, uint32_t height) : appDevice{device}, width{width}, height{height} 
 	{
 		this->createPipelineLayout(globalDescSetLayout);
 		this->createPipeline();
 	}
 
-	EngineRayTracingComputeRender::~EngineRayTracingComputeRender() {
+	EngineTraceRayRenderSystem::~EngineTraceRayRenderSystem() {
 		vkDestroyPipelineLayout(this->appDevice.getLogicalDevice(), this->pipelineLayout, nullptr);
 	}
 
-	void EngineRayTracingComputeRender::createPipelineLayout(VkDescriptorSetLayout globalDescSetLayout) {
+	void EngineTraceRayRenderSystem::createPipelineLayout(VkDescriptorSetLayout globalDescSetLayout) {
 		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { globalDescSetLayout };
 
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
@@ -36,7 +36,7 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineRayTracingComputeRender::createPipeline() {
+	void EngineTraceRayRenderSystem::createPipeline() {
 		assert(this->pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
 		this->pipeline = EngineComputePipeline::Builder(this->appDevice, this->pipelineLayout)
@@ -44,7 +44,7 @@ namespace nugiEngine {
 			.build();
 	}
 
-	void EngineRayTracingComputeRender::render(std::shared_ptr<EngineCommandBuffer> commandBuffer, VkDescriptorSet &GlobalDescSet) {
+	void EngineTraceRayRenderSystem::render(std::shared_ptr<EngineCommandBuffer> commandBuffer, VkDescriptorSet &GlobalDescSet) {
 		this->pipeline->bind(commandBuffer->getCommandBuffer());
 
 		VkDescriptorSet descpSet[1] = { GlobalDescSet };

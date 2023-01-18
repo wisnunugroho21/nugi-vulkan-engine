@@ -12,20 +12,20 @@
 #include <cassert>
 
 namespace nugiEngine {
-	class EngineRenderer
+	class EngineRasterRenderer
 	{
 		public:
-			EngineRenderer(EngineWindow& window, EngineDevice& device);
-			~EngineRenderer();
+			EngineRasterRenderer(EngineWindow& window, EngineDevice& device);
+			~EngineRasterRenderer();
 
-			EngineRenderer(const EngineRenderer&) = delete;
-			EngineRenderer& operator = (const EngineRenderer&) = delete;
+			EngineRasterRenderer(const EngineRasterRenderer&) = delete;
+			EngineRasterRenderer& operator = (const EngineRasterRenderer&) = delete;
 
 			std::shared_ptr<EngineSwapChain> getSwapChain() const { return this->swapChain; }
 			bool isFrameInProgress() const { return this->isFrameStarted; }
 			
 			std::shared_ptr<EngineDescriptorPool> getDescriptorPool() const { return this->descriptorPool; }
-			std::shared_ptr<EngineDescriptorSetLayout> getglobalDescSetLayout() const { return this->globalDescSetLayout; }
+			std::shared_ptr<EngineDescriptorSetLayout> getGlobalDescSetLayout() const { return this->globalDescSetLayout; }
 			std::shared_ptr<VkDescriptorSet> getGlobalDescriptorSets(int index) const { return this->globalDescriptorSets[index]; }
 
 			VkCommandBuffer getCommandBuffer() const { 
