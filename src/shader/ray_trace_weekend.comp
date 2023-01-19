@@ -86,7 +86,10 @@ HitRecord hitSphere(Sphere obj, Ray r, float tMin, float tMax) {
 }
 
 vec3 rayColor(Ray r) {
-  Sphere obj { vec3(0.0, 0.0, -1.0), 0.5 };
+  Sphere obj;
+  obj.center = vec3(0.0, 0.0, -1.0);
+  obj.radius = 0.5;
+
   HitRecord rec = hitSphere(obj, r, 0.001, 10000.0);
 
   if (rec.isHit) {
