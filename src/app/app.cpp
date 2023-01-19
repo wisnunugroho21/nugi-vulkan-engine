@@ -52,17 +52,18 @@ namespace nugiEngine {
 				int imageIndex = this->renderer->getImageIndex();
 				int frameIndex = this->renderer->getFrameIndex();
 
-				auto commandBuffer = this->renderer->beginCommand();
-
 				this->traceRayRender->writeGlobalData(imageIndex);
+
+				auto commandBuffer = this->renderer->beginCommand();
+				this->samplingRayRender->prepareFrame(commandBuffer, imageIndex);
+				
 				this->traceRayRender->render(commandBuffer, imageIndex);
 				this->traceRayRender->waitToFinish(commandBuffer, imageIndex);
+
 				std::shared_ptr<VkDescriptorSet> traceRayDescSet = this->traceRayRender->getDescriptorSets(imageIndex);
-
-				this->samplingRayRender->prepareFrame(commandBuffer, imageIndex);
 				this->samplingRayRender->render(commandBuffer, imageIndex, traceRayDescSet);
-				this->samplingRayRender->finishFrame(commandBuffer, imageIndex);
 
+				this->samplingRayRender->finishFrame(commandBuffer, imageIndex);
 				this->renderer->endCommand(commandBuffer);
 				this->renderer->submitCommand(commandBuffer);
 
