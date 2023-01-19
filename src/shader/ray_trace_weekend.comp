@@ -6,11 +6,17 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 layout(set = 0, binding = 0, rgba8) uniform image2D targetImage[8];
 
+struct Sphere {
+  vec3 center;
+  float radius;
+};
+
 layout(set = 0, binding = 1) uniform GlobalUbo {
   vec3 origin;
   vec3 horizontal;
   vec3 vertical;
   vec3 lowerLeftCorner;
+  Sphere spheres[2];
 } ubo;
 
 // ------------- pre-defined parameter -------------
@@ -34,11 +40,6 @@ struct HitRecord {
   float t;
   vec3 point;
   FaceNormal faceNormal;
-};
-
-struct Sphere {
-  vec3 center;
-  float radius;
 };
 
 // ------------- function ------------- 
@@ -99,12 +100,19 @@ HitRecord hitSphere(Sphere obj, Ray r, float tMin, float tMax) {
   return rec;
 }
 
-vec3 rayColor(Ray r) {
-  Sphere obj;
-  obj.center = vec3(0.0, 0.0, -1.0);
-  obj.radius = 0.5;
+HitRecord hitSphereList(Sphere[] obj, int objNum, Ray r, float tMin, float tMax) {
+  HitRecord rec;
+  rec.t = tMax;
 
-  HitRecord rec = hitSphere(obj, r, 0.001, 10000.0);
+  for (int i = 0; i < objNum; i++) {
+    rec = hitSphere(obj[i], r, tMin, rec.t);
+  }
+
+  return rec;
+}
+
+vec3 rayColor(Ray r) {
+  HitRecord rec = hitSphereList(ubo.spheres, 2, r, 0.001, 10000.0);
 
   if (rec.isHit) {
     return 0.5 * (rec.faceNormal.normal + vec3(1.0, 1.0, 1.0));
@@ -115,6 +123,14 @@ vec3 rayColor(Ray r) {
   return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
 }
 
+Ray shootRayFromCamera(GlobalUbo ubo, vec2 uv) {
+  Ray r;
+  r.origin = ubo.origin;
+  r.direction = ubo.lowerLeftCorner + uv.x * ubo.horizontal + uv.y * ubo.vertical - ubo.origin;
+
+  return r;
+}
+
 void main() {
   uint imageIndex = gl_GlobalInvocationID.z;
   vec2 imageSize = vec2(imageSize(targetImage[imageIndex]));
@@ -122,12 +138,10 @@ void main() {
   float noiseX = goldNoise(gl_GlobalInvocationID.xz, 1.0);
   float noiseY = goldNoise(gl_GlobalInvocationID.yz, 1.0);
 
-  float u = (gl_GlobalInvocationID.x + noiseX) / imageSize.x;
-  float v = (gl_GlobalInvocationID.y + noiseY) / imageSize.y;
+  vec2 noiseUV = vec2(noiseX, noiseY);
+  vec2 uv = (gl_GlobalInvocationID.xy + noiseUV) / imageSize;
 
-  Ray r;
-  r.origin = ubo.origin;
-  r.direction = ubo.lowerLeftCorner + u * ubo.horizontal + v * ubo.vertical - ubo.origin;
+  Ray r = shootRayFromCamera(ubo, uv);
   
   vec4 curColor = vec4(rayColor(r).xyz, 1.0);
   imageStore(targetImage[imageIndex], ivec2(gl_GlobalInvocationID.xy), curColor);

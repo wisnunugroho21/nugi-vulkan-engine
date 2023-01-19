@@ -124,6 +124,14 @@ namespace nugiEngine {
     ubo.vertical = glm::vec3(0.0f, viewport_height, 0.0f);
     ubo.lowerLeftCorner = ubo.origin - ubo.horizontal / 2.0f - ubo.vertical / 2.0f - glm::vec3(0.0f, 0.0f, focal_length);
 
+		Sphere sphere[2];
+		
+		sphere[0].radius = 0.5f;
+		sphere[0].center = glm::vec3(0.0f, 0.0f, -1.0f);
+
+		sphere[1].radius = 100.0f;
+		sphere[1].center = glm::vec3(0.0f, -100.5f, -1.0f);
+
 		this->uniformBuffers[imageIndex]->writeToBuffer(&ubo);
 		this->uniformBuffers[imageIndex]->flush();
 	}
