@@ -83,13 +83,15 @@ namespace nugiEngine {
 	}
 
 	void EngineApp::recreateSubRendererAndSubsystem() {
+		uint32_t nSample = 8;
+		
 		uint32_t width = this->renderer->getSwapChain()->getSwapChainExtent().width;
 		uint32_t height = this->renderer->getSwapChain()->getSwapChainExtent().height;
 		std::shared_ptr<EngineDescriptorPool> descriptorPool = this->renderer->getDescriptorPool();
 		std::vector<std::shared_ptr<EngineImage>> swapChainImages = this->renderer->getSwapChain()->getswapChainImages();
 
-		this->traceRayRender = std::make_unique<EngineTraceRayRenderSystem>(this->device, descriptorPool,
-			width, height, swapChainImages.size());
+		this->traceRayRender = std::make_unique<EngineTraceRayRenderSystem>(this->device, descriptorPool, 
+			swapChainImages.size(), width, height, nSample);
 
 		this->samplingRayRender = std::make_unique<EngineSamplingRayRenderSystem>(this->device, descriptorPool, 
 			this->traceRayRender->getDescSetLayout(), swapChainImages, width, height);

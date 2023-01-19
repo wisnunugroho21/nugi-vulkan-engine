@@ -14,7 +14,7 @@
 
 namespace nugiEngine {
 	EngineTraceRayRenderSystem::EngineTraceRayRenderSystem(EngineDevice& device, std::shared_ptr<EngineDescriptorPool> descriptorPool, 
-		uint32_t width, uint32_t height, uint32_t swapChainImageCount) : appDevice{device}, width{width}, height{height} 
+		uint32_t swapChainImageCount, uint32_t width, uint32_t height, uint32_t nSample) : appDevice{device}, width{width}, height{height}, nSample{nSample} 
 	{
 		this->createImageStorages(swapChainImageCount);
 		this->createUniformBuffer(sizeof(RayTraceUbo), swapChainImageCount);
@@ -52,10 +52,9 @@ namespace nugiEngine {
 
 	void EngineTraceRayRenderSystem::createImageStorages(uint32_t swapChainImageCount) {
 		this->storageImages.clear();
-		uint32_t nSample = 8;
 
 		for (uint32_t i = 0; i < swapChainImageCount; i++) {
-			for (uint32_t j = 0; j < nSample; j++) {
+			for (uint32_t j = 0; j < this->nSample; j++) {
 				auto storageImage = std::make_shared<EngineImage>(
 					this->appDevice, this->width, this->height, 
 					1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_B8G8R8A8_UNORM, 
@@ -86,11 +85,9 @@ namespace nugiEngine {
 	}
 
 	void EngineTraceRayRenderSystem::createDescriptor(std::shared_ptr<EngineDescriptorPool> descriptorPool, uint32_t swapChainImageCount) {
-		uint32_t nSample = 8;
-
 		this->descSetLayout = 
 			EngineDescriptorSetLayout::Builder(this->appDevice)
-        .addBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT, nSample)
+        .addBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT, this->nSample)
 				.addBinding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT)
 				.build();
 
@@ -98,8 +95,8 @@ namespace nugiEngine {
 			auto descSet = std::make_shared<VkDescriptorSet>();
 			std::vector<VkDescriptorImageInfo> imageInfos{};
 
-			for (uint32_t j = 0; j < nSample; j++) {
-				auto imageInfo = this->storageImages[j + nSample * i]->getDescriptorInfo(VK_IMAGE_LAYOUT_GENERAL); 
+			for (uint32_t j = 0; j < this->nSample; j++) {
+				auto imageInfo = this->storageImages[j + this->nSample * i]->getDescriptorInfo(VK_IMAGE_LAYOUT_GENERAL); 
 				imageInfos.emplace_back(imageInfo);
 			}
 
@@ -107,7 +104,7 @@ namespace nugiEngine {
 			auto bufferInfo = uniformBuffer->descriptorInfo();
 
 			EngineDescriptorWriter(*this->descSetLayout, *descriptorPool)
-				.writeImage(0, imageInfos.data(), nSample) 
+				.writeImage(0, imageInfos.data(), this->nSample) 
 				.writeBuffer(1, &bufferInfo)
 				.build(descSet.get());
 
@@ -145,14 +142,12 @@ namespace nugiEngine {
 			nullptr
 		);
 
-		this->pipeline->dispatch(commandBuffer->getCommandBuffer(), this->width / 8, this->height / 8, 8);
+		this->pipeline->dispatch(commandBuffer->getCommandBuffer(), this->width / 8, this->height / 8, this->nSample / 1);
 	}
 
 	bool EngineTraceRayRenderSystem::prepareFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex) {
-		uint32_t nSample = 8;
-
 		std::vector<std::shared_ptr<EngineImage>> selectedImages;
-		for (uint32_t i = nSample * imageIndex; i < (nSample * imageIndex) + nSample; i++) {
+		for (uint32_t i = this->nSample * imageIndex; i < (this->nSample * imageIndex) + this->nSample; i++) {
 			selectedImages.emplace_back(this->storageImages[i]);
 		}
 
@@ -170,10 +165,8 @@ namespace nugiEngine {
 	}
 
 	bool EngineTraceRayRenderSystem::finishFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex) {
-		uint32_t nSample = 8;
-
 		std::vector<std::shared_ptr<EngineImage>> selectedImages;
-		for (uint32_t i = nSample * imageIndex; i < (nSample * imageIndex) + nSample; i++) {
+		for (uint32_t i = this->nSample * imageIndex; i < (this->nSample * imageIndex) + this->nSample; i++) {
 			selectedImages.emplace_back(this->storageImages[i]);
 		}
 

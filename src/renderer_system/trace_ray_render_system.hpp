@@ -17,7 +17,7 @@ namespace nugiEngine {
 	class EngineTraceRayRenderSystem {
 		public:
 			EngineTraceRayRenderSystem(EngineDevice& device, std::shared_ptr<EngineDescriptorPool> descriptorPool, 
-				uint32_t width, uint32_t height, uint32_t swapChainImageCount);
+				uint32_t swapChainImageCount, uint32_t width, uint32_t height, uint32_t nSample);
 			~EngineTraceRayRenderSystem();
 
 			EngineTraceRayRenderSystem(const EngineTraceRayRenderSystem&) = delete;
@@ -52,6 +52,6 @@ namespace nugiEngine {
 			VkPipelineLayout pipelineLayout;
 			std::unique_ptr<EngineComputePipeline> pipeline;
 
-			uint32_t width, height;
+			uint32_t width, height, nSample;
 	};
 }
