@@ -89,6 +89,6 @@ namespace nugiEngine {
 			width, height, swapChainImages.size());
 
 		this->samplingRayRender = std::make_unique<EngineSamplingRayRenderSystem>(this->device, descriptorPool, 
-			swapChainImages, width, height);
+			this->traceRayRender->getDescSetLayout(), swapChainImages, width, height);
 	}
 }

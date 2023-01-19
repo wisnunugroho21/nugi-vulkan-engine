@@ -23,6 +23,7 @@ namespace nugiEngine {
 			EngineTraceRayRenderSystem(const EngineTraceRayRenderSystem&) = delete;
 			EngineTraceRayRenderSystem& operator = (const EngineTraceRayRenderSystem&) = delete;
 
+			std::shared_ptr<EngineDescriptorSetLayout> getDescSetLayout() { return this->descSetLayout; }
 			std::shared_ptr<VkDescriptorSet> getDescriptorSets(uint32_t index) { return this->descriptorSets[index]; }
 
 			void writeGlobalData(int imageIndex);

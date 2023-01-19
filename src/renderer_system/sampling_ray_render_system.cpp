@@ -12,12 +12,12 @@
 #include <string>
 
 namespace nugiEngine {
-	EngineSamplingRayRenderSystem::EngineSamplingRayRenderSystem(EngineDevice& device, std::shared_ptr<EngineDescriptorPool> descriptorPool, 
+	EngineSamplingRayRenderSystem::EngineSamplingRayRenderSystem(EngineDevice& device, std::shared_ptr<EngineDescriptorPool> descriptorPool, std::shared_ptr<EngineDescriptorSetLayout> traceRayDescLayout,
 		std::vector<std::shared_ptr<EngineImage>> swapChainImages, uint32_t width, uint32_t height) : appDevice{device}, width{width}, height{height}, swapChainImages{swapChainImages} 
 	{
 		this->createDescriptor(descriptorPool);
 
-		this->createPipelineLayout();
+		this->createPipelineLayout(traceRayDescLayout);
 		this->createPipeline();
 	}
 
@@ -26,13 +26,13 @@ namespace nugiEngine {
 		vkDestroyDescriptorSetLayout(this->appDevice.getLogicalDevice(), this->descSetLayout->getDescriptorSetLayout(), nullptr);
 	}
 
-	void EngineSamplingRayRenderSystem::createPipelineLayout() {
-		VkDescriptorSetLayout descriptorSetLayout = this->descSetLayout->getDescriptorSetLayout();
+	void EngineSamplingRayRenderSystem::createPipelineLayout(std::shared_ptr<EngineDescriptorSetLayout> traceRayDescLayout) {
+		std::vector<VkDescriptorSetLayout> descSetLayouts = { traceRayDescLayout->getDescriptorSetLayout(), this->descSetLayout->getDescriptorSetLayout() };
 
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutInfo.setLayoutCount = 1;
-		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+		pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(descSetLayouts.size());
+		pipelineLayoutInfo.pSetLayouts = descSetLayouts.data();
 
 		if (vkCreatePipelineLayout(this->appDevice.getLogicalDevice(), &pipelineLayoutInfo, nullptr, &this->pipelineLayout) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create pipeline layout!");

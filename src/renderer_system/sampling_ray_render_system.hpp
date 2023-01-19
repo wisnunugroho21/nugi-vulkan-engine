@@ -16,7 +16,7 @@
 namespace nugiEngine {
 	class EngineSamplingRayRenderSystem {
 		public:
-			EngineSamplingRayRenderSystem(EngineDevice& device, std::shared_ptr<EngineDescriptorPool> descriptorPool, 
+			EngineSamplingRayRenderSystem(EngineDevice& device, std::shared_ptr<EngineDescriptorPool> descriptorPool, std::shared_ptr<EngineDescriptorSetLayout> traceRayDescLayout,
 				std::vector<std::shared_ptr<EngineImage>> swapChainImages, uint32_t width, uint32_t height);
 			~EngineSamplingRayRenderSystem();
 
@@ -29,7 +29,7 @@ namespace nugiEngine {
 			bool finishFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex);	
 		
 		private:
-			void createPipelineLayout();
+			void createPipelineLayout(std::shared_ptr<EngineDescriptorSetLayout> traceRayDescLayout);
 			void createPipeline();
 
 			void createDescriptor(std::shared_ptr<EngineDescriptorPool> descriptorPool);
