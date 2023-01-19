@@ -46,14 +46,14 @@ vec3 rayAt(Ray r, float t) {
 FaceNormal setFaceNormal(Ray r, vec3 outwardNormal) {
   FaceNormal faceNormal{};
 
-  faceNormal.frontFace = dot(r.direction(), outward_normal) < 0;
-  faceNormal.normal = front_face ? outward_normal :-outward_normal;
+  faceNormal.frontFace = dot(r.direction, outwardNormal) < 0;
+  faceNormal.normal = faceNormal.frontFace ? outwardNormal : -outwardNormal;
 
   return faceNormal;
 }
 
-HitRecord hitSphere(Sphere obj, Ray r, double tMin, double tMax) {
-  HitRecord rec{};
+HitRecord hitSphere(Sphere obj, Ray r, float tMin, float tMax) {
+  HitRecord rec;
 
   vec3 oc = r.origin - obj.center;
   float a = dot(r.direction, r.direction);
@@ -86,10 +86,11 @@ HitRecord hitSphere(Sphere obj, Ray r, double tMin, double tMax) {
 }
 
 vec3 rayColor(Ray r) {
-  HitRecord rec = hitSphere(vec3(0.0, 0.0, -1.0), 0.5, r);
+  Sphere obj { vec3(0.0, 0.0, -1.0), 0.5 };
+  HitRecord rec = hitSphere(obj, r, 0.001, 10000.0);
 
   if (rec.isHit) {
-    return 0.5 * (rec.normal + vec3(1.0, 1.0, 1.0));
+    return 0.5 * (rec.faceNormal.normal + vec3(1.0, 1.0, 1.0));
   }
 
   vec3 unit_direction = normalize(r.direction);
