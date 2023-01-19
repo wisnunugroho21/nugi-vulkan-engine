@@ -44,7 +44,7 @@ vec3 rayAt(Ray r, float t) {
 }
 
 FaceNormal setFaceNormal(Ray r, vec3 outwardNormal) {
-  FaceNormal faceNormal{};
+  FaceNormal faceNormal;
 
   faceNormal.frontFace = dot(r.direction, outwardNormal) < 0;
   faceNormal.normal = faceNormal.frontFace ? outwardNormal : -outwardNormal;
