@@ -52,15 +52,17 @@ namespace nugiEngine {
 				int imageIndex = this->renderer->getImageIndex();
 				int frameIndex = this->renderer->getFrameIndex();
 
-				this->renderer->writeGlobalData(imageIndex);
-
 				auto commandBuffer = this->renderer->beginCommand();
-				this->renderer->prepareFrame(commandBuffer);
 
-				auto globalDescSet = this->renderer->getGlobalDescriptorSets(imageIndex);
-				this->computeRender->render(commandBuffer, *globalDescSet);
+				this->traceRayRender->writeGlobalData(imageIndex);
+				this->traceRayRender->render(commandBuffer, imageIndex);
+				this->traceRayRender->waitToFinish(commandBuffer, imageIndex);
+				std::shared_ptr<VkDescriptorSet> traceRayDescSet = this->traceRayRender->getDescriptorSets(imageIndex);
 
-				this->renderer->finishFrame(commandBuffer);
+				this->samplingRayRender->prepareFrame(commandBuffer, imageIndex);
+				this->samplingRayRender->render(commandBuffer, imageIndex, traceRayDescSet);
+				this->samplingRayRender->finishFrame(commandBuffer, imageIndex);
+
 				this->renderer->endCommand(commandBuffer);
 				this->renderer->submitCommand(commandBuffer);
 
@@ -78,9 +80,15 @@ namespace nugiEngine {
 	}
 
 	void EngineApp::recreateSubRendererAndSubsystem() {
-		this->computeRender = std::make_unique<EngineTraceRayRenderSystem>(this->device, 
-			this->renderer->getGlobalDescSetLayout()->getDescriptorSetLayout(), *this->renderer->getDescriptorPool(),
-			this->renderer->getSwapChain()->getSwapChainExtent().width, this->renderer->getSwapChain()->getSwapChainExtent().height
-    );
+		uint32_t width = this->renderer->getSwapChain()->getSwapChainExtent().width;
+		uint32_t height = this->renderer->getSwapChain()->getSwapChainExtent().height;
+		std::shared_ptr<EngineDescriptorPool> descriptorPool = this->renderer->getDescriptorPool();
+		std::vector<std::shared_ptr<EngineImage>> swapChainImages = this->renderer->getSwapChain()->getswapChainImages();
+
+		this->traceRayRender = std::make_unique<EngineTraceRayRenderSystem>(this->device, descriptorPool,
+			width, height, swapChainImages.size());
+
+		this->samplingRayRender = std::make_unique<EngineSamplingRayRenderSystem>(this->device, descriptorPool, 
+			swapChainImages, width, height);
 	}
 }

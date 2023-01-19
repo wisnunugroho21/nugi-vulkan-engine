@@ -11,14 +11,13 @@ namespace nugiEngine {
 		this->createSyncObjects(this->swapChain->imageCount());
 
 		this->commandBuffers = EngineCommandBuffer::createCommandBuffers(device, EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
-		this->createGlobalUniformBuffer(sizeof(RayTraceUbo));
-		
-		this->createGlobalDescriptor();
-		this->recreateDescriptor();
+		this->createDescriptorPool();
 	}
 
 	EngineRayTraceRenderer::~EngineRayTraceRenderer() {
 		// cleanup synchronization objects
+		this->descriptorPool->resetPool();
+		
     for (size_t i = 0; i < EngineSwapChain::MAX_FRAMES_IN_FLIGHT; i++) {
       vkDestroySemaphore(this->appDevice.getLogicalDevice(), this->renderFinishedSemaphores[i], nullptr);
       vkDestroySemaphore(this->appDevice.getLogicalDevice(), this->imageAvailableSemaphores[i], nullptr);
@@ -47,45 +46,16 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineRayTraceRenderer::createGlobalDescriptor() {
+	void EngineRayTraceRenderer::createDescriptorPool() {
+		uint32_t nSample = 8;
 		uint32_t imageCount = static_cast<uint32_t>(this->swapChain->getswapChainImages().size());
 
 		this->descriptorPool = 
 			EngineDescriptorPool::Builder(this->appDevice)
-				.setMaxSets(imageCount)
-				.addPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, imageCount)
+				.setMaxSets(imageCount * nSample + imageCount)
+				.addPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, imageCount * nSample)
 				.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, imageCount)
 				.build();
-
-		this->globalDescSetLayout = 
-			EngineDescriptorSetLayout::Builder(this->appDevice)
-				.addBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT)
-				.addBinding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT)
-				.build();
-	}
-
-	void EngineRayTraceRenderer::recreateDescriptor() {
-		this->descriptorPool->resetPool();
-		this->globalDescriptorSets.clear();
-
-		uint32_t imageCount = static_cast<uint32_t>(this->swapChain->getswapChainImages().size());
-
-		for (uint32_t i = 0; i < imageCount; i++) {
-			auto descSet = std::make_shared<VkDescriptorSet>();
-
-			auto swapChainImage = this->swapChain->getswapChainImages()[i];
-			auto uniformBuffer = this->globalUniformBuffers[i];
-
-			auto imageInfo = swapChainImage->getDescriptorInfo(VK_IMAGE_LAYOUT_GENERAL);
-			auto bufferInfo = uniformBuffer->descriptorInfo();
-
-			EngineDescriptorWriter(*this->globalDescSetLayout, *this->descriptorPool)
-				.writeImage(0, &imageInfo) 
-				.writeBuffer(1, &bufferInfo)
-				.build(descSet.get());
-
-			this->globalDescriptorSets.emplace_back(descSet);
-		}
 	}
 
 	void EngineRayTraceRenderer::createSyncObjects(int imageCount) {
@@ -111,39 +81,6 @@ namespace nugiEngine {
     }
   }
 
-	void EngineRayTraceRenderer::createGlobalUniformBuffer(unsigned long sizeUBO) {
-		uint32_t imageCount = static_cast<uint32_t>(this->swapChain->getswapChainImages().size());
-
-		for (uint32_t i = 0; i < imageCount; i++) {
-			auto uniformBuffer = std::make_shared<EngineBuffer>(
-				this->appDevice,
-				sizeUBO,
-				1,
-				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-			);
-
-			uniformBuffer->map();
-			this->globalUniformBuffers.emplace_back(uniformBuffer);
-		}
-	}
-
-	void EngineRayTraceRenderer::writeGlobalData(int imageIndex) {
-		RayTraceUbo ubo;
-
-		auto viewport_height = 2.0f;
-    auto viewport_width = 1.0f * viewport_height;
-    auto focal_length = 1.0f;
-
-		ubo.origin = glm::vec3(0.0f, 0.0f, 0.0f);
-    ubo.horizontal = glm::vec3(viewport_width, 0.0f, 0.0f);
-    ubo.vertical = glm::vec3(0.0f, viewport_height, 0.0f);
-    ubo.lowerLeftCorner = ubo.origin - ubo.horizontal / 2.0f - ubo.vertical / 2.0f - glm::vec3(0.0f, 0.0f, focal_length);
-
-		this->globalUniformBuffers[imageIndex]->writeToBuffer(&ubo);
-		this->globalUniformBuffers[imageIndex]->flush();
-	}
-
 	bool EngineRayTraceRenderer::acquireFrame() {
 		assert(!this->isFrameStarted && "can't acquire frame while frame still in progress");
 
@@ -158,16 +95,6 @@ namespace nugiEngine {
 		}
 
 		this->isFrameStarted = true;
-		return true;
-	}
-
-	bool EngineRayTraceRenderer::prepareFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
-		auto imageIndex = this->getImageIndex();
-		auto swapChainImage = this->swapChain->getswapChainImages()[imageIndex];
-
-		swapChainImage->transitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 
-			VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, commandBuffer);
-
 		return true;
 	}
 
@@ -217,16 +144,6 @@ namespace nugiEngine {
 		commandBuffer->submitCommand(this->appDevice.getComputeQueue(), waitSemaphores, waitStages, signalSemaphores, this->inFlightFences[this->currentFrameIndex]);
 	}
 
-	bool EngineRayTraceRenderer::finishFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer) {
-		auto imageIndex = this->getImageIndex();
-		auto swapChainImage = this->swapChain->getswapChainImages()[imageIndex];
-
-		swapChainImage->transitionImageLayout(VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 
-			VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, commandBuffer);
-
-    return true;
-	}
-
 	bool EngineRayTraceRenderer::presentFrame() {
 		assert(this->isFrameStarted && "can't present frame if frame is not in progress");
 
@@ -238,7 +155,7 @@ namespace nugiEngine {
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || this->appWindow.wasResized()) {
 			this->appWindow.resetResizedFlag();
 			this->recreateSwapChain();
-			this->recreateDescriptor();
+			this->descriptorPool->resetPool();
 
 			return false;
 		} else if (result != VK_SUCCESS) {

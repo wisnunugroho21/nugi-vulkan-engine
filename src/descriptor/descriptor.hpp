@@ -88,8 +88,8 @@ class EngineDescriptorWriter {
  public:
   EngineDescriptorWriter(EngineDescriptorSetLayout &setLayout, EngineDescriptorPool &pool);
  
-  EngineDescriptorWriter &writeBuffer(uint32_t binding, VkDescriptorBufferInfo *bufferInfo);
-  EngineDescriptorWriter &writeImage(uint32_t binding, VkDescriptorImageInfo *imageInfo);
+  EngineDescriptorWriter &writeBuffer(uint32_t binding, VkDescriptorBufferInfo *bufferInfo, uint32_t count = 1);
+  EngineDescriptorWriter &writeImage(uint32_t binding, VkDescriptorImageInfo *imageInfo, uint32_t count = 1);
  
   bool build(VkDescriptorSet *set);
   void overwrite(VkDescriptorSet *set);

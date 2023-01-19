@@ -135,7 +135,7 @@ namespace nugiEngine {
   
   EngineDescriptorWriter::EngineDescriptorWriter(EngineDescriptorSetLayout &setLayout, EngineDescriptorPool &pool) : setLayout{setLayout}, pool{pool} {}
   
-  EngineDescriptorWriter &EngineDescriptorWriter::writeBuffer(uint32_t binding, VkDescriptorBufferInfo *bufferInfo) {
+  EngineDescriptorWriter &EngineDescriptorWriter::writeBuffer(uint32_t binding, VkDescriptorBufferInfo *bufferInfo, uint32_t count) {
     assert(setLayout.bindings.count(binding) == 1 && "Layout does not contain specified binding");
   
     auto &bindingDescription = setLayout.bindings[binding];
@@ -149,13 +149,13 @@ namespace nugiEngine {
     write.descriptorType = bindingDescription.descriptorType;
     write.dstBinding = binding;
     write.pBufferInfo = bufferInfo;
-    write.descriptorCount = 1;
+    write.descriptorCount = count;
   
     writes.push_back(write);
     return *this;
   }
   
-  EngineDescriptorWriter &EngineDescriptorWriter::writeImage(uint32_t binding, VkDescriptorImageInfo *imageInfo) {
+  EngineDescriptorWriter &EngineDescriptorWriter::writeImage(uint32_t binding, VkDescriptorImageInfo *imageInfo, uint32_t count) {
     assert(setLayout.bindings.count(binding) == 1 && "Layout does not contain specified binding");
   
     auto &bindingDescription = setLayout.bindings[binding];
@@ -168,7 +168,7 @@ namespace nugiEngine {
     write.descriptorType = bindingDescription.descriptorType;
     write.dstBinding = binding;
     write.pImageInfo = imageInfo;
-    write.descriptorCount = 1;
+    write.descriptorCount = count;
   
     writes.push_back(write);
     return *this;

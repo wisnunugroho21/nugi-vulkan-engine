@@ -20,12 +20,18 @@ namespace nugiEngine
       VkImage getImage() const { return this->image; }
       VkImageView getImageView() const { return this->imageView; }
       VkDeviceMemory getImageMemory() const { return this->imageMemory; }
+      
+      VkImageAspectFlags getAspectFlag() { return this->aspectFlags; }
+      uint32_t getMipLevels() { return this->mipLevels; }
 
       VkDescriptorImageInfo getDescriptorInfo(VkImageLayout desiredImageLayout);
 
       void transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout);
       void transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout, VkPipelineStageFlags srcStage, VkPipelineStageFlags dstStage, 
         std::shared_ptr<EngineCommandBuffer> commandBuffer = nullptr);
+
+      static void transitionImageLayout(std::vector<std::shared_ptr<EngineImage>> images, VkImageLayout oldLayout, VkImageLayout newLayout, VkPipelineStageFlags srcStage, 
+        VkPipelineStageFlags dstStage, std::shared_ptr<EngineCommandBuffer> commandBuffer = nullptr, EngineDevice *appDevice = nullptr);
 
       void copyImageFromOther(std::shared_ptr<EngineImage> srcImage, VkImageLayout srcLayout, VkImageLayout dstLayout, std::shared_ptr<EngineCommandBuffer> commandBuffer = nullptr);
       void copyImageToOther(std::shared_ptr<EngineImage> dstImage, VkImageLayout srcLayout, VkImageLayout dstLayout, std::shared_ptr<EngineCommandBuffer> commandBuffer = nullptr);

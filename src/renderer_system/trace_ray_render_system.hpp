@@ -8,7 +8,7 @@
 #include "../frame_info.hpp"
 #include "../buffer/buffer.hpp"
 #include "../descriptor/descriptor.hpp"
-#include "../globalUbo.hpp"
+#include "../frame_info.hpp"
 
 #include <memory>
 #include <vector>
@@ -16,20 +16,35 @@
 namespace nugiEngine {
 	class EngineTraceRayRenderSystem {
 		public:
-			EngineTraceRayRenderSystem(EngineDevice& device, VkDescriptorSetLayout globalDescSetLayout, 
-				EngineDescriptorPool &descriptorPool, uint32_t width, uint32_t height);
+			EngineTraceRayRenderSystem(EngineDevice& device, std::shared_ptr<EngineDescriptorPool> descriptorPool, 
+				uint32_t width, uint32_t height, uint32_t swapChainImageCount);
 			~EngineTraceRayRenderSystem();
 
 			EngineTraceRayRenderSystem(const EngineTraceRayRenderSystem&) = delete;
 			EngineTraceRayRenderSystem& operator = (const EngineTraceRayRenderSystem&) = delete;
 
-			void render(std::shared_ptr<EngineCommandBuffer> commandBuffer, VkDescriptorSet &GlobalDescSet);
+			std::shared_ptr<VkDescriptorSet> getDescriptorSets(uint32_t index) { return this->descriptorSets[index]; }
+
+			void writeGlobalData(int imageIndex);
+			void render(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex);
+			void waitToFinish(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex);
 
 		private:
-			void createPipelineLayout(VkDescriptorSetLayout globalDescSetLayouts);
+			void createPipelineLayout();
 			void createPipeline();
 
+			void createUniformBuffer(unsigned long sizeUBO, uint32_t swapChainImageCount);
+			void createImageStorages(uint32_t swapChainImageCount);
+
+			void createDescriptor(std::shared_ptr<EngineDescriptorPool> descriptorPool, uint32_t swapChainImageCount);
+
 			EngineDevice& appDevice;
+
+			std::shared_ptr<EngineDescriptorSetLayout> descSetLayout;
+			std::vector<std::shared_ptr<VkDescriptorSet>> descriptorSets;
+
+			std::vector<std::shared_ptr<EngineBuffer>> uniformBuffers;
+			std::vector<std::shared_ptr<EngineImage>> storageImages;
 			
 			VkPipelineLayout pipelineLayout;
 			std::unique_ptr<EngineComputePipeline> pipeline;
