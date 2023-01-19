@@ -13,6 +13,10 @@ layout(set = 0, binding = 1) uniform GlobalUbo {
   vec3 lowerLeftCorner;
 } ubo;
 
+// ------------- pre-defined parameter -------------
+
+float PHI = 1.61803398874989484820459;  // Φ = Golden Ratio
+
 // ------------- struct ------------- 
 
 struct Ray {
@@ -38,6 +42,16 @@ struct Sphere {
 };
 
 // ------------- function ------------- 
+
+// Gold Noise ©2015 dcerisano@standard3d.com
+// - based on the Golden Ratio
+// - uniform normalized distribution
+// - fastest static noise generator function (also runs at low precision)
+// - use with indicated fractional seeding method. 
+
+float goldNoise(in vec2 xy, float seed){
+  return fract(tan(distance(xy * PHI, xy) * seed) * xy.y);
+}
 
 vec3 rayAt(Ray r, float t) {
   return r.origin + t * r.direction;
@@ -105,8 +119,11 @@ void main() {
   uint imageIndex = gl_GlobalInvocationID.z;
   vec2 imageSize = vec2(imageSize(targetImage[imageIndex]));
 
-  float u = gl_GlobalInvocationID.x / imageSize.x;
-  float v = gl_GlobalInvocationID.y / imageSize.y;
+  float noiseX = goldNoise(gl_GlobalInvocationID.xz, 1.0);
+  float noiseY = goldNoise(gl_GlobalInvocationID.yz, 1.0);
+
+  float u = (gl_GlobalInvocationID.x + noiseX) / imageSize.x;
+  float v = (gl_GlobalInvocationID.y + noiseY) / imageSize.y;
 
   Ray r;
   r.origin = ubo.origin;
