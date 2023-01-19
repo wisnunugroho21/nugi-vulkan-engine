@@ -115,8 +115,10 @@ namespace nugiEngine {
 	void EngineTraceRayRenderSystem::writeGlobalData(int imageIndex) {
 		RayTraceUbo ubo;
 
+		float aspectRatio = this->width / this->height;
+
 		auto viewport_height = 2.0f;
-    auto viewport_width = 1.0f * viewport_height;
+    auto viewport_width = aspectRatio * viewport_height;
     auto focal_length = 1.0f;
 
 		ubo.origin = glm::vec3(0.0f, 0.0f, 0.0f);
