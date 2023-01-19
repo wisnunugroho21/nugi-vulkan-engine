@@ -148,7 +148,7 @@ namespace nugiEngine {
 			nullptr
 		);
 
-		this->pipeline->dispatch(commandBuffer->getCommandBuffer(), this->width, this->height, 1);
+		this->pipeline->dispatch(commandBuffer->getCommandBuffer(), this->width, this->height, 8);
 	}
 
 	void EngineTraceRayRenderSystem::waitToFinish(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex) {
