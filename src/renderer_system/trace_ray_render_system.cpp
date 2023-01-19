@@ -120,17 +120,15 @@ namespace nugiEngine {
     auto focal_length = 1.0f;
 
 		ubo.origin = glm::vec3(0.0f, 0.0f, 0.0f);
-    ubo.horizontal = glm::vec3(viewport_width, 0.0f, 0.0f);
-    ubo.vertical = glm::vec3(0.0f, viewport_height, 0.0f);
-    ubo.lowerLeftCorner = ubo.origin - ubo.horizontal / 2.0f - ubo.vertical / 2.0f - glm::vec3(0.0f, 0.0f, focal_length);
+		ubo.horizontal = glm::vec3(viewport_width, 0.0f, 0.0f);
+		ubo.vertical = glm::vec3(0.0f, viewport_height, 0.0f);
+		ubo.lowerLeftCorner = ubo.origin - ubo.horizontal / 2.0f - ubo.vertical / 2.0f - glm::vec3(0.0f, 0.0f, focal_length);
+				
+		ubo.spheres[0].radius = 0.5f;
+		ubo.spheres[0].center = glm::vec3(0.0f, 0.0f, -1.0f);
 
-		Sphere sphere[2];
-		
-		sphere[0].radius = 0.5f;
-		sphere[0].center = glm::vec3(0.0f, 0.0f, -1.0f);
-
-		sphere[1].radius = 100.0f;
-		sphere[1].center = glm::vec3(0.0f, -100.5f, -1.0f);
+		ubo.spheres[1].radius = 100.0f;
+		ubo.spheres[1].center = glm::vec3(0.0f, -100.5f, -1.0f);
 
 		this->uniformBuffers[imageIndex]->writeToBuffer(&ubo);
 		this->uniformBuffers[imageIndex]->flush();
