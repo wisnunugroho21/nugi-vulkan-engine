@@ -27,7 +27,6 @@ namespace nugiEngine {
 
 	EngineTraceRayRenderSystem::~EngineTraceRayRenderSystem() {
 		vkDestroyPipelineLayout(this->appDevice.getLogicalDevice(), this->pipelineLayout, nullptr);
-		vkDestroyDescriptorSetLayout(this->appDevice.getLogicalDevice(), this->descSetLayout->getDescriptorSetLayout(), nullptr);
 	}
 
 	void EngineTraceRayRenderSystem::createPipelineLayout() {

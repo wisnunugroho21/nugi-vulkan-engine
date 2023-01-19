@@ -23,7 +23,6 @@ namespace nugiEngine {
 
 	EngineSamplingRayRenderSystem::~EngineSamplingRayRenderSystem() {
 		vkDestroyPipelineLayout(this->appDevice.getLogicalDevice(), this->pipelineLayout, nullptr);
-		vkDestroyDescriptorSetLayout(this->appDevice.getLogicalDevice(), this->descSetLayout->getDescriptorSetLayout(), nullptr);
 	}
 
 	void EngineSamplingRayRenderSystem::createPipelineLayout(std::shared_ptr<EngineDescriptorSetLayout> traceRayDescLayout) {
@@ -51,7 +50,6 @@ namespace nugiEngine {
 		this->descSetLayout = 
 			EngineDescriptorSetLayout::Builder(this->appDevice)
 				.addBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT)
-				.addBinding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT)
 				.build();
 				
 		this->descriptorSets.clear();
