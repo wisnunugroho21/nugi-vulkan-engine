@@ -63,9 +63,6 @@ namespace nugiEngine {
 					VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_COLOR_BIT
 				);
 
-				storageImage->transitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 
-					VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-
 				this->storageImages.emplace_back(storageImage);
 			}
 		}
@@ -151,7 +148,28 @@ namespace nugiEngine {
 		this->pipeline->dispatch(commandBuffer->getCommandBuffer(), this->width / 8, this->height / 8, 8);
 	}
 
-	void EngineTraceRayRenderSystem::waitToFinish(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex) {
+	bool EngineTraceRayRenderSystem::prepareFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex) {
+		uint32_t nSample = 8;
+
+		std::vector<std::shared_ptr<EngineImage>> selectedImages;
+		for (uint32_t i = nSample * imageIndex; i < (nSample * imageIndex) + nSample; i++) {
+			selectedImages.emplace_back(this->storageImages[i]);
+		}
+
+		if (selectedImages[0]->getLayout() == VK_IMAGE_LAYOUT_UNDEFINED) {
+			EngineImage::transitionImageLayout(selectedImages, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 
+				VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 
+				0, VK_ACCESS_SHADER_WRITE_BIT, commandBuffer);
+		} else {
+			EngineImage::transitionImageLayout(selectedImages, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL, 
+				VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 
+				VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_SHADER_WRITE_BIT, commandBuffer);
+		}
+
+		return true;
+	}
+
+	bool EngineTraceRayRenderSystem::finishFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex) {
 		uint32_t nSample = 8;
 
 		std::vector<std::shared_ptr<EngineImage>> selectedImages;
@@ -160,6 +178,10 @@ namespace nugiEngine {
 		}
 
 		EngineImage::transitionImageLayout(selectedImages, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL, 
-			VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, commandBuffer);
+			VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 
+			VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, 
+			commandBuffer);
+
+		return true;
 	}
 }

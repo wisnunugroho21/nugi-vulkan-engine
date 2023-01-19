@@ -28,7 +28,9 @@ namespace nugiEngine {
 
 			void writeGlobalData(int imageIndex);
 			void render(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex);
-			void waitToFinish(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex);
+
+			bool prepareFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex);
+			bool finishFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex);
 
 		private:
 			void createPipelineLayout();

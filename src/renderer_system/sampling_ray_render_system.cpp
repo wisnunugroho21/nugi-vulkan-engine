@@ -92,7 +92,8 @@ namespace nugiEngine {
 		auto swapChainImage = this->swapChainImages[imageIndex];
 
 		swapChainImage->transitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 
-			VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, commandBuffer);
+			VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 
+			0, VK_ACCESS_SHADER_WRITE_BIT, commandBuffer);
 
 		return true;
 	}
@@ -101,7 +102,8 @@ namespace nugiEngine {
 		auto swapChainImage = this->swapChainImages[imageIndex];
 
 		swapChainImage->transitionImageLayout(VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 
-			VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, commandBuffer);
+			VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 
+			VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_MEMORY_READ_BIT, commandBuffer);
 
     return true;
 	}

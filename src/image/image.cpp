@@ -136,6 +136,8 @@ namespace nugiEngine {
       throw std::invalid_argument("unsupported layout transition!");
     }
 
+    this->layout = newLayout;
+
     vkCmdPipelineBarrier(
       commandBuffer.getCommandBuffer(), 
       sourceStage, 
@@ -220,6 +222,56 @@ namespace nugiEngine {
       throw std::invalid_argument("unsupported layout transition!");
     }
 
+    this->layout = newLayout;
+
+    vkCmdPipelineBarrier(
+      commandBuffer->getCommandBuffer(), 
+      srcStage, 
+      dstStage,
+      0,
+      0, nullptr,
+      0, nullptr,
+      1, 
+      &barrier
+    );
+
+    if (isCommandBufferCreatedHere) {
+      commandBuffer->endCommand();
+      commandBuffer->submitCommand(this->appDevice.getGraphicsQueue());
+    }
+  }
+
+  void EngineImage::transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout, VkPipelineStageFlags srcStage, VkPipelineStageFlags dstStage, 
+    VkAccessFlags srcAccess, VkAccessFlags dstAccess, std::shared_ptr<EngineCommandBuffer> commandBuffer, EngineDevice *appDevice) 
+  {
+    bool isCommandBufferCreatedHere = false;
+    
+    if (commandBuffer == nullptr) {
+      commandBuffer = std::make_shared<EngineCommandBuffer>(this->appDevice);
+      commandBuffer->beginSingleTimeCommand();
+
+      isCommandBufferCreatedHere = true;  
+    }
+
+    VkImageMemoryBarrier barrier{};
+    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.oldLayout = oldLayout;
+    barrier.newLayout = newLayout;
+
+    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+    barrier.image = this->image;
+    barrier.subresourceRange.aspectMask = this->aspectFlags;
+    barrier.subresourceRange.baseMipLevel = 0;
+    barrier.subresourceRange.levelCount = this->mipLevels;
+    barrier.subresourceRange.baseArrayLayer = 0;
+    barrier.subresourceRange.layerCount = 1;
+    barrier.srcAccessMask = srcAccess;
+    barrier.dstAccessMask = dstAccess;
+
+    this->layout = newLayout;
+
     vkCmdPipelineBarrier(
       commandBuffer->getCommandBuffer(), 
       srcStage, 
@@ -261,7 +313,7 @@ namespace nugiEngine {
       barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
       barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 
-      barrier.image = image->image;
+      barrier.image = image->getImage();
       barrier.subresourceRange.aspectMask = image->getAspectFlag();
       barrier.subresourceRange.baseMipLevel = 0;
       barrier.subresourceRange.levelCount = image->getMipLevels();
@@ -312,6 +364,62 @@ namespace nugiEngine {
         throw std::invalid_argument("unsupported layout transition!");
       }
 
+      image->layout = newLayout;
+      barriers.emplace_back(barrier);
+    }
+
+    vkCmdPipelineBarrier(
+      commandBuffer->getCommandBuffer(), 
+      srcStage, 
+      dstStage,
+      0,
+      0, nullptr,
+      0, nullptr,
+      static_cast<uint32_t>(barriers.size()), 
+      barriers.data()
+    );
+
+    if (isCommandBufferCreatedHere) {
+      commandBuffer->endCommand();
+      commandBuffer->submitCommand(appDevice->getGraphicsQueue());
+    }
+  }
+
+  void EngineImage::transitionImageLayout(std::vector<std::shared_ptr<EngineImage>> images, VkImageLayout oldLayout, VkImageLayout newLayout, 
+    VkPipelineStageFlags srcStage, VkPipelineStageFlags dstStage, VkAccessFlags srcAccess, VkAccessFlags dstAccess,
+    std::shared_ptr<EngineCommandBuffer> commandBuffer, EngineDevice *appDevice) 
+  {
+    bool isCommandBufferCreatedHere = false;
+    
+    if (commandBuffer == nullptr) {
+      commandBuffer = std::make_shared<EngineCommandBuffer>(*appDevice);
+      commandBuffer->beginSingleTimeCommand();
+
+      isCommandBufferCreatedHere = true;  
+    }
+
+    std::vector<VkImageMemoryBarrier> barriers;
+
+    for (auto &&image : images) {
+      VkImageMemoryBarrier barrier{};
+
+      barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+      barrier.oldLayout = oldLayout;
+      barrier.newLayout = newLayout;
+
+      barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+      barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+      barrier.image = image->getImage();
+      barrier.subresourceRange.aspectMask = image->getAspectFlag();
+      barrier.subresourceRange.baseMipLevel = 0;
+      barrier.subresourceRange.levelCount = image->getMipLevels();
+      barrier.subresourceRange.baseArrayLayer = 0;
+      barrier.subresourceRange.layerCount = 1;
+      barrier.srcAccessMask = srcAccess;
+      barrier.dstAccessMask = dstAccess;
+
+      image->layout = newLayout;
       barriers.emplace_back(barrier);
     }
 
