@@ -85,7 +85,7 @@ namespace nugiEngine {
 			nullptr
 		);
 
-		this->pipeline->dispatch(commandBuffer->getCommandBuffer(), this->width, this->height, 1);
+		this->pipeline->dispatch(commandBuffer->getCommandBuffer(), this->width / 8, this->height / 8, 1);
 	}
 
 	bool EngineSamplingRayRenderSystem::prepareFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex) {
