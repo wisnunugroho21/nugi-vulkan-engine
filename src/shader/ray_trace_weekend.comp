@@ -61,20 +61,30 @@ vec3 rayAt(Ray r, float t) {
 FaceNormal setFaceNormal(Ray r, vec3 outwardNormal) {
   FaceNormal faceNormal;
 
-  faceNormal.frontFace = dot(r.direction, outwardNormal) < 0;
+  faceNormal.frontFace = dot(r.direction, outwardNormal) < 0.0;
   faceNormal.normal = faceNormal.frontFace ? outwardNormal : -outwardNormal;
 
   return faceNormal;
 }
 
 HitRecord hitSphere(Sphere obj, Ray r, float tMin, float tMax) {
+  FaceNormal faceNormal;
+  faceNormal.frontFace = false;
+  faceNormal.normal = vec3(0, 0, 0);
+
   HitRecord rec;
+  rec.isHit = false;
+  rec.t = 0.0;
+  rec.point = vec3(0, 0, 0);
+  rec.faceNormal = faceNormal;
 
   vec3 oc = r.origin - obj.center;
+
   float a = dot(r.direction, r.direction);
-  float b = 2.0 * dot(oc, r.direction);
+  float half_b = dot(oc, r.direction);
   float c = dot(oc, oc) - obj.radius * obj.radius;
-  float discriminant = b * b - 4.0 * a * c;
+
+  float discriminant = half_b * half_b - a * c;
 
   if (discriminant < 0.0) {
     return rec;
@@ -82,10 +92,11 @@ HitRecord hitSphere(Sphere obj, Ray r, float tMin, float tMax) {
 
   float sqrtd = sqrt(discriminant);
 
-  float root = (-b - sqrtd) / (2.0 * a);
-  if (root < tMin || root > tMax) {
-    root = (-b + sqrtd) / (2.0 * a);
-    if (root < tMin || root > tMax) {
+  // Find the nearest root that lies in the acceptable range.
+  float root = (-half_b - sqrtd) / a;
+  if (root < tMin || tMax < root) {
+    root = (-half_b + sqrtd) / a;
+    if (root < tMin || tMax < root) {
       return rec;
     }
   }
@@ -100,12 +111,19 @@ HitRecord hitSphere(Sphere obj, Ray r, float tMin, float tMax) {
   return rec;
 }
 
-HitRecord hitSphereList(Sphere obj[2], int objNum, Ray r, float tMin, float tMax) {
+HitRecord hitSphereList(Sphere objList[2], int objNum, Ray r, float tMin, float tMax) {
+  FaceNormal faceNormal;
+  faceNormal.frontFace = false;
+  faceNormal.normal = vec3(0, 0, 0);
+  
   HitRecord rec;
-  rec.t = tMax;
+  rec.isHit = false;
+  rec.point = vec3(0, 0, 0);
+  rec.faceNormal = faceNormal;
 
+  rec.t = tMax;
   for (int i = 0; i < objNum; i++) {
-    HitRecord tempRec = hitSphere(obj[i], r, tMin, rec.t);
+    HitRecord tempRec = hitSphere(objList[i], r, tMin, rec.t);
     if (tempRec.isHit) {
       rec = tempRec;
     }
@@ -140,7 +158,7 @@ void main() {
 
   Ray r;
   r.origin = ubo.origin;
-  r.direction = ubo.lowerLeftCorner + uv.x * ubo.horizontal + uv.y * ubo.vertical - ubo.origin;
+  r.direction = ubo.lowerLeftCorner + uv.x * ubo.horizontal - uv.y * ubo.vertical - ubo.origin;
   
   vec4 curColor = vec4(rayColor(r), 1.0);
   imageStore(targetImage[imgIndex], ivec2(imgPosition), curColor);
