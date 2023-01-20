@@ -50,26 +50,28 @@ struct HitRecord {
 // - fastest static noise generator function (also runs at low precision)
 // - use with indicated fractional seeding method. 
 
-float randomFloat(vec2 xy, float seed){
+float randomFloat(){
+  vec2 xy = gl_GlobalInvocationID.xy;
   float PHI = 1.61803398874989484820459;
-  return fract(tan(distance(xy * PHI, xy) * seed) * xy.y);
+
+  return fract(tan(distance(xy * PHI, xy) * 278711) * xy.y);
 }
 
-float randomFloatAt(float min, float max, vec2 xy, float seed) {
-  return min + (max - min) * randomFloat(xy, seed);
+float randomFloatAt(float min, float max) {
+  return min + (max - min) * randomFloat();
 }
 
-vec3 randomVecThree(vec2 xy, float seed) {
-  return vec3(randomFloat(xy, seed), randomFloat(xy, seed), randomFloat(xy, seed));
+vec3 randomVecThree() {
+  return vec3(randomFloat(), randomFloat(), randomFloat());
 }
 
-vec3 randomVecThreeAt(float min, float max, vec2 xy, float seed) {
-  return vec3(randomFloatAt(min, max, xy, seed), randomFloatAt(min, max, xy, seed), randomFloatAt(min, max, xy, seed));
+vec3 randomVecThreeAt(float min, float max) {
+  return vec3(randomFloatAt(min, max), randomFloatAt(min, max), randomFloatAt(min, max));
 }
 
-vec3 randomInUnitSphere(vec2 xy, float seed) {
+vec3 randomInUnitSphere() {
   while (true) {
-    vec3 p = randomVecThreeAt(-1.0, 1.0, xy, seed);
+    vec3 p = randomVecThreeAt(-1.0, 1.0);
 
     if (dot(p, p) >= 1) continue;
     return p;
@@ -162,7 +164,7 @@ vec3 rayColor(Ray r) {
     HitRecord rec = hitSphereList(ubo.spheres, 2, curRay, 0.001, 10000.0);
 
     if (rec.isHit) {
-      vec3 target = rec.point + rec.faceNormal.normal + normalize(randomInUnitSphere(gl_GlobalInvocationID.xy, i + 11.0));
+      vec3 target = rec.point + rec.faceNormal.normal + normalize(randomInUnitSphere());
       curAttenuation *= 0.5f;
 
       curRay.origin = rec.point;
