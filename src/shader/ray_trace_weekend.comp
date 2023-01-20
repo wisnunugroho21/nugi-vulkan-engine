@@ -17,7 +17,7 @@ layout(set = 0, binding = 1) uniform GlobalUbo {
   vec3 vertical;
   vec3 lowerLeftCorner;
   Sphere spheres[2];
-  int currentSample;
+  uint currentSample;
 } ubo;
 
 // ------------- pre-defined parameter -------------
@@ -59,24 +59,24 @@ float stepAndOutputRNGFloat(inout uint rngState) {
   return float(word) / 4294967295.0;
 }
 
-float randomFloat(vec2 xy) {
+float randomFloat(ivec2 xy) {
   uint rngState =  (600 * xy.x + xy.y) * (ubo.currentSample + 1);
   return stepAndOutputRNGFloat(rngState);
 }
 
-float randomFloatAt(float min, float max, vec2 xy) {
+float randomFloatAt(float min, float max, ivec2 xy) {
   return min + (max - min) * random(xy);
 }
 
-vec3 randomVecThree(vec2 xy) {
+vec3 randomVecThree(ivec2 xy) {
   return vec3(randomFloat(xy), randomFloat(xy), randomFloat(xy));
 }
 
-vec3 randomVecThreeAt(float min, float max, vec2 xy) {
+vec3 randomVecThreeAt(float min, float max, ivec2 xy) {
   return vec3(randomFloatAt(min, max, xy), randomFloatAt(min, max, xy), randomFloatAt(min, max, xy));
 }
 
-vec3 randomInUnitSphere(vec2 xy) {
+vec3 randomInUnitSphere(ivec2 xy) {
   while (true) {
     vec3 p = randomVecThreeAt(-1.0, 1.0, xy);
 
