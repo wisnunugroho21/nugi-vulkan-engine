@@ -21,7 +21,7 @@ layout(set = 0, binding = 1) uniform GlobalUbo {
 
 // ------------- pre-defined parameter -------------
 
-float PHI = 1.61803398874989484820459;  // Φ = Golden Ratio
+float pi = 3.14159265359
 
 // ------------- struct ------------- 
 
@@ -50,8 +50,35 @@ struct HitRecord {
 // - fastest static noise generator function (also runs at low precision)
 // - use with indicated fractional seeding method. 
 
-float goldNoise(in vec2 xy, float seed){
+float randomFloat(vec2 xy, float seed){
+  float PHI = 1.61803398874989484820459;
   return fract(tan(distance(xy * PHI, xy) * seed) * xy.y);
+}
+
+float randomFloatAt(float min, float max, vec2 xy, float seed) {
+  return min + (max - min) * randomFloat(xy, seed);
+}
+
+vec3 randomVecThree(vec2 xy, float seed) {
+  return vec3(randomFloat(xy, seed), randomFloat(xy, seed), randomFloat(xy, seed));
+}
+
+vec3 randomVecThreeAt(float min, float max, vec2 xy, float seed) {
+  return vec3(randomFloatAt(min, max, xy, seed), randomFloatAt(min, max, xy, seed), randomFloatAt(min, max, xy, seed));
+}
+
+vec3 randomInUnitSphere(vec3 xyz, float seed) {
+  float u1 = randomFloat(xyz.xz, seed);
+  float u2 = randomFloat(xyz.yz, seed);
+
+  float latitude = acos(2.0 * u1 - 1.0) - (pi / 2.0);
+  float longitude = 2.0 * pi * u2;
+
+  float x = cos(latitude) * cos(longitude);
+  float y = cos(latitude) * sin(longitude);
+  float z = sin(latitude);
+
+  return vec3(x, y, z);
 }
 
 vec3 rayAt(Ray r, float t) {
@@ -133,15 +160,27 @@ HitRecord hitSphereList(Sphere objList[2], int objNum, Ray r, float tMin, float 
 }
 
 vec3 rayColor(Ray r) {
-  HitRecord rec = hitSphereList(ubo.spheres, 2, r, 0.001, 10000.0);
+  Ray curRay = r;
+  float curAttenuation = 1.0;
+  
+  for(int i = 0; i < 50; i++) {
+    HitRecord rec = hitSphereList(ubo.spheres, 2, r, 0.001, 10000.0);
 
-  if (rec.isHit) {
-    return 0.5 * (rec.faceNormal.normal + vec3(1.0, 1.0, 1.0));
+    if (rec.isHit) {
+      vec3 target = rec.point + rec.faceNormal.normal + randomInUnitSphere(gl_GlobalInvocationID, 8.9);
+      curAttenuation *= 0.5f;
+      curRay = ray(rec.point, target - rec.point);
+
+    } else {
+      vec3 unit_direction = normalize(r.direction);
+      float t = 0.5 * (unit_direction.y + 1.0);
+      vec3 c = (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
+
+      return curAttenuation * c;
+    }
   }
 
-  vec3 unit_direction = normalize(r.direction);
-  float t = 0.5 * (unit_direction.y + 1.0);
-  return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
+  return vec3(0.0, 0.0, 0.0); // exceeded recursion
 }
 
 void main() {
@@ -150,8 +189,8 @@ void main() {
 
   vec2 imgSize = vec2(imageSize(targetImage[imgIndex]));
 
-  float noiseX = goldNoise(gl_GlobalInvocationID.xz, 1.0);
-  float noiseY = goldNoise(gl_GlobalInvocationID.yz, 1.0);
+  float noiseX = randomFloat(gl_GlobalInvocationID.xz, 1.0);
+  float noiseY = randomFloat(gl_GlobalInvocationID.yz, 1.0);
 
   vec2 noiseUV = vec2(noiseX, noiseY);
   vec2 uv = (imgPosition + noiseUV) / imgSize;
