@@ -17,7 +17,6 @@ void main() {
 
   totalColor = totalColor / 8;
   totalColor = sqrt(totalColor);
-  totalColor = clamp(totalColor, 0.0, 0.999);
 
   imageStore(targetImage, ivec2(gl_GlobalInvocationID.xy), totalColor);
 }
