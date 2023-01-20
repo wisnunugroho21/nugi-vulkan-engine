@@ -53,5 +53,6 @@ namespace nugiEngine {
 			std::unique_ptr<EngineComputePipeline> pipeline;
 
 			uint32_t width, height, nSample;
+			uint32_t randomSampleIndex = 0;
 	};
 }

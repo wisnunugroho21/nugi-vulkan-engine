@@ -113,7 +113,7 @@ namespace nugiEngine {
 	}
 
 	void EngineTraceRayRenderSystem::writeGlobalData(int imageIndex) {
-		RayTraceUbo ubo;
+		RayTraceUbo ubo{};
 
 		float aspectRatio = static_cast<float>(this->width) / static_cast<float>(this->height);
 
@@ -132,8 +132,12 @@ namespace nugiEngine {
 		ubo.spheres[1].radius = 100.0f;
 		ubo.spheres[1].center = glm::vec3(0.0f, -100.5f, -1.0f);
 
+		ubo.currentSample = this->randomSampleIndex;
+
 		this->uniformBuffers[imageIndex]->writeToBuffer(&ubo);
 		this->uniformBuffers[imageIndex]->flush();
+
+		this->randomSampleIndex++;
 	}
 
 	void EngineTraceRayRenderSystem::render(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex) {

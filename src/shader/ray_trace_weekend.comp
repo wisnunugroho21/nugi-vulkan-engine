@@ -17,6 +17,7 @@ layout(set = 0, binding = 1) uniform GlobalUbo {
   vec3 vertical;
   vec3 lowerLeftCorner;
   Sphere spheres[2];
+  int currentSample;
 } ubo;
 
 // ------------- pre-defined parameter -------------
@@ -44,34 +45,40 @@ struct HitRecord {
 
 // ------------- function ------------- 
 
-// Gold Noise ©2015 dcerisano@standard3d.com
-// - based on the Golden Ratio
-// - uniform normalized distribution
-// - fastest static noise generator function (also runs at low precision)
-// - use with indicated fractional seeding method. 
-
-float randomFloat(){
-  vec2 xy = gl_GlobalInvocationID.xy;
-  float PHI = 1.61803398874989484820459;
-
-  return fract(tan(distance(xy * PHI, xy) * 278711) * xy.y);
+// Random number generation using pcg32i_random_t, using inc = 1. Our random state is a uint.
+uint stepRNG(uint rngState) {
+  return rngState * 747796405 + 1;
 }
 
-float randomFloatAt(float min, float max) {
-  return min + (max - min) * randomFloat();
+// Steps the RNG and returns a floating-point value between 0 and 1 inclusive.
+float stepAndOutputRNGFloat(inout uint rngState) {
+  // Condensed version of pcg_output_rxs_m_xs_32_32, with simple conversion to floating-point [0,1].
+  rngState  = stepRNG(rngState);
+  uint word = ((rngState >> ((rngState >> 28) + 4)) ^ rngState) * 277803737;
+  word      = (word >> 22) ^ word;
+  return float(word) / 4294967295.0;
 }
 
-vec3 randomVecThree() {
-  return vec3(randomFloat(), randomFloat(), randomFloat());
+float randomFloat(vec2 xy) {
+  uint rngState =  (600 * xy.x + xy.y) * (ubo.currentSample + 1);
+  return stepAndOutputRNGFloat(rngState);
 }
 
-vec3 randomVecThreeAt(float min, float max) {
-  return vec3(randomFloatAt(min, max), randomFloatAt(min, max), randomFloatAt(min, max));
+float randomFloatAt(float min, float max, vec2 xy) {
+  return min + (max - min) * random(xy);
 }
 
-vec3 randomInUnitSphere() {
+vec3 randomVecThree(vec2 xy) {
+  return vec3(randomFloat(xy), randomFloat(xy), randomFloat(xy));
+}
+
+vec3 randomVecThreeAt(float min, float max, vec2 xy) {
+  return vec3(randomFloatAt(min, max, xy), randomFloatAt(min, max, xy), randomFloatAt(min, max, xy));
+}
+
+vec3 randomInUnitSphere(vec2 xy) {
   while (true) {
-    vec3 p = randomVecThreeAt(-1.0, 1.0);
+    vec3 p = randomVecThreeAt(-1.0, 1.0, xy);
 
     if (dot(p, p) >= 1) continue;
     return p;
@@ -164,7 +171,7 @@ vec3 rayColor(Ray r) {
     HitRecord rec = hitSphereList(ubo.spheres, 2, curRay, 0.001, 10000.0);
 
     if (rec.isHit) {
-      vec3 target = rec.point + rec.faceNormal.normal + normalize(randomInUnitSphere());
+      vec3 target = rec.point + rec.faceNormal.normal + normalize(randomInUnitSphere(gl_GlobalInvocationID.xy));
       curAttenuation *= 0.5f;
 
       curRay.origin = rec.point;
@@ -188,8 +195,8 @@ void main() {
 
   vec2 imgSize = vec2(imageSize(targetImage[imgIndex]));
 
-  float noiseX = randomFloat(gl_GlobalInvocationID.xz, 1.0);
-  float noiseY = randomFloat(gl_GlobalInvocationID.yz, 1.0);
+  float noiseX = randomFloat(gl_GlobalInvocationID.xz);
+  float noiseY = randomFloat(gl_GlobalInvocationID.yz);
 
   vec2 noiseUV = vec2(noiseX, noiseY);
   vec2 uv = (imgPosition + noiseUV) / imgSize;
