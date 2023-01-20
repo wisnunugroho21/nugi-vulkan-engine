@@ -115,7 +115,7 @@ namespace nugiEngine {
 	void EngineTraceRayRenderSystem::writeGlobalData(int imageIndex) {
 		RayTraceUbo ubo;
 
-		float aspectRatio = this->width / this->height;
+		float aspectRatio = static_cast<float>(this->width) / static_cast<float>(this->height);
 
 		auto viewport_height = 2.0f;
     auto viewport_width = aspectRatio * viewport_height;

@@ -15,9 +15,8 @@ void main() {
     totalColor += imgColor;
   }
 
-  float scale = 1.0 / 8;
-
-  totalColor = scale * totalColor;
+  totalColor = totalColor / 8;
+  totalColor = sqrt(totalColor);
   totalColor = clamp(totalColor, 0.0, 0.999);
 
   imageStore(targetImage, ivec2(gl_GlobalInvocationID.xy), totalColor);
