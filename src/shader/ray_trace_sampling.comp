@@ -25,8 +25,8 @@ void main() {
   totalColor = sqrt(totalColor);
 
   vec4 accColor = imageLoad(accumulateImage, ivec2(gl_GlobalInvocationID.xy));
-  accColor = accColor * min(accColor, 1.0);
-  totalColor = totalColor + accColor * push.randomSeed / (push.randomSeed + 1.0);
+  accColor = accColor * min(push.randomSeed, 1);
+  totalColor = (totalColor + accColor * push.randomSeed) / (push.randomSeed + 1.0);
 
   imageStore(accumulateImage, ivec2(gl_GlobalInvocationID.xy), totalColor);
   imageStore(targetImage, ivec2(gl_GlobalInvocationID.xy), totalColor);
