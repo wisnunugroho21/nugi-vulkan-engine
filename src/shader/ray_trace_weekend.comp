@@ -63,24 +63,24 @@ float stepAndOutputRNGFloat(inout uint rngState) {
   return float(word) / 4294967295.0;
 }
 
-float randomFloat(ivec2 xy) {
+float randomFloat(uvec2 xy) {
   uint rngState =  (600 * xy.x + xy.y) * (push.randomSeed + 1);
   return stepAndOutputRNGFloat(rngState);
 }
 
-float randomFloatAt(float min, float max, ivec2 xy) {
+float randomFloatAt(float min, float max, uvec2 xy) {
   return min + (max - min) * random(xy);
 }
 
-vec3 randomVecThree(ivec2 xy) {
+vec3 randomVecThree(uvec2 xy) {
   return vec3(randomFloat(xy), randomFloat(xy), randomFloat(xy));
 }
 
-vec3 randomVecThreeAt(float min, float max, ivec2 xy) {
+vec3 randomVecThreeAt(float min, float max, uvec2 xy) {
   return vec3(randomFloatAt(min, max, xy), randomFloatAt(min, max, xy), randomFloatAt(min, max, xy));
 }
 
-vec3 randomInUnitSphere(ivec2 xy) {
+vec3 randomInUnitSphere(uvec2 xy) {
   while (true) {
     vec3 p = randomVecThreeAt(-1.0, 1.0, xy);
 
@@ -195,7 +195,7 @@ vec3 rayColor(Ray r) {
 
 void main() {
   uint imgIndex = gl_GlobalInvocationID.z;
-  vec2 imgPosition = gl_GlobalInvocationID.xy;
+  uvec2 imgPosition = gl_GlobalInvocationID.xy;
 
   vec2 imgSize = vec2(imageSize(targetImage[imgIndex]));
 
@@ -210,5 +210,5 @@ void main() {
   r.direction = ubo.lowerLeftCorner + uv.x * ubo.horizontal - uv.y * ubo.vertical - ubo.origin;
   
   vec4 curColor = vec4(rayColor(r), 1.0);
-  imageStore(targetImage[imgIndex], ivec2(imgPosition), curColor);
+  imageStore(targetImage[imgIndex], imgPosition, curColor);
 }
