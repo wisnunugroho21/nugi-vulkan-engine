@@ -31,6 +31,8 @@ namespace nugiEngine {
 		auto currentTime = std::chrono::high_resolution_clock::now();
 		uint32_t t = 0;
 
+		RayTraceUbo ubo = this->updateCamera();
+
 		while (!this->window.shouldClose()) {
 			this->window.pollEvents();
 
@@ -54,7 +56,7 @@ namespace nugiEngine {
 				uint32_t randomSeed = this->renderer->getRandomSeed();
 
 				if (!this->traceRayRender->isFrameUpdated[imageIndex]) {
-					this->updateCamera(imageIndex);
+					this->traceRayRender->writeGlobalData(imageIndex, ubo);
 					this->traceRayRender->isFrameUpdated[imageIndex] = true;
 				}
 
@@ -117,7 +119,7 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineApp::updateCamera(uint32_t imageIndex) {
+	RayTraceUbo EngineApp::updateCamera() {
 		uint32_t width = this->renderer->getSwapChain()->getSwapChainExtent().width;
 		uint32_t height = this->renderer->getSwapChain()->getSwapChainExtent().height;
 
@@ -144,7 +146,7 @@ namespace nugiEngine {
 		ubo.vertical = viewportHeight * v;
 		ubo.lowerLeftCorner = ubo.origin - ubo.horizontal / 2.0f + ubo.vertical / 2.0f - w;
 
-		this->traceRayRender->writeGlobalData(imageIndex, ubo);
+		return ubo;
 	}
 
 	void EngineApp::recreateSubRendererAndSubsystem() {
