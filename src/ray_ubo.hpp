@@ -22,6 +22,10 @@ namespace nugiEngine {
     float fuzziness;
   };
 
+  struct Dielectric {
+    float indexOfRefraction;
+  };
+
   struct RayTraceUbo {
     alignas(16) glm::vec3 origin;
     alignas(16) glm::vec3 horizontal;
@@ -33,6 +37,7 @@ namespace nugiEngine {
     Sphere spheres[4];
     Metal metals[4];
     Lambertian lambertians[4];
+    Dielectric dielectrics[4];
   };
 
   struct RayTracePushConstant {

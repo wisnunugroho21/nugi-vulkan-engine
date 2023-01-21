@@ -22,6 +22,10 @@ struct Metal {
   float fuzziness;
 };
 
+struct Dielectric {
+  float indexOfRefraction;
+}
+
 layout(set = 0, binding = 1) uniform GlobalUbo {
   vec3 origin;
   vec3 horizontal;
@@ -33,6 +37,7 @@ layout(set = 0, binding = 2) uniform ObjectUbo {
   Sphere spheres[4];
   Metal metals[4];
   Lambertian lambertians[4];
+  Dielectric dielectrics[4];
 } objects;
 
 layout(push_constant) uniform Push {
@@ -260,6 +265,34 @@ ScatterRecord scatterMetal(Ray r, HitRecord hit) {
   return scat;
 }
 
+ScatterRecord scatterDielectric(Ray r, HitRecord hit) {
+  ScatterRecord scat;
+
+  float indexOfRefraction = objects.dielectrics[hit.materialHit.materialIndex].indexOfRefraction;
+  float refractionRatio = hit.faceNormal.frontFace ? (1.0 / indexOfRefraction) : indexOfRefraction;
+
+  vec3 unitDirection = normalize(r.direction);
+  float cosTheta = min(dot(-unitDirection, rec.faceNormal.normal), 1.0);
+  float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+
+  bool cannotRefract = refraction_ratio * sinTheta > 1.0;
+  vec3 direction;
+
+  if (cannotRefract) {
+    direction = reflect(unitDirection, hit.faceNormal.normal);
+  } else {
+    direction = refract(unitDirection, hit.faceNormal.normal, refractionRatio);
+  }
+
+  scat.raySpecular.origin = hit.point;
+  scat.raySpecular.direction = direction;
+
+  scat.isScattered = true;
+  scat.colorAttenuation = vec3(1.0, 1.0, 1.0);
+
+  return scat;
+}
+
 vec3 rayColor(Ray r) {
   Ray curRay = r;
   vec3 curAttenuation = vec3(1.0, 1.0, 1.0);
@@ -274,6 +307,8 @@ vec3 rayColor(Ray r) {
         scat = scatterLambertian(curRay, hit);
       } else if (hit.materialHit.materialType == 1) {
         scat = scatterMetal(curRay, hit);
+      } else if (hit.materialHit.materialType == 2) {
+        scat = scatterDielectric(curRay, hit);
       }
 
       if (scat.isScattered) {
