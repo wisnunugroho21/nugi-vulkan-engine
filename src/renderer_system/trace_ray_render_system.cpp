@@ -141,8 +141,6 @@ namespace nugiEngine {
 	void EngineTraceRayRenderSystem::writeGlobalData(uint32_t imageIndex) {
 		RayTraceUbo ubo{};
 
-		float aspectRatio = static_cast<float>(this->width) / static_cast<float>(this->height);
-
 		glm::vec3 lookFrom = glm::vec3(-2.0f, 2.0f, 1.0f);
 		glm::vec3 lookAt = glm::vec3(0.0f, 0.0f, -1.0f);
 		glm::vec3 vup = glm::vec3(0.0f, 1.0f, 0.0f);
