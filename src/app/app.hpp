@@ -30,6 +30,7 @@ namespace nugiEngine {
 
 		private:
 			void loadObjects();
+			void updateCamera(uint32_t imageIndex);
 			void recreateSubRendererAndSubsystem();
 
 			EngineWindow window{WIDTH, HEIGHT, APP_TITLE};

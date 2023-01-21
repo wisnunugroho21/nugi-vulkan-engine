@@ -113,6 +113,9 @@ namespace nugiEngine {
 				.addBinding(2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT)
 				.build();
 
+		this->descriptorSets.clear();
+		this->isFrameUpdated.clear();
+
 		for (uint32_t i = 0; i < swapChainImageCount; i++) {
 			auto descSet = std::make_shared<VkDescriptorSet>();
 			std::vector<VkDescriptorImageInfo> imageInfos{};
@@ -135,67 +138,16 @@ namespace nugiEngine {
 				.build(descSet.get());
 
 			this->descriptorSets.emplace_back(descSet);
+			this->isFrameUpdated.emplace_back(false);
 		}
 	}
 
-	void EngineTraceRayRenderSystem::writeGlobalData(uint32_t imageIndex) {
-		RayTraceUbo ubo{};
-
-		glm::vec3 lookFrom = glm::vec3(-2.0f, 2.0f, 1.0f);
-		glm::vec3 lookAt = glm::vec3(0.0f, 0.0f, -1.0f);
-		glm::vec3 vup = glm::vec3(0.0f, 1.0f, 0.0f);
-		float vfov = 45.0f;
-		float aspectRatio = static_cast<float>(this->width) / static_cast<float>(this->height);
-		float aperture = 1.0f;
-		float focusDistance = 1.0f;
-
-		float theta = glm::radians(vfov);
-		float h = glm::tan(theta / 2.0f);
-		float viewportHeight = 2.0f * h;
-    float viewportWidth = aspectRatio * viewportHeight;
-
-		glm::vec3 w = glm::normalize(lookFrom - lookAt);
-		glm::vec3 u = glm::normalize(glm::cross(vup, w));
-    glm::vec3 v = glm::cross(w, u);
-
-		ubo.origin = lookFrom;
-		ubo.horizontal = focusDistance * viewportWidth * u;
-		ubo.vertical = focusDistance * viewportHeight * v;
-		ubo.lowerLeftCorner = ubo.origin - ubo.horizontal / 2.0f + ubo.vertical / 2.0f - focusDistance * w;
-		ubo.lensRadius = aperture / 2.0f;
-
+	void EngineTraceRayRenderSystem::writeGlobalData(uint32_t imageIndex, RayTraceUbo ubo) {
 		this->uniformBuffers[imageIndex]->writeToBuffer(&ubo);
 		this->uniformBuffers[imageIndex]->flush();
 	}
 
-	void EngineTraceRayRenderSystem::writeObjectData(uint32_t imageIndex) {
-		RayTraceObject objects{};
-
-		objects.spheres[0].radius = 100.0f;
-		objects.spheres[0].center = glm::vec3(0.0f, -100.5f, -1.0f);
-		objects.lambertians[0].colorAlbedo = glm::vec3(0.8f, 0.8f, 0.0f);
-		objects.spheres[0].materialType = 0;
-		objects.spheres[0].materialIndex = 0;
-
-		objects.spheres[1].radius = 0.5f;
-		objects.spheres[1].center = glm::vec3(0.0f, 0.0f, -1.0f);
-		objects.lambertians[1].colorAlbedo = glm::vec3(0.7f, 0.3f, 0.3f);
-		objects.spheres[1].materialType = 0;
-		objects.spheres[1].materialIndex = 1;
-
-		objects.spheres[2].radius = 0.5f;
-		objects.spheres[2].center = glm::vec3(-1.0f, 0.0f, -1.0f);
-		objects.dielectrics[0].indexOfRefraction = 1.5f;
-		objects.spheres[2].materialType = 2;
-		objects.spheres[2].materialIndex = 0;
-
-		objects.spheres[3].radius = 0.5f;
-		objects.spheres[3].center = glm::vec3(1.0f, 0.0f, -1.0f);
-		objects.metals[0].colorAlbedo = glm::vec3(0.8f, 0.6f, 0.2f);
-		objects.metals[0].fuzziness = 0.0f;
-		objects.spheres[3].materialType = 1;
-		objects.spheres[3].materialIndex = 0;
-
+	void EngineTraceRayRenderSystem::writeObjectData(uint32_t imageIndex, RayTraceObject objects) {
 		this->objectBuffers[imageIndex]->writeToBuffer(&objects);
 		this->objectBuffers[imageIndex]->flush();
 	}

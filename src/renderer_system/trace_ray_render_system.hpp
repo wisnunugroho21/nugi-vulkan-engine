@@ -9,6 +9,7 @@
 #include "../buffer/buffer.hpp"
 #include "../descriptor/descriptor.hpp"
 #include "../frame_info.hpp"
+#include "../ray_ubo.hpp"
 
 #include <memory>
 #include <vector>
@@ -25,13 +26,16 @@ namespace nugiEngine {
 
 			std::shared_ptr<EngineDescriptorSetLayout> getDescSetLayout() { return this->descSetLayout; }
 			std::shared_ptr<VkDescriptorSet> getDescriptorSets(uint32_t index) { return this->descriptorSets[index]; }
+			bool getFramesUpdated(uint32_t index) const { return this->isFrameUpdated[index]; }
 
-			void writeGlobalData(uint32_t imageIndex);
-			void writeObjectData(uint32_t imageIndex);
+			void writeGlobalData(uint32_t imageIndex, RayTraceUbo ubo);
+			void writeObjectData(uint32_t imageIndex, RayTraceObject objects);
 			void render(std::shared_ptr<EngineCommandBuffer> commandBuffer, uint32_t imageIndex, uint32_t randomSeed = 1);
 
 			bool prepareFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, uint32_t imageIndex);
 			bool finishFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, uint32_t imageIndex);
+
+			std::vector<bool> isFrameUpdated;
 
 		private:
 			void createPipelineLayout();

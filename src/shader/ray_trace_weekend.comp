@@ -31,7 +31,6 @@ layout(set = 0, binding = 1) uniform GlobalUbo {
   vec3 horizontal;
   vec3 vertical;
   vec3 lowerLeftCorner;
-  float lensRadius;
 } ubo;
 
 layout(set = 0, binding = 2) uniform ObjectUbo {
@@ -359,12 +358,9 @@ void main() {
   vec2 noiseUV = vec2(noiseX, noiseY);
   vec2 uv = (imgPosition + noiseUV) / imgSize;
 
-  vec3 rd = ubo.lensRadius * randomInUnitDisk();
-  vec3 offset = uv.x * rd + uv.y * rd.y;
-
   Ray r;
   r.origin = ubo.origin;
-  r.direction = ubo.lowerLeftCorner + uv.x * ubo.horizontal - uv.y * ubo.vertical - ubo.origin - offset;
+  r.direction = ubo.lowerLeftCorner + uv.x * ubo.horizontal - uv.y * ubo.vertical - ubo.origin;
   
   vec4 curColor = vec4(rayColor(r), 1.0);
   imageStore(targetImage[imgIndex], ivec2(imgPosition), curColor);

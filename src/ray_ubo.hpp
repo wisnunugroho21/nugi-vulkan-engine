@@ -31,7 +31,6 @@ namespace nugiEngine {
     alignas(16) glm::vec3 horizontal;
     alignas(16) glm::vec3 vertical;
     alignas(16) glm::vec3 lowerLeftCorner;
-    float lensRadius;
   };
 
   struct RayTraceObject {
