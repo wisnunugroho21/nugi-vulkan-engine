@@ -53,8 +53,8 @@ namespace nugiEngine {
 		this->descriptorPool = 
 			EngineDescriptorPool::Builder(this->appDevice)
 				.setMaxSets(imageCount * nSample + imageCount)
-				.addPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, imageCount * nSample)
-				.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, imageCount)
+				.addPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, imageCount * nSample + imageCount * 2)
+				.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 2 * imageCount * nSample)
 				.build();
 	}
 

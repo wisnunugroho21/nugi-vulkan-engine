@@ -54,6 +54,7 @@ namespace nugiEngine {
 				uint32_t randomSeed = this->renderer->getRandomSeed();
 
 				this->traceRayRender->writeGlobalData(imageIndex);
+				this->traceRayRender->writeObjectData(imageIndex);
 
 				auto commandBuffer = this->renderer->beginCommand();
 				

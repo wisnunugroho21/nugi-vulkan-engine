@@ -17,7 +17,7 @@ namespace nugiEngine {
 		uint32_t swapChainImageCount, uint32_t width, uint32_t height, uint32_t nSample) : appDevice{device}, width{width}, height{height}, nSample{nSample} 
 	{
 		this->createImageStorages(swapChainImageCount);
-		this->createUniformBuffer(sizeof(RayTraceUbo), swapChainImageCount);
+		this->createUniformBuffer(swapChainImageCount);
 
 		this->createDescriptor(descriptorPool, swapChainImageCount);
 
@@ -74,13 +74,14 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineTraceRayRenderSystem::createUniformBuffer(unsigned long sizeUBO, uint32_t swapChainImageCount) {
+	void EngineTraceRayRenderSystem::createUniformBuffer(uint32_t swapChainImageCount) {
 		this->uniformBuffers.clear();
+		this->objectBuffers.clear();
 
 		for (uint32_t i = 0; i < swapChainImageCount; i++) {
 			auto uniformBuffer = std::make_shared<EngineBuffer>(
 				this->appDevice,
-				sizeUBO,
+				sizeof(RayTraceUbo),
 				1,
 				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
@@ -89,6 +90,19 @@ namespace nugiEngine {
 			uniformBuffer->map();
 			this->uniformBuffers.emplace_back(uniformBuffer);
 		}
+
+		for (uint32_t i = 0; i < swapChainImageCount; i++) {
+			auto objectBuffer = std::make_shared<EngineBuffer>(
+				this->appDevice,
+				sizeof(RayTraceObject),
+				1,
+				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+			);
+
+			objectBuffer->map();
+			this->objectBuffers.emplace_back(objectBuffer);
+		}
 	}
 
 	void EngineTraceRayRenderSystem::createDescriptor(std::shared_ptr<EngineDescriptorPool> descriptorPool, uint32_t swapChainImageCount) {
@@ -96,6 +110,7 @@ namespace nugiEngine {
 			EngineDescriptorSetLayout::Builder(this->appDevice)
         .addBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT, this->nSample)
 				.addBinding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT)
+				.addBinding(2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT)
 				.build();
 
 		for (uint32_t i = 0; i < swapChainImageCount; i++) {
@@ -108,11 +123,15 @@ namespace nugiEngine {
 			}
 
 			auto uniformBuffer = this->uniformBuffers[i];
-			auto bufferInfo = uniformBuffer->descriptorInfo();
+			auto uniformBufferInfo = uniformBuffer->descriptorInfo();
+
+			auto objectBuffer = this->objectBuffers[i];
+			auto objectBufferInfo = objectBuffer->descriptorInfo();
 
 			EngineDescriptorWriter(*this->descSetLayout, *descriptorPool)
 				.writeImage(0, imageInfos.data(), this->nSample) 
-				.writeBuffer(1, &bufferInfo)
+				.writeBuffer(1, &uniformBufferInfo)
+				.writeBuffer(2, &objectBufferInfo)
 				.build(descSet.get());
 
 			this->descriptorSets.emplace_back(descSet);
@@ -132,15 +151,40 @@ namespace nugiEngine {
 		ubo.horizontal = glm::vec3(viewport_width, 0.0f, 0.0f);
 		ubo.vertical = glm::vec3(0.0f, viewport_height, 0.0f);
 		ubo.lowerLeftCorner = ubo.origin - ubo.horizontal / 2.0f + ubo.vertical / 2.0f - glm::vec3(0.0f, 0.0f, focal_length);
-				
-		ubo.spheres[0].radius = 0.5f;
-		ubo.spheres[0].center = glm::vec3(0.0f, 0.0f, -1.0f);
-
-		ubo.spheres[1].radius = 100.0f;
-		ubo.spheres[1].center = glm::vec3(0.0f, -100.5f, -1.0f);
 
 		this->uniformBuffers[imageIndex]->writeToBuffer(&ubo);
 		this->uniformBuffers[imageIndex]->flush();
+	}
+
+	void EngineTraceRayRenderSystem::writeObjectData(uint32_t imageIndex) {
+		RayTraceObject objects{};
+
+		objects.spheres[0].radius = 100.0f;
+		objects.spheres[0].center = glm::vec3(0.0f, -100.5f, -1.0f);
+		objects.lambertians[0].colorAlbedo = glm::vec3(0.8f, 0.8f, 0.0f);
+		objects.spheres[0].materialType = 0;
+		objects.spheres[0].materialIndex = 0;
+
+		objects.spheres[1].radius = 0.5f;
+		objects.spheres[1].center = glm::vec3(0.0f, 0.0f, -1.0f);
+		objects.lambertians[1].colorAlbedo = glm::vec3(0.7f, 0.3f, 0.3f);
+		objects.spheres[1].materialType = 0;
+		objects.spheres[1].materialIndex = 1;
+
+		objects.spheres[2].radius = 0.5f;
+		objects.spheres[2].center = glm::vec3(-1.0f, 0.0f, -1.0f);
+		objects.metals[0].colorAlbedo = glm::vec3(0.8f, 0.8f, 0.8f);
+		objects.spheres[2].materialType = 1;
+		objects.spheres[2].materialIndex = 0;
+
+		objects.spheres[3].radius = 0.5f;
+		objects.spheres[3].center = glm::vec3(1.0f, 0.0f, -1.0f);
+		objects.metals[1].colorAlbedo = glm::vec3(0.8f, 0.6f, 0.2f);
+		objects.spheres[3].materialType = 1;
+		objects.spheres[3].materialIndex = 1;
+
+		this->objectBuffers[imageIndex]->writeToBuffer(&objects);
+		this->objectBuffers[imageIndex]->flush();
 	}
 
 	void EngineTraceRayRenderSystem::render(std::shared_ptr<EngineCommandBuffer> commandBuffer, uint32_t imageIndex, uint32_t randomSeed) {

@@ -27,6 +27,7 @@ namespace nugiEngine {
 			std::shared_ptr<VkDescriptorSet> getDescriptorSets(uint32_t index) { return this->descriptorSets[index]; }
 
 			void writeGlobalData(uint32_t imageIndex);
+			void writeObjectData(uint32_t imageIndex);
 			void render(std::shared_ptr<EngineCommandBuffer> commandBuffer, uint32_t imageIndex, uint32_t randomSeed = 1);
 
 			bool prepareFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, uint32_t imageIndex);
@@ -36,7 +37,7 @@ namespace nugiEngine {
 			void createPipelineLayout();
 			void createPipeline();
 
-			void createUniformBuffer(unsigned long sizeUBO, uint32_t swapChainImageCount);
+			void createUniformBuffer(uint32_t swapChainImageCount);
 			void createImageStorages(uint32_t swapChainImageCount);
 
 			void createDescriptor(std::shared_ptr<EngineDescriptorPool> descriptorPool, uint32_t swapChainImageCount);
@@ -47,6 +48,7 @@ namespace nugiEngine {
 			std::vector<std::shared_ptr<VkDescriptorSet>> descriptorSets;
 
 			std::vector<std::shared_ptr<EngineBuffer>> uniformBuffers;
+			std::vector<std::shared_ptr<EngineBuffer>> objectBuffers;
 			std::vector<std::shared_ptr<EngineImage>> storageImages;
 			
 			VkPipelineLayout pipelineLayout;

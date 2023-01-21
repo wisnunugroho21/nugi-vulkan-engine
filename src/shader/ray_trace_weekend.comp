@@ -9,6 +9,17 @@ layout(set = 0, binding = 0, rgba8) uniform image2D targetImage[8];
 struct Sphere {
   vec3 center;
   float radius;
+  uint materialType;
+  uint materialIndex;
+};
+
+struct Lambertian {
+  vec3 colorAlbedo;
+};
+
+struct Metal {
+  vec3 colorAlbedo;
+  float fuzziness;
 };
 
 layout(set = 0, binding = 1) uniform GlobalUbo {
@@ -16,9 +27,13 @@ layout(set = 0, binding = 1) uniform GlobalUbo {
   vec3 horizontal;
   vec3 vertical;
   vec3 lowerLeftCorner;
-  Sphere spheres[2];
-  
 } ubo;
+
+layout(set = 0, binding = 2) uniform ObjectUbo {
+  Sphere spheres[4];
+  Metal metals[4];
+  Lambertian lambertians[4];
+} objects;
 
 layout(push_constant) uniform Push {
   uint randomSeed;
@@ -40,12 +55,24 @@ struct FaceNormal {
   vec3 normal;
 };
 
+struct MaterialHitRecord {
+  uint materialType;
+  uint materialIndex;
+}
+
 struct HitRecord {
   bool isHit;
   float t;
   vec3 point;
   FaceNormal faceNormal;
+  MaterialHitRecord materialHit;
 };
+
+struct ScatterRecord {
+  bool isScattered;
+  vec3 colorAttenuation;
+  Ray raySpecular;
+}
 
 // ------------- function ------------- 
 
@@ -112,6 +139,12 @@ vec3 randomInHemisphere(vec3 normal, uint index) {
   }   
 }
 
+bool nearZero(vec3 xyz) {
+  // Return true if the vector is close to zero in all dimensions.
+  float s = 1e-8;
+  return (fabs(xyz.x) < s) && (fabs(xyz.y) < s) && (fabs(xyz.z) < s);
+}
+
 vec3 rayAt(Ray r, float t) {
   return r.origin + t * r.direction;
 }
@@ -123,6 +156,10 @@ FaceNormal setFaceNormal(Ray r, vec3 outwardNormal) {
   faceNormal.normal = faceNormal.frontFace ? outwardNormal : -outwardNormal;
 
   return faceNormal;
+}
+
+vec3 reflect(vec3 v, vec3 n) {
+  return v - 2 * dot(v, n) * n;
 }
 
 HitRecord hitSphere(Sphere obj, Ray r, float tMin, float tMax) {
@@ -166,6 +203,11 @@ HitRecord hitSphere(Sphere obj, Ray r, float tMin, float tMax) {
   vec3 outwardNormal = (rec.point - obj.center) / obj.radius;
   rec.faceNormal = setFaceNormal(r, outwardNormal);
 
+  MaterialHitRecord matHit;
+  matHit.materialType = obj.materialType;
+  matHit.materialIndex = obj.materialIndex;
+  rec.materialHit = matHit;
+
   return rec;
 }
 
@@ -190,20 +232,58 @@ HitRecord hitSphereList(Sphere objList[2], int objNum, Ray r, float tMin, float 
   return rec;
 }
 
+ScatteRecord scatterLambertian(Ray r, HitRecord hit) {
+  ScatteRecord scat;
+
+  scatterDirection = hit.faceNormal.normal + normalize(randomInUnitSphere());
+  if (nearZero(scatterDirection)) {
+    scatterDirection = hit.faceNormal.normal;
+  }
+
+  scat.raySpecular.origin = hit.point;
+  scat.raySpecular.direction = scatterDirection;
+
+  scat.isScattered = true;
+  scat.colorAttenuation = objects.lambertians[hit.materialHit.materialIndex].albedo;
+
+  return scat;
+}
+
+ScatteRecord scatterMetal(Ray r, HitRecord hit) {
+  ScatteRecord scat;
+
+  vec3 reflected = reflect(normalize(r.direction), hit.faceNormal.normal);
+
+  scat.raySpecular.origin = hit.point;
+  scat.raySpecular.direction = reflected;
+
+  scat.isScattered = dot(reflected, hit.faceNormal.normal) > 0.0;
+  scat.colorAttenuation = objects.metals[hit.materialHit.materialIndex].albedo;
+
+  return scat;
+}
+
 vec3 rayColor(Ray r) {
   Ray curRay = r;
   float curAttenuation = 1.0;
   
   for(int i = 0; i < 50; i++) {
-    HitRecord rec = hitSphereList(ubo.spheres, 2, curRay, 0.001, 10000.0);
+    HitRecord hit = hitSphereList(ubo.spheres, 4, curRay, 0.001, 10000.0);
 
-    if (rec.isHit) {
-      vec3 target = rec.faceNormal.normal + normalize(randomInUnitSphere(0)); // randomInHemisphere(rec.faceNormal.normal, gl_GlobalInvocationID.xy); // rec.faceNormal.normal + randomInUnitSphere(gl_GlobalInvocationID.xy);
-      curAttenuation *= 0.5f;
+    if (hit.isHit) {
+      ScatteRecord scat;
 
-      curRay.origin = rec.point;
-      curRay.direction = target;
+      switch(hit.materialType) {
+        case 0: scat = scatterLambertian(curRay, hit); break;
+        case 1: scat = scatterMetal(curRay, hit); break;
+      }
 
+      if (scat.isScattered) {
+        curAttenuation *= scat.colorAttenuation;
+        curRay = scat.raySpecular;
+      } else {
+        return vec3(0.0, 0.0, 0.0);
+      }
     } else {
       vec3 unit_direction = normalize(curRay.direction);
       float t = 0.5 * (unit_direction.y + 1.0);
