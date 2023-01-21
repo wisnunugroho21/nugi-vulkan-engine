@@ -69,7 +69,7 @@ float randomFloat(uvec2 xy) {
 }
 
 float randomFloatAt(float min, float max, uvec2 xy) {
-  return min + (max - min) * random(xy);
+  return min + (max - min) * randomFloat(xy);
 }
 
 vec3 randomVecThree(uvec2 xy) {
@@ -84,9 +84,21 @@ vec3 randomInUnitSphere(uvec2 xy) {
   while (true) {
     vec3 p = randomVecThreeAt(-1.0, 1.0, xy);
 
-    if (dot(p, p) >= 1) continue;
-    return p;
+    if (dot(p, p) < 1) {
+      return p;
+    }
   }
+}
+
+vec3 randomInHemisphere(vec3 normal, uvec2 xy) {
+  vec3 in_unit_sphere = randomInUnitSphere(xy);
+
+  // In the same hemisphere as the normal
+  if (dot(in_unit_sphere, normal) > 0.0) {
+    return in_unit_sphere;
+  } else {
+    return -in_unit_sphere;
+  }   
 }
 
 vec3 rayAt(Ray r, float t) {
@@ -175,7 +187,7 @@ vec3 rayColor(Ray r) {
     HitRecord rec = hitSphereList(ubo.spheres, 2, curRay, 0.001, 10000.0);
 
     if (rec.isHit) {
-      vec3 target = rec.faceNormal.normal + randomInUnitSphere(gl_GlobalInvocationID.xy);
+      vec3 target = randomInHemisphere(rec.faceNormal.normal, gl_GlobalInvocationID.xy); // rec.faceNormal.normal + randomInUnitSphere(gl_GlobalInvocationID.xy);
       curAttenuation *= 0.5f;
 
       curRay.origin = rec.point;
@@ -210,5 +222,5 @@ void main() {
   r.direction = ubo.lowerLeftCorner + uv.x * ubo.horizontal - uv.y * ubo.vertical - ubo.origin;
   
   vec4 curColor = vec4(rayColor(r), 1.0);
-  imageStore(targetImage[imgIndex], imgPosition, curColor);
+  imageStore(targetImage[imgIndex], ivec2(imgPosition), curColor);
 }
