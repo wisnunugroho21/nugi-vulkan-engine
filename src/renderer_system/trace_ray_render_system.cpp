@@ -146,6 +146,8 @@ namespace nugiEngine {
 		glm::vec3 vup = glm::vec3(0.0f, 1.0f, 0.0f);
 		float vfov = 45.0f;
 		float aspectRatio = static_cast<float>(this->width) / static_cast<float>(this->height);
+		float aperture = 1.0f;
+		float focusDistance = 1.0f;
 
 		float theta = glm::radians(vfov);
 		float h = glm::tan(theta / 2.0f);
@@ -157,9 +159,10 @@ namespace nugiEngine {
     glm::vec3 v = glm::cross(w, u);
 
 		ubo.origin = lookFrom;
-		ubo.horizontal = viewportWidth * u;
-		ubo.vertical = viewportHeight* v;
-		ubo.lowerLeftCorner = ubo.origin - ubo.horizontal / 2.0f + ubo.vertical / 2.0f - w;
+		ubo.horizontal = focusDistance * viewportWidth * u;
+		ubo.vertical = focusDistance * viewportHeight * v;
+		ubo.lowerLeftCorner = ubo.origin - ubo.horizontal / 2.0f + ubo.vertical / 2.0f - focusDistance * w;
+		ubo.lensRadius = aperture / 2.0f;
 
 		this->uniformBuffers[imageIndex]->writeToBuffer(&ubo);
 		this->uniformBuffers[imageIndex]->flush();
