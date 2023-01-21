@@ -13,8 +13,6 @@ layout(push_constant) uniform Push {
 
 void main() {
   vec4 accColor = imageLoad(accumulateImage, ivec2(gl_GlobalInvocationID.xy));
-  accColor = accColor * min(push.randomSeed, 1);
-
   vec4 totalColor = vec4(0.0, 0.0, 0.0, 0.0);
 
   for (uint i = 0; i < 8; i++) {
