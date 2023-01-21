@@ -49,15 +49,16 @@ namespace nugiEngine {
 			currentTime = newTime;
 
 			if (this->renderer->acquireFrame()) {
-				int imageIndex = this->renderer->getImageIndex();
-				int frameIndex = this->renderer->getFrameIndex();
+				uint32_t imageIndex = this->renderer->getImageIndex();
+				uint32_t frameIndex = this->renderer->getFrameIndex();
+				uint32_t randomSeed = this->renderer->getRandomSeed();
 
 				this->traceRayRender->writeGlobalData(imageIndex);
 
 				auto commandBuffer = this->renderer->beginCommand();
 				
 				this->traceRayRender->prepareFrame(commandBuffer, imageIndex);
-				this->traceRayRender->render(commandBuffer, imageIndex);
+				this->traceRayRender->render(commandBuffer, imageIndex, randomSeed);
 				this->traceRayRender->finishFrame(commandBuffer, imageIndex);
 
 				std::shared_ptr<VkDescriptorSet> traceRayDescSet = this->traceRayRender->getDescriptorSets(imageIndex);

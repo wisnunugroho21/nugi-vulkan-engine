@@ -26,11 +26,11 @@ namespace nugiEngine {
 			std::shared_ptr<EngineDescriptorSetLayout> getDescSetLayout() { return this->descSetLayout; }
 			std::shared_ptr<VkDescriptorSet> getDescriptorSets(uint32_t index) { return this->descriptorSets[index]; }
 
-			void writeGlobalData(int imageIndex);
-			void render(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex);
+			void writeGlobalData(uint32_t imageIndex);
+			void render(std::shared_ptr<EngineCommandBuffer> commandBuffer, uint32_t imageIndex, uint32_t randomSeed = 1);
 
-			bool prepareFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex);
-			bool finishFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex);
+			bool prepareFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, uint32_t imageIndex);
+			bool finishFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, uint32_t imageIndex);
 
 		private:
 			void createPipelineLayout();
@@ -53,6 +53,5 @@ namespace nugiEngine {
 			std::unique_ptr<EngineComputePipeline> pipeline;
 
 			uint32_t width, height, nSample;
-			uint32_t randomSampleIndex = 0;
 	};
 }

@@ -30,12 +30,19 @@ namespace nugiEngine {
 	}
 
 	void EngineTraceRayRenderSystem::createPipelineLayout() {
+		VkPushConstantRange pushConstantRange{};
+		pushConstantRange.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+		pushConstantRange.offset = 0;
+		pushConstantRange.size = sizeof(RayTracePushConstant);
+
 		VkDescriptorSetLayout descriptorSetLayout = this->descSetLayout->getDescriptorSetLayout();
 
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipelineLayoutInfo.setLayoutCount = 1;
 		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+		pipelineLayoutInfo.pushConstantRangeCount = 1;
+		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
 		if (vkCreatePipelineLayout(this->appDevice.getLogicalDevice(), &pipelineLayoutInfo, nullptr, &this->pipelineLayout) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create pipeline layout!");
@@ -112,7 +119,7 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineTraceRayRenderSystem::writeGlobalData(int imageIndex) {
+	void EngineTraceRayRenderSystem::writeGlobalData(uint32_t imageIndex) {
 		RayTraceUbo ubo{};
 
 		float aspectRatio = static_cast<float>(this->width) / static_cast<float>(this->height);
@@ -132,15 +139,11 @@ namespace nugiEngine {
 		ubo.spheres[1].radius = 100.0f;
 		ubo.spheres[1].center = glm::vec3(0.0f, -100.5f, -1.0f);
 
-		ubo.currentSample = this->randomSampleIndex;
-
 		this->uniformBuffers[imageIndex]->writeToBuffer(&ubo);
 		this->uniformBuffers[imageIndex]->flush();
-
-		this->randomSampleIndex++;
 	}
 
-	void EngineTraceRayRenderSystem::render(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex) {
+	void EngineTraceRayRenderSystem::render(std::shared_ptr<EngineCommandBuffer> commandBuffer, uint32_t imageIndex, uint32_t randomSeed) {
 		this->pipeline->bind(commandBuffer->getCommandBuffer());
 
 		vkCmdBindDescriptorSets(
@@ -154,10 +157,22 @@ namespace nugiEngine {
 			nullptr
 		);
 
+		RayTracePushConstant pushConstant{};
+		pushConstant.randomSeed = randomSeed;
+
+		vkCmdPushConstants(
+			commandBuffer->getCommandBuffer(), 
+			this->pipelineLayout, 
+			VK_SHADER_STAGE_COMPUTE_BIT,
+			0,
+			sizeof(RayTracePushConstant),
+			&pushConstant
+		);
+
 		this->pipeline->dispatch(commandBuffer->getCommandBuffer(), this->width / 8, this->height / 8, this->nSample / 1);
 	}
 
-	bool EngineTraceRayRenderSystem::prepareFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex) {
+	bool EngineTraceRayRenderSystem::prepareFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, uint32_t imageIndex) {
 		std::vector<std::shared_ptr<EngineImage>> selectedImages;
 		for (uint32_t i = this->nSample * imageIndex; i < (this->nSample * imageIndex) + this->nSample; i++) {
 			selectedImages.emplace_back(this->storageImages[i]);
@@ -176,7 +191,7 @@ namespace nugiEngine {
 		return true;
 	}
 
-	bool EngineTraceRayRenderSystem::finishFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex) {
+	bool EngineTraceRayRenderSystem::finishFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, uint32_t imageIndex) {
 		std::vector<std::shared_ptr<EngineImage>> selectedImages;
 		for (uint32_t i = this->nSample * imageIndex; i < (this->nSample * imageIndex) + this->nSample; i++) {
 			selectedImages.emplace_back(this->storageImages[i]);

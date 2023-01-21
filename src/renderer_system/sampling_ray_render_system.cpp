@@ -69,7 +69,7 @@ namespace nugiEngine {
 		}
 	}
 
-	void EngineSamplingRayRenderSystem::render(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex, std::shared_ptr<VkDescriptorSet> traceRayDescSet) {
+	void EngineSamplingRayRenderSystem::render(std::shared_ptr<EngineCommandBuffer> commandBuffer, uint32_t imageIndex, std::shared_ptr<VkDescriptorSet> traceRayDescSet) {
 		this->pipeline->bind(commandBuffer->getCommandBuffer());
 
 		VkDescriptorSet descpSet[2] = { *traceRayDescSet, *this->descriptorSets[imageIndex] };
@@ -88,7 +88,7 @@ namespace nugiEngine {
 		this->pipeline->dispatch(commandBuffer->getCommandBuffer(), this->width / 8, this->height / 8, 1);
 	}
 
-	bool EngineSamplingRayRenderSystem::prepareFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex) {
+	bool EngineSamplingRayRenderSystem::prepareFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, uint32_t imageIndex) {
 		auto swapChainImage = this->swapChainImages[imageIndex];
 
 		swapChainImage->transitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 
@@ -98,7 +98,7 @@ namespace nugiEngine {
 		return true;
 	}
 
-	bool EngineSamplingRayRenderSystem::finishFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex) {
+	bool EngineSamplingRayRenderSystem::finishFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, uint32_t imageIndex) {
 		auto swapChainImage = this->swapChainImages[imageIndex];
 
 		swapChainImage->transitionImageLayout(VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 
