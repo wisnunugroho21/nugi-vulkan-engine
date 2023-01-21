@@ -23,10 +23,10 @@ namespace nugiEngine {
 			EngineSamplingRayRenderSystem(const EngineSamplingRayRenderSystem&) = delete;
 			EngineSamplingRayRenderSystem& operator = (const EngineSamplingRayRenderSystem&) = delete;
 
-			void render(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex, std::shared_ptr<VkDescriptorSet> traceRayDescSet);
+			void render(std::shared_ptr<EngineCommandBuffer> commandBuffer, uint32_t imageIndex, std::shared_ptr<VkDescriptorSet> traceRayDescSet);
 
-			bool prepareFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex);
-			bool finishFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, int imageIndex);	
+			bool prepareFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, uint32_t imageIndex);
+			bool finishFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, uint32_t imageIndex);	
 		
 		private:
 			void createPipelineLayout(std::shared_ptr<EngineDescriptorSetLayout> traceRayDescLayout);
