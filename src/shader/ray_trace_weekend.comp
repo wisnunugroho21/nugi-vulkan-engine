@@ -248,8 +248,11 @@ ScatterRecord scatterMetal(Ray r, HitRecord hit) {
 
   vec3 reflected = reflect(normalize(r.direction), hit.faceNormal.normal);
 
+  float fuzziness = objects.metals[hit.materialHit.materialIndex].fuzziness;
+  fuzziness = fuzziness < 1.0 ? fuzziness : 1.0;
+
   scat.raySpecular.origin = hit.point;
-  scat.raySpecular.direction = reflected;
+  scat.raySpecular.direction = reflected + fuzziness * randomInUnitSphere(0);
 
   scat.isScattered = dot(reflected, hit.faceNormal.normal) > 0.0;
   scat.colorAttenuation = objects.metals[hit.materialHit.materialIndex].colorAlbedo;

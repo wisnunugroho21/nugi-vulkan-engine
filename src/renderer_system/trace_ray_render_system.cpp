@@ -174,12 +174,14 @@ namespace nugiEngine {
 		objects.spheres[2].radius = 0.5f;
 		objects.spheres[2].center = glm::vec3(-1.0f, 0.0f, -1.0f);
 		objects.metals[0].colorAlbedo = glm::vec3(0.8f, 0.8f, 0.8f);
+		objects.metals[0].fuzziness = 0.3f;
 		objects.spheres[2].materialType = 1;
 		objects.spheres[2].materialIndex = 0;
 
 		objects.spheres[3].radius = 0.5f;
 		objects.spheres[3].center = glm::vec3(1.0f, 0.0f, -1.0f);
 		objects.metals[1].colorAlbedo = glm::vec3(0.8f, 0.6f, 0.2f);
+		objects.metals[1].fuzziness = 1.0f;
 		objects.spheres[3].materialType = 1;
 		objects.spheres[3].materialIndex = 1;
 
