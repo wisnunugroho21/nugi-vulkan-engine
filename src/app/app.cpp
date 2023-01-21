@@ -20,8 +20,6 @@
 
 namespace nugiEngine {
 	EngineApp::EngineApp() {
-		this->loadObjects();
-
 		this->renderer = std::make_unique<EngineRayTraceRenderer>(this->window, this->device);
 		this->recreateSubRendererAndSubsystem();
 		this->loadObjects();
@@ -77,6 +75,7 @@ namespace nugiEngine {
 
 				if (!this->renderer->presentFrame()) {
 					this->recreateSubRendererAndSubsystem();
+					this->loadObjects();
 				}
 			}
 		}

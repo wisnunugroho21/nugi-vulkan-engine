@@ -146,7 +146,7 @@ vec3 randomInHemisphere(vec3 normal, uint index) {
 
 vec3 randomInUnitDisk(uint index) {
   while (true) {
-    auto p = vec3(randomFloat(-1.0, 1.0), randomFloat(-1.0, 1.0), 0.0);
+    vec3 p = vec3(randomFloatAt(-1.0, 1.0, index), randomFloatAt(-1.0, 1.0, index), 0.0);
 
     if (dot(p, p) < 1) {
       return p;
