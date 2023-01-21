@@ -143,14 +143,25 @@ namespace nugiEngine {
 
 		float aspectRatio = static_cast<float>(this->width) / static_cast<float>(this->height);
 
-		auto viewport_height = 2.0f;
-    auto viewport_width = aspectRatio * viewport_height;
-    auto focal_length = 1.0f;
+		glm::vec3 lookFrom = glm::vec3(-2.0f, 2.0f, 1.0f);
+		glm::vec3 lookAt = glm::vec3(0.0f, 0.0f, -1.0f);
+		glm::vec3 vup = glm::vec3(0.0f, 1.0f, 0.0f);
+		float vfov = 45.0f;
+		float aspectRatio = static_cast<float>(this->width) / static_cast<float>(this->height);
 
-		ubo.origin = glm::vec3(0.0f, 0.0f, 0.0f);
-		ubo.horizontal = glm::vec3(viewport_width, 0.0f, 0.0f);
-		ubo.vertical = glm::vec3(0.0f, viewport_height, 0.0f);
-		ubo.lowerLeftCorner = ubo.origin - ubo.horizontal / 2.0f + ubo.vertical / 2.0f - glm::vec3(0.0f, 0.0f, focal_length);
+		float theta = glm::radians(vfov);
+		float h = glm::tan(theta / 2.0f);
+		float viewportHeight = 2.0f * h;
+    float viewportWidth = aspectRatio * viewportHeight;
+
+		glm::vec3 w = glm::normalize(lookFrom - lookAt);
+		glm::vec3 u = glm::normalize(glm::cross(vup, w));
+    glm::vec3 v = glm::cross(w, u);
+
+		ubo.origin = lookFrom;
+		ubo.horizontal = viewportWidth * u;
+		ubo.vertical = viewportHeight* v;
+		ubo.lowerLeftCorner = ubo.origin - ubo.horizontal / 2.0f + ubo.vertical / 2.0f - w;
 
 		this->uniformBuffers[imageIndex]->writeToBuffer(&ubo);
 		this->uniformBuffers[imageIndex]->flush();
