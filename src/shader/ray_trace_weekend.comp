@@ -198,7 +198,7 @@ vec3 rayColor(Ray r) {
     HitRecord rec = hitSphereList(ubo.spheres, 2, curRay, 0.001, 10000.0);
 
     if (rec.isHit) {
-      vec3 target = rec.faceNormal.normal + randomInUnitSphere(0); // randomInHemisphere(rec.faceNormal.normal, gl_GlobalInvocationID.xy); // rec.faceNormal.normal + randomInUnitSphere(gl_GlobalInvocationID.xy);
+      vec3 target = rec.faceNormal.normal + normalize(randomInUnitSphere(0)); // randomInHemisphere(rec.faceNormal.normal, gl_GlobalInvocationID.xy); // rec.faceNormal.normal + randomInUnitSphere(gl_GlobalInvocationID.xy);
       curAttenuation *= 0.5f;
 
       curRay.origin = rec.point;
