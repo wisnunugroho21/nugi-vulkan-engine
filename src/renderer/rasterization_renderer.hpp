@@ -59,7 +59,7 @@ namespace nugiEngine {
 			void recreateSwapChain();
 			void createGlobalBuffers(unsigned long sizeUBO, unsigned long sizeLightBuffer);
 			void createGlobalUboDescriptor();
-			void createSyncObjects(int imageCount);
+			void createSyncObjects(uint32_t imageCount);
 
 			EngineWindow& appWindow;
 			EngineDevice& appDevice;

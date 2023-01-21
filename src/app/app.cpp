@@ -93,7 +93,7 @@ namespace nugiEngine {
 		std::vector<std::shared_ptr<EngineImage>> swapChainImages = this->renderer->getSwapChain()->getswapChainImages();
 
 		this->traceRayRender = std::make_unique<EngineTraceRayRenderSystem>(this->device, descriptorPool, 
-			swapChainImages.size(), width, height, nSample);
+			static_cast<uint32_t>(swapChainImages.size()), width, height, nSample);
 
 		this->samplingRayRender = std::make_unique<EngineSamplingRayRenderSystem>(this->device, descriptorPool, 
 			this->traceRayRender->getDescSetLayout(), swapChainImages, width, height);

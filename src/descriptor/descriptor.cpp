@@ -182,7 +182,7 @@ namespace nugiEngine {
       write.dstSet = *set;
     }
     
-    vkUpdateDescriptorSets(this->pool.engineDevice.getLogicalDevice(), this->writes.size(), this->writes.data(), 0, nullptr);
+    vkUpdateDescriptorSets(this->pool.engineDevice.getLogicalDevice(), static_cast<uint32_t>(this->writes.size()), this->writes.data(), 0, nullptr);
   }
  
 }  // namespace lve

@@ -86,7 +86,7 @@ namespace nugiEngine {
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &this->commandBuffer;
 
-		submitInfo.waitSemaphoreCount = waitSemaphores.size();
+		submitInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size());
 		if (waitSemaphores.size() == 0) {
   		submitInfo.pWaitSemaphores = nullptr;
 		} else {
@@ -97,7 +97,7 @@ namespace nugiEngine {
 			submitInfo.pWaitDstStageMask = waitStages.data();
 		}
 
-		submitInfo.signalSemaphoreCount = signalSemaphores.size();
+		submitInfo.signalSemaphoreCount = static_cast<uint32_t>(signalSemaphores.size());
 		if (signalSemaphores.size() == 0) {
   		submitInfo.pSignalSemaphores = nullptr;
 		} else {
@@ -126,7 +126,7 @@ namespace nugiEngine {
 		submitInfo.commandBufferCount = static_cast<uint32_t>(buffers.size());
 		submitInfo.pCommandBuffers = buffers.data();
 
-		submitInfo.waitSemaphoreCount = waitSemaphores.size();
+		submitInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size());
 		if (waitSemaphores.size() == 0) {
   		submitInfo.pWaitSemaphores = nullptr;
 		} else {
@@ -137,7 +137,7 @@ namespace nugiEngine {
 			submitInfo.pWaitDstStageMask = waitStages.data();
 		}
 
-		submitInfo.signalSemaphoreCount = signalSemaphores.size();
+		submitInfo.signalSemaphoreCount = static_cast<uint32_t>(signalSemaphores.size());
 		if (signalSemaphores.size() == 0) {
   		submitInfo.pSignalSemaphores = nullptr;
 		} else {

@@ -8,7 +8,7 @@
 namespace nugiEngine {
 	EngineRayTraceRenderer::EngineRayTraceRenderer(EngineWindow& window, EngineDevice& device) : appDevice{device}, appWindow{window} {
 		this->recreateSwapChain();
-		this->createSyncObjects(this->swapChain->imageCount());
+		this->createSyncObjects(static_cast<uint32_t>(this->swapChain->imageCount()));
 
 		this->commandBuffers = EngineCommandBuffer::createCommandBuffers(device, EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
 		this->createDescriptorPool();
@@ -58,7 +58,7 @@ namespace nugiEngine {
 				.build();
 	}
 
-	void EngineRayTraceRenderer::createSyncObjects(int imageCount) {
+	void EngineRayTraceRenderer::createSyncObjects(uint32_t imageCount) {
     imageAvailableSemaphores.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
     renderFinishedSemaphores.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
     inFlightFences.resize(EngineSwapChain::MAX_FRAMES_IN_FLIGHT);

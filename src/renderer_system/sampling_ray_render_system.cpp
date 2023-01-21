@@ -77,7 +77,7 @@ namespace nugiEngine {
 				.build();
 				
 		this->descriptorSets.clear();
-		uint32_t imageCount = this->swapChainImages.size();
+		uint32_t imageCount = static_cast<uint32_t>(this->swapChainImages.size());
 
 		for (uint32_t i = 0; i < imageCount; i++) {
 			auto descSet = std::make_shared<VkDescriptorSet>();

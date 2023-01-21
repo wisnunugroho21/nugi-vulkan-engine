@@ -52,7 +52,7 @@ namespace nugiEngine {
 
 		private:
 			void recreateSwapChain();
-			void createSyncObjects(int imageCount);
+			void createSyncObjects(uint32_t imageCount);
 			void createDescriptorPool();
 
 			EngineWindow& appWindow;
