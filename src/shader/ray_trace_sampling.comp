@@ -5,15 +5,16 @@
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 layout(set = 0, binding = 0, rgba8) uniform image2D inputImage[8];
-
-layout(set = 1, binding = 0, rgba8) uniform image2D targetImage;
-layout(set = 1, binding = 1, rgba8) uniform image2D accumulateImage;
+layout(set = 1, binding = 0, rgba8) uniform image2D accumulateImage;
 
 layout(push_constant) uniform Push {
   uint randomSeed;
 } push;
 
 void main() {
+  vec4 accColor = imageLoad(accumulateImage, ivec2(gl_GlobalInvocationID.xy));
+  accColor = accColor * min(push.randomSeed, 1);
+
   vec4 totalColor = vec4(0.0, 0.0, 0.0, 0.0);
 
   for (uint i = 0; i < 8; i++) {
@@ -23,11 +24,7 @@ void main() {
 
   totalColor = totalColor / 8;
   totalColor = sqrt(totalColor);
-
-  vec4 accColor = imageLoad(accumulateImage, ivec2(gl_GlobalInvocationID.xy));
-  accColor = accColor * min(push.randomSeed, 1);
   totalColor = (totalColor + accColor * push.randomSeed) / (push.randomSeed + 1.0);
 
   imageStore(accumulateImage, ivec2(gl_GlobalInvocationID.xy), totalColor);
-  imageStore(targetImage, ivec2(gl_GlobalInvocationID.xy), totalColor);
 }

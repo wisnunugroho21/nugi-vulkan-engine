@@ -74,7 +74,6 @@ namespace nugiEngine {
 		this->descSetLayout = 
 			EngineDescriptorSetLayout::Builder(this->appDevice)
 				.addBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT)
-				.addBinding(1, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT)
 				.build();
 				
 		this->descriptorSets.clear();
@@ -83,15 +82,11 @@ namespace nugiEngine {
 		for (uint32_t i = 0; i < imageCount; i++) {
 			auto descSet = std::make_shared<VkDescriptorSet>();
 
-			auto swapChainImage = this->swapChainImages[i];
-			auto swapChainImageInfo = swapChainImage->getDescriptorInfo(VK_IMAGE_LAYOUT_GENERAL);
-
 			auto accumulateImage = this->accumulateImages[i];
 			auto accumulateImageInfo = accumulateImage->getDescriptorInfo(VK_IMAGE_LAYOUT_GENERAL);
 
 			EngineDescriptorWriter(*this->descSetLayout, *descriptorPool)
-				.writeImage(0, &swapChainImageInfo)
-				.writeImage(1, &accumulateImageInfo)
+				.writeImage(0, &accumulateImageInfo)
 				.build(descSet.get());
 
 			this->descriptorSets.emplace_back(descSet);
@@ -133,25 +128,36 @@ namespace nugiEngine {
 		auto swapChainImage = this->swapChainImages[imageIndex];
 		auto accumulateImage = this->accumulateImages[imageIndex];
 
-		swapChainImage->transitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 
-			VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 
-			0, VK_ACCESS_SHADER_WRITE_BIT, commandBuffer);
-
 		if (accumulateImage->getLayout() == VK_IMAGE_LAYOUT_UNDEFINED) {
 			accumulateImage->transitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 
 				VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 
 				0, VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, commandBuffer);
 		}
 
+		swapChainImage->transitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
+			VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 
+			0, VK_ACCESS_TRANSFER_WRITE_BIT, commandBuffer);
+
 		return true;
 	}
 
 	bool EngineSamplingRayRenderSystem::finishFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, uint32_t imageIndex) {
 		auto swapChainImage = this->swapChainImages[imageIndex];
+		auto accumulateImage = this->accumulateImages[imageIndex];
 
-		swapChainImage->transitionImageLayout(VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 
-			VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 
-			VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_MEMORY_READ_BIT, commandBuffer);
+		accumulateImage->transitionImageLayout(VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, 
+			VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 
+			VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_TRANSFER_READ_BIT, commandBuffer);
+
+		swapChainImage->copyImageFromOther(accumulateImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, commandBuffer);
+
+		swapChainImage->transitionImageLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 
+			VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 
+			VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_MEMORY_READ_BIT, commandBuffer);
+
+		accumulateImage->transitionImageLayout(VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL, 
+			VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 
+			VK_ACCESS_TRANSFER_READ_BIT, VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, commandBuffer);
 
     return true;
 	}
