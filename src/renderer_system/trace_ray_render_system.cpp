@@ -180,7 +180,7 @@ namespace nugiEngine {
 
 		if (selectedImages[0]->getLayout() == VK_IMAGE_LAYOUT_UNDEFINED) {
 			EngineImage::transitionImageLayout(selectedImages, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 
-				VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 
+				VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 
 				0, VK_ACCESS_SHADER_WRITE_BIT, commandBuffer);
 		} else {
 			EngineImage::transitionImageLayout(selectedImages, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL, 

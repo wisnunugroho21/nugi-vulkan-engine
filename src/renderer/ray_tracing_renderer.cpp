@@ -146,7 +146,6 @@ namespace nugiEngine {
 
 	bool EngineRayTraceRenderer::presentFrame() {
 		assert(this->isFrameStarted && "can't present frame if frame is not in progress");
-		this->randomSeed++;
 
 		auto result = this->swapChain->presentRenders(&this->currentImageIndex, &this->renderFinishedSemaphores[this->currentFrameIndex]);
 
@@ -157,13 +156,14 @@ namespace nugiEngine {
 			this->appWindow.resetResizedFlag();
 			this->recreateSwapChain();
 			this->descriptorPool->resetPool();
-			this->randomSeed = 0;
 
+			this->randomSeed = 0;
 			return false;
 		} else if (result != VK_SUCCESS) {
 			throw std::runtime_error("failed to present swap chain image");
 		}
 
+		this->randomSeed++;
 		return true;
 	}
 }

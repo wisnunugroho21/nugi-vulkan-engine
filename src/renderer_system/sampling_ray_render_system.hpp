@@ -23,7 +23,7 @@ namespace nugiEngine {
 			EngineSamplingRayRenderSystem(const EngineSamplingRayRenderSystem&) = delete;
 			EngineSamplingRayRenderSystem& operator = (const EngineSamplingRayRenderSystem&) = delete;
 
-			void render(std::shared_ptr<EngineCommandBuffer> commandBuffer, uint32_t imageIndex, std::shared_ptr<VkDescriptorSet> traceRayDescSet);
+			void render(std::shared_ptr<EngineCommandBuffer> commandBuffer, uint32_t imageIndex, std::shared_ptr<VkDescriptorSet> traceRayDescSet, uint32_t randomSeed = 1);
 
 			bool prepareFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, uint32_t imageIndex);
 			bool finishFrame(std::shared_ptr<EngineCommandBuffer> commandBuffer, uint32_t imageIndex);	
@@ -32,6 +32,7 @@ namespace nugiEngine {
 			void createPipelineLayout(std::shared_ptr<EngineDescriptorSetLayout> traceRayDescLayout);
 			void createPipeline();
 
+			void createAccumulateImages(uint32_t swapChainImageCount);
 			void createDescriptor(std::shared_ptr<EngineDescriptorPool> descriptorPool);
 
 			EngineDevice& appDevice;
@@ -43,6 +44,7 @@ namespace nugiEngine {
 			std::vector<std::shared_ptr<VkDescriptorSet>> descriptorSets;
 
 			std::vector<std::shared_ptr<EngineImage>> swapChainImages;
+			std::vector<std::shared_ptr<EngineImage>> accumulateImages;
 
 			uint32_t width, height;
 	};
