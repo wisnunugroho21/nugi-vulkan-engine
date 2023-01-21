@@ -63,26 +63,37 @@ float stepAndOutputRNGFloat(inout uint rngState) {
   return float(word) / 4294967295.0;
 }
 
-float randomFloat(uvec2 xy) {
-  uint rngState =  (600 * xy.x + xy.y) * (push.randomSeed + 1);
-  return stepAndOutputRNGFloat(rngState);
+uint rngStateXY =  (600 * gl_GlobalInvocationID.x + gl_GlobalInvocationID.y) * (ubo.currentSample + 1);
+uint rngStateXZ =  (600 * gl_GlobalInvocationID.x + gl_GlobalInvocationID.z) * (ubo.currentSample + 1);
+uint rngStateYZ =  (600 * gl_GlobalInvocationID.y + gl_GlobalInvocationID.z) * (ubo.currentSample + 1);
+
+float randomFloat(uint index) {
+  float randNum = 0.0;
+
+  switch(index) {
+    case 0: randNum = stepAndOutputRNGFloat(rngStateXY); break;
+    case 1: randNum = stepAndOutputRNGFloat(rngStateXZ); break;
+    case 2: randNum = stepAndOutputRNGFloat(rngStateYZ); break;
+  }
+
+  return randNum;
 }
 
-float randomFloatAt(float min, float max, uvec2 xy) {
-  return min + (max - min) * randomFloat(xy);
+float randomFloatAt(float min, float max, uint index) {
+  return min + (max - min) * randomFloat(index);
 }
 
-vec3 randomVecThree(uvec2 xy) {
-  return vec3(randomFloat(xy), randomFloat(xy), randomFloat(xy));
+vec3 randomVecThree(uint index) {
+  return vec3(randomFloat(index), randomFloat(index), randomFloat(index));
 }
 
-vec3 randomVecThreeAt(float min, float max, uvec2 xy) {
-  return vec3(randomFloatAt(min, max, xy), randomFloatAt(min, max, xy), randomFloatAt(min, max, xy));
+vec3 randomVecThreeAt(float min, float max, uint index) {
+  return vec3(randomFloatAt(min, max, index), randomFloatAt(min, max, index), randomFloatAt(min, max, index));
 }
 
-vec3 randomInUnitSphere(uvec2 xy) {
+vec3 randomInUnitSphere(uint index) {
   while (true) {
-    vec3 p = randomVecThreeAt(-1.0, 1.0, xy);
+    vec3 p = randomVecThreeAt(-1.0, 1.0, index);
 
     if (dot(p, p) < 1) {
       return p;
@@ -90,8 +101,8 @@ vec3 randomInUnitSphere(uvec2 xy) {
   }
 }
 
-vec3 randomInHemisphere(vec3 normal, uvec2 xy) {
-  vec3 in_unit_sphere = randomInUnitSphere(xy);
+vec3 randomInHemisphere(vec3 normal, uint index) {
+  vec3 in_unit_sphere = randomInUnitSphere(index);
 
   // In the same hemisphere as the normal
   if (dot(in_unit_sphere, normal) > 0.0) {
@@ -187,7 +198,7 @@ vec3 rayColor(Ray r) {
     HitRecord rec = hitSphereList(ubo.spheres, 2, curRay, 0.001, 10000.0);
 
     if (rec.isHit) {
-      vec3 target = rec.faceNormal.normal + randomInUnitSphere(gl_GlobalInvocationID.xy); // randomInHemisphere(rec.faceNormal.normal, gl_GlobalInvocationID.xy); // rec.faceNormal.normal + randomInUnitSphere(gl_GlobalInvocationID.xy);
+      vec3 target = rec.faceNormal.normal + randomInUnitSphere(0); // randomInHemisphere(rec.faceNormal.normal, gl_GlobalInvocationID.xy); // rec.faceNormal.normal + randomInUnitSphere(gl_GlobalInvocationID.xy);
       curAttenuation *= 0.5f;
 
       curRay.origin = rec.point;
@@ -211,8 +222,8 @@ void main() {
 
   vec2 imgSize = vec2(imageSize(targetImage[imgIndex]));
 
-  float noiseX = randomFloat(gl_GlobalInvocationID.xz);
-  float noiseY = randomFloat(gl_GlobalInvocationID.yz);
+  float noiseX = randomFloat(1);
+  float noiseY = randomFloat(2);
 
   vec2 noiseUV = vec2(noiseX, noiseY);
   vec2 uv = (imgPosition + noiseUV) / imgSize;
