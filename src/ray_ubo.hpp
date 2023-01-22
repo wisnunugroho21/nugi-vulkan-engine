@@ -34,10 +34,11 @@ namespace nugiEngine {
   };
 
   struct RayTraceObject {
-    Sphere spheres[4];
-    Metal metals[4];
-    Lambertian lambertians[4];
-    Dielectric dielectrics[4];
+    Sphere spheres[500];
+    Metal metals[100];
+    Lambertian lambertians[100];
+    Dielectric dielectrics[100];
+    uint32_t numObj;
   };
 
   struct RayTracePushConstant {

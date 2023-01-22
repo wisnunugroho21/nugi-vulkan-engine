@@ -88,30 +88,86 @@ namespace nugiEngine {
 	void EngineApp::loadObjects() {
 		RayTraceObject objects{};
 
-		objects.spheres[0].radius = 100.0f;
-		objects.spheres[0].center = glm::vec3(0.0f, -100.5f, -1.0f);
-		objects.lambertians[0].colorAlbedo = glm::vec3(0.8f, 0.8f, 0.0f);
-		objects.spheres[0].materialType = 0;
-		objects.spheres[0].materialIndex = 0;
+		uint32_t numObj = 0;
+		uint32_t materialIndex = 0;
+		uint32_t lambertIndex = 0;
+		uint32_t metalIndex = 0;
+		uint32_t glassIndex = 0;
 
-		objects.spheres[1].radius = 0.5f;
-		objects.spheres[1].center = glm::vec3(0.0f, 0.0f, -1.0f);
-		objects.lambertians[1].colorAlbedo = glm::vec3(0.7f, 0.3f, 0.3f);
-		objects.spheres[1].materialType = 0;
-		objects.spheres[1].materialIndex = 1;
+		for (int i = -11; i < 11; i++) {
+			for (int j = -11; j < 11; j++) {
+				glm::vec3 center = glm::vec3(i, 0.2, j);
 
-		objects.spheres[2].radius = 0.5f;
-		objects.spheres[2].center = glm::vec3(-1.0f, 0.0f, -1.0f);
-		objects.dielectrics[0].indexOfRefraction = 1.5f;
-		objects.spheres[2].materialType = 2;
-		objects.spheres[2].materialIndex = 0;
+				if ((center - glm::vec3(4.0f, 0.2f, 0.0f)).length() > 0.9f) {
+					objects.spheres[numObj].center = center;
+					objects.spheres[numObj].radius = 0.2f;
+					
+					if (materialIndex == 0) {
+						objects.lambertians[lambertIndex].colorAlbedo = glm::vec3(0.8f, 0.8f, 0.0f);
+						objects.spheres[numObj].materialType = 0;
+						objects.spheres[numObj].materialIndex = lambertIndex;
 
-		objects.spheres[3].radius = 0.5f;
-		objects.spheres[3].center = glm::vec3(1.0f, 0.0f, -1.0f);
-		objects.metals[0].colorAlbedo = glm::vec3(0.8f, 0.6f, 0.2f);
-		objects.metals[0].fuzziness = 0.0f;
-		objects.spheres[3].materialType = 1;
-		objects.spheres[3].materialIndex = 0;
+						lambertIndex++;
+					} else if (materialIndex == 1) {
+						objects.metals[metalIndex].colorAlbedo = glm::vec3(0.8f, 0.6f, 0.2f);
+						objects.metals[metalIndex].fuzziness = 0.0f;
+						objects.spheres[numObj].materialType = 1;
+						objects.spheres[numObj].materialIndex = metalIndex;
+
+						metalIndex++;
+					} else {
+						objects.dielectrics[glassIndex].indexOfRefraction = 1.5f;
+						objects.spheres[numObj].materialType = 2;
+						objects.spheres[numObj].materialIndex = glassIndex;
+
+						glassIndex++;
+					}
+
+					if (materialIndex >= 2) {
+						materialIndex = 0;
+					} else {
+						materialIndex++;
+					}
+
+					numObj++;
+				}
+			}
+		}
+
+		objects.spheres[numObj].radius = 100.0f;
+		objects.spheres[numObj].center = glm::vec3(0.0f, -100.5f, -1.0f);
+		objects.lambertians[lambertIndex].colorAlbedo = glm::vec3(0.8f, 0.8f, 0.0f);
+		objects.spheres[numObj].materialType = 0;
+		objects.spheres[numObj].materialIndex = lambertIndex;
+
+		lambertIndex++;
+		numObj++;
+
+		objects.spheres[numObj].radius = 0.5f;
+		objects.spheres[numObj].center = glm::vec3(-4.0f, 1.0f, 0.0f);
+		objects.lambertians[lambertIndex].colorAlbedo = glm::vec3(0.4f, 0.2f, 0.1f);
+		objects.spheres[numObj].materialType = 0;
+		objects.spheres[numObj].materialIndex = lambertIndex;
+
+		numObj++;
+
+		objects.spheres[numObj].radius = 0.5f;
+		objects.spheres[numObj].center = glm::vec3(0.0f, 1.0f, -0.0f);
+		objects.dielectrics[glassIndex].indexOfRefraction = 1.5f;
+		objects.spheres[numObj].materialType = 2;
+		objects.spheres[numObj].materialIndex = glassIndex;
+
+		numObj++;
+
+		objects.spheres[numObj].radius = 0.5f;
+		objects.spheres[numObj].center = glm::vec3(4.0f, 1.0f, 0.0f);
+		objects.metals[metalIndex].colorAlbedo = glm::vec3(0.7f, 0.6f, 0.5f);
+		objects.metals[metalIndex].fuzziness = 0.0f;
+		objects.spheres[numObj].materialType = 1;
+		objects.spheres[numObj].materialIndex = metalIndex;
+
+		numObj++;
+		objects.numObj = numObj;
 
 		uint32_t imageCount = this->renderer->getSwapChain()->getswapChainImages().size();
 		for (int i = 0; i < imageCount; i++) {
