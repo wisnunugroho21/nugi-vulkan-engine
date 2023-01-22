@@ -34,10 +34,10 @@ layout(set = 0, binding = 1) uniform GlobalUbo {
 } ubo;
 
 layout(set = 0, binding = 2) uniform ObjectUbo {
-  Sphere spheres[500];
-  Metal metals[100];
-  Lambertian lambertians[100];
-  Dielectric dielectrics[100];
+  Sphere spheres[50];
+  Metal metals[10];
+  Lambertian lambertians[10];
+  Dielectric dielectrics[10];
   uint numObj;
 } objects;
 
@@ -228,7 +228,7 @@ HitRecord hitSphere(Sphere obj, Ray r, float tMin, float tMax) {
   return rec;
 }
 
-HitRecord hitSphereList(Sphere objList[4], int objNum, Ray r, float tMin, float tMax) {
+HitRecord hitSphereList(Sphere objList[50], int objNum, Ray r, float tMin, float tMax) {
   FaceNormal faceNormal;
   faceNormal.frontFace = false;
   faceNormal.normal = vec3(0, 0, 0);

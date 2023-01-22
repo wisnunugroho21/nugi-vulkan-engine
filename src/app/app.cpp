@@ -94,49 +94,9 @@ namespace nugiEngine {
 		uint32_t metalIndex = 0;
 		uint32_t glassIndex = 0;
 
-		for (int i = -11; i < 11; i++) {
-			for (int j = -11; j < 11; j++) {
-				glm::vec3 center = glm::vec3(i, 0.2, j);
-
-				if ((center - glm::vec3(4.0f, 0.2f, 0.0f)).length() > 0.9f) {
-					objects.spheres[numObj].center = center;
-					objects.spheres[numObj].radius = 0.2f;
-					
-					if (materialIndex == 0) {
-						objects.lambertians[lambertIndex].colorAlbedo = glm::vec3(0.8f, 0.8f, 0.0f);
-						objects.spheres[numObj].materialType = 0;
-						objects.spheres[numObj].materialIndex = lambertIndex;
-
-						lambertIndex++;
-					} else if (materialIndex == 1) {
-						objects.metals[metalIndex].colorAlbedo = glm::vec3(0.8f, 0.6f, 0.2f);
-						objects.metals[metalIndex].fuzziness = 0.0f;
-						objects.spheres[numObj].materialType = 1;
-						objects.spheres[numObj].materialIndex = metalIndex;
-
-						metalIndex++;
-					} else {
-						objects.dielectrics[glassIndex].indexOfRefraction = 1.5f;
-						objects.spheres[numObj].materialType = 2;
-						objects.spheres[numObj].materialIndex = glassIndex;
-
-						glassIndex++;
-					}
-
-					if (materialIndex >= 2) {
-						materialIndex = 0;
-					} else {
-						materialIndex++;
-					}
-
-					numObj++;
-				}
-			}
-		}
-
-		objects.spheres[numObj].radius = 100.0f;
-		objects.spheres[numObj].center = glm::vec3(0.0f, -100.5f, -1.0f);
-		objects.lambertians[lambertIndex].colorAlbedo = glm::vec3(0.8f, 0.8f, 0.0f);
+		objects.spheres[numObj].radius = 1000.0f;
+		objects.spheres[numObj].center = glm::vec3(0.0f, -1000.0f, 0.0f);
+		objects.lambertians[lambertIndex].colorAlbedo = glm::vec3(0.5f, 0.5f, 0.5f);
 		objects.spheres[numObj].materialType = 0;
 		objects.spheres[numObj].materialIndex = lambertIndex;
 
@@ -152,7 +112,7 @@ namespace nugiEngine {
 		numObj++;
 
 		objects.spheres[numObj].radius = 0.5f;
-		objects.spheres[numObj].center = glm::vec3(0.0f, 1.0f, -0.0f);
+		objects.spheres[numObj].center = glm::vec3(0.0f, 1.0f, 0.0f);
 		objects.dielectrics[glassIndex].indexOfRefraction = 1.5f;
 		objects.spheres[numObj].materialType = 2;
 		objects.spheres[numObj].materialIndex = glassIndex;
@@ -181,21 +141,21 @@ namespace nugiEngine {
 
 		RayTraceUbo ubo{};
 
-		glm::vec3 lookFrom = glm::vec3(-2.0f, 2.0f, 1.0f);
-		glm::vec3 lookAt = glm::vec3(0.0f, 0.0f, -1.0f);
+		glm::vec3 lookFrom = glm::vec3(13.0f, 2.0f, 3.0f);
+		glm::vec3 lookAt = glm::vec3(0.0f, 0.0f, 0.0f);
 		glm::vec3 vup = glm::vec3(0.0f, 1.0f, 0.0f);
 		
-		float vfov = 45.0f;
+		float vfov = 20.0f;
 		float aspectRatio = static_cast<float>(width) / static_cast<float>(height);
 
 		float theta = glm::radians(vfov);
 		float h = glm::tan(theta / 2.0f);
 		float viewportHeight = 2.0f * h;
-    float viewportWidth = aspectRatio * viewportHeight;
+		float viewportWidth = aspectRatio * viewportHeight;
 
 		glm::vec3 w = glm::normalize(lookFrom - lookAt);
 		glm::vec3 u = glm::normalize(glm::cross(vup, w));
-    glm::vec3 v = glm::cross(w, u);
+		glm::vec3 v = glm::cross(w, u);
 
 		ubo.origin = lookFrom;
 		ubo.horizontal = viewportWidth * u;
