@@ -33,7 +33,7 @@ layout(set = 0, binding = 1) uniform GlobalUbo {
   vec3 lowerLeftCorner;
 } ubo;
 
-layout(set = 0, binding = 2) uniform ObjectUbo {
+layout(set = 0, binding = 2) buffer ObjectUbo {
   Sphere spheres[50];
   Metal metals[10];
   Lambertian lambertians[10];
